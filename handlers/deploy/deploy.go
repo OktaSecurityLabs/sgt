@@ -61,6 +61,7 @@ func CopyFile(src, dst string) error {
 
 func ErrorCheck(err error) error{
 	if err != nil {
+		logger.Error(err)
 		logger.Fatal(err)
 		return err
 	}
