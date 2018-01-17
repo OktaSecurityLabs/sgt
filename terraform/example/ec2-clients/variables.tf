@@ -1,2 +1,0 @@
-variable "num_clients" {
-}
