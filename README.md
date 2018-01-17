@@ -79,4 +79,29 @@ files and stand up the environment if you choose to do so
 ./sgt -wizard
 ```
 
+When you are done with the wizard, you will be prompted to either continue to deploy
+the actual resources, or exit.  If you choose to exit, you you will need manually deploy later
+
+### Manual deployment
+
+SGT can be deployed as a full environment, or individual pieces(Note that the components
+still requires their dependencies to be built, they may just be updated individually to save time)
+
+To deploy SGT...
+
+```commandline
+./sgt -deploy -env <environment> -all
+```
+
+To deploy/update an individual component..
+
+```commandline
+./sgt -deploy -env <environment> -elasticsearch
+```
+
+for a full list of commands, issue the -h flag
+
+If terraform fails at any point during this process, cancel the installation `ctrl+c` and review
+your errors.  SGT depends on all previous deploy steps completing successfully, so it is important
+to make sure this occurs before moving on to next steps
 
