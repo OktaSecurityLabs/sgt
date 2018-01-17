@@ -4,7 +4,7 @@ provider "aws" {
 }
 
 resource "aws_elasticsearch_domain" "sgt-osquery_results" {
-  domain_name = "sgt-osquery-results"
+  domain_name = "${var.elasticsearch_domain_name}"
   elasticsearch_version = "5.5"
   cluster_config {
     instance_count = 3
