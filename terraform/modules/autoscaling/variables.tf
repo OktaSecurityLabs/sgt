@@ -38,10 +38,6 @@ variable "dns_subdomain" {
   description = "subdomain to be used for server"
 }
 
-variable "firehose_arns" {
-  type = "list"
-  default = ["go-api-put-test", "alpha1osquerysgt", "alphaosquery-sgt-distributed"]
-}
 
 variable "aws_profile" {}
 #variable "nat_gw_id" {}
