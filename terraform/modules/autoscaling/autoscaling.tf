@@ -105,10 +105,6 @@ data "aws_iam_policy_document" "osquery_ssm_param_store_policy_doc" {
   }
 }
 
-data "template_file" "firehosen" {
-  count = "${length(var.firehose_arns)}"
-  template = "arn:aws:kinesis${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stream/${element(var.firehose_arns, count.index)}"
-}
 
 data "aws_iam_policy_document" "osquery_firehose_policy_doc" {
   statement {
