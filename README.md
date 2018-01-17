@@ -43,7 +43,6 @@ cd sgt
 get dependencies and build the binary
 
 ```commandline
-go get
 go build
 ```
 
