@@ -409,7 +409,7 @@ func Autoscaling(top_level_dir, environ string) error {
 	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("building Autoscaling...")
 	//check to make sure terraform files are in place
-	_, err := ParseDeploymentConfig(config_file)
+	//_, err := ParseDeploymentConfig(config_file)
 	files, err := filepath.Glob("terraform/example/autoscaling/*")
 	for _, fn := range files {
 		_, filename := filepath.Split(fn)
