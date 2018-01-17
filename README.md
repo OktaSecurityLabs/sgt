@@ -1,5 +1,5 @@
-## Welcome to Sgt!
-![](docs/images/11036-200.png)
+## SGT: OSQuery Management Server Built Entirely on AWS!
+![](docs/images/sgt_3x.png)
 
 SGT is an osquery management server written in Golang and built in aws.  Sgt (Simple Go TLS)
 is backed entirely by AWS services, making its infrastructure requirements extremely
@@ -14,7 +14,7 @@ Getting started with sgt is designed to be very simple with minimal setup requir
 1. An aws account with admin access to DynamoDB, EC2, ES (ElastisearchService), Kinesis/Firehose and IAM. (note, this must be
 programatic access, so you can have an access key and secret to use)
 2. [Golang 1.8.2+](https://golang.org/doc/install)
-3. [Terraform](https://www.terraform.io/intro/getting-started/install.html)
+3. [Terraform 10.4+](https://www.terraform.io/intro/getting-started/install.html)
 4. A domain with dns [managed via Route53](http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html)
 5. An SSL cert with public and private keypair.  This will be used to terminate TLS connections to our server
 see [Obtaining a free ssl cert for SGT with Letsencrypt](docs/letsencrypt_cert_instructions.md) for one method of aquiring a certificate
