@@ -1,0 +1,14 @@
+{
+  "environment": "example_environment",
+  "aws_profile": "default",
+  "user_ip_address": "127.0.0.1",
+  "sgt_osquery_results_bucket_name": "example_log_bucket_name",
+  "sgt_config_bucket_name": "example_config_bucket_name",
+  "domain": "somedomain.com",
+  "subdomain": "mysubdomain",
+  "aws_keypair": "my_aws_ec2_keypair_name",
+  "full_ssl_certchain": "full_cert_chain.pem",
+  "ssl_private_key": "privkey.pem",
+  "sgt_node_secret": "super_sekret_node_enrollment_key",
+  "sgt_app_secret": "ultra_mega_sekret_key_you'll_never_give_to_anyone_not_even_your_mother"
+}

@@ -1,0 +1,2 @@
+variable "num_clients" {
+}

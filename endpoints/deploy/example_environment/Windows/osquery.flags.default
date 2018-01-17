@@ -1,0 +1,8 @@
+--config_plugin=tls
+--enroll_secret_path=/var/osquery/osquery.secret
+--enroll_tls_endpoint=/node/enroll
+--config_tls_endpoint=/node/configure
+--tls_hostname=example.domain.endpoint.com
+--config_refresh=300
+--config_tls_accelerated_refresh=300
+--config_tls_max_attempts=9999

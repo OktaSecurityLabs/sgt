@@ -1,0 +1,62 @@
+{
+  "queries": {
+    "windows_events": {
+      "query": "select * from windows_events;",
+      "interval": "180"
+    },
+    "interface_addr_mac": {
+      "query": "select ia.address, ia.mask, id.mac from interface_addresses ia, interface_details id where ia.interface = id.interface;",
+      "interval": "300",
+      "snapshot": "true"
+    },
+    "active_users": {
+      "query": "select user, time, pid from logged_in_users where type='active';",
+      "interval": "300",
+      "snapshot": "true"
+    },
+    "listening_ports": {
+      "query": "select * from listening_ports;",
+      "interval": "300",
+      "snapshot": "true"
+    },
+    "processes": {
+      "query": "select * from processes;",
+      "interval": "300",
+      "snapshot": "true"
+    },
+    "scheduled_tasks": {
+      "query": "select * from scheduled_tasks;",
+      "interval": "3600"
+    },
+    "startup_items": {
+      "query": "select * from startup_items;",
+      "interval": "300",
+      "snapshot": "true"
+    },
+    "drivers": {
+      "query": "select * from drivers;",
+      "interval": "86400",
+      "snapshot": "false"
+    },
+    "services": {
+      "query": "select * from services;",
+      "interval": "86400",
+      "snapshot": "false"
+    },
+    "etc_hosts": {
+      "query": "select * from etc_hosts;",
+      "interval": "86400",
+      "snapshot": "false"
+    },
+    "windows_patches": {
+      "query": "select * from patches;",
+      "interval": "86400",
+      "snapshot": "false"
+    },
+    "system_users": {
+      "query": "select * from users;",
+      "interval": "86400",
+      "snapshot": "false"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "decorators": {
+    "always": [
+      "SELECT user AS username FROM logged_in_users ORDER BY time DESC LIMIT 1;",
+      "SELECT uuid AS host_uuid FROM system_info;"
+    ]
+  },
+  "options": {
+    "audit_allow_config": true,
+    "aws_firehose_stream": "",
+    "aws_firehose_access_key": "",
+    "config_refresh": 300,
+    "disable_audit": false,
+    "disable_events": false,
+    "disabled_distributed": false,
+    "distributed_tls_read_endpoint": "/distributed/read",
+    "distributed_tls_write_endpoint": "/distributed/write",
+    "events_expiry": 300,
+    "events_max": 100000,
+    "event_optimize": true,
+    "host_identifier": "hostname",
+    "logger_plugin": "aws_firehose",
+    "watchdog_level": -1,
+    "watchdog_memory_limit": 300
+  },
+  "packs": ["osx-attacks", "unwanted-chrome-extensions", "vuln-management", "ossec-rootkit"]
+
+}
