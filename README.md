@@ -6,6 +6,8 @@ simple, robust and scalable.
 
 SGT is managed entirely through terraform
 
+###### NOTE: SGT is under active development.  Please help us improve by submitting issues!
+
 ### Getting started.
 
 Getting started with sgt is designed to be very simple with minimal setup required.  To get started, however, you will need a FEW things first.

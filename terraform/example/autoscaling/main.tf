@@ -12,6 +12,5 @@ module "autoscaling" {
   dns_zone_domain = "${var.domain}"
   dns_subdomain = "${var.subdomain}"
   aws_profile = "${var.aws_profile}"
-#  nat_gw_id = "nat-001f1475d5dc6d57b"
 }
 
