@@ -542,7 +542,7 @@ func DestroyElasticsearch(top_level_dir, environ string) error {
 	err = os.Chdir(fmt.Sprintf("terraform/%s/elasticsearch", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s -var user_ip_address=%s", config.AWSProfile, config.UserIPAddress)
-	args := fmt.Sprintf("terraform apply -force -var-file=../%s.json", environ)
+	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd := exec.Command("bash", "-c", args)
 	s := spinner.New(spinner.CharSets[43], 500*time.Millisecond)

@@ -106,3 +106,8 @@ If terraform fails at any point during this process, cancel the installation `ct
 your errors.  SGT depends on all previous deploy steps completing successfully, so it is important
 to make sure this occurs before moving on to next steps
 
+
+## Documentation notes:
+Documentation is lacking right now due to a rather un-fun flu season.  However, updates to documentation should be expected in teh coming week or so.
+(This note marked: 1/17/18)
+
