@@ -1,25 +1,25 @@
 package node
 
 import (
-	"net/http"
-	"sync"
-	"github.com/oktasecuritylabs/sgt/osquery_types"
-	log "github.com/sirupsen/logrus"
-	"github.com/oktasecuritylabs/sgt/dyndb"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"net/http/httputil"
 	"math/rand"
+	"net/http"
+	"net/http/httputil"
 	"strings"
+	"sync"
+
+	"github.com/oktasecuritylabs/sgt/dyndb"
 	"github.com/oktasecuritylabs/sgt/handlers/auth"
 	"github.com/oktasecuritylabs/sgt/logger"
-	"fmt"
+	"github.com/oktasecuritylabs/sgt/osquery_types"
+	log "github.com/sirupsen/logrus"
 )
 
-
 type NodeConfigurePost struct {
-	Enroll_secret string `json:"enroll_secret"`
-	Node_key string `json:"node_key"`
+	Enroll_secret   string `json:"enroll_secret"`
+	Node_key        string `json:"node_key"`
 	Host_identifier string `json:"host_identifier"`
 }
 
@@ -36,7 +36,9 @@ func NodeEnrollRequest(respwritter http.ResponseWriter, request *http.Request) {
 	dump, _ := httputil.DumpRequest(request, true)
 	logger.Debug(string(dump))
 	dyn_svc := dyndb.DbInstance()
-	var(mut sync.Mutex)
+	var (
+		mut sync.Mutex
+	)
 	respwritter.Header().Set("Content-Type", "application/json")
 	//test if enrol secret is correct
 	dump, err := httputil.DumpRequest(request, true)
@@ -60,26 +62,25 @@ func NodeEnrollRequest(respwritter http.ResponseWriter, request *http.Request) {
 	//if hostname registered, send config
 	//if not, send back to pending registration
 	type EnrollRequest struct {
-		Enroll_secret string `json:"enroll_secret"`
-		Node_key string `json:"node_key"`
-		Host_identifier string `json:"host_identifier"`
-		PlatformType string `json:"platform_type"`
-		HostDetails map[string]map[string]string `json:"host_details"`
-
+		Enroll_secret   string                       `json:"enroll_secret"`
+		Node_key        string                       `json:"node_key"`
+		Host_identifier string                       `json:"host_identifier"`
+		PlatformType    string                       `json:"platform_type"`
+		HostDetails     map[string]map[string]string `json:"host_details"`
 	}
 	type EnrollRequestResponse struct {
-		Node_key string `json:"node_key"`
-		Node_invalid bool `json:"node_invalid"`
+		Node_key     string `json:"node_key"`
+		Node_invalid bool   `json:"node_invalid"`
 	}
 	//fmt.Println(request.Body)
 	nodeEnrollRequestLogger := logger.WithFields(log.Fields{
 		"node_ip_address": request.RemoteAddr,
-		"user_agent": request.UserAgent(),
+		"user_agent":      request.UserAgent(),
 	})
 	body, err := ioutil.ReadAll(request.Body)
 	logger.Info(string(body))
 	defer request.Body.Close()
-	if err != nil{
+	if err != nil {
 		nodeEnrollRequestLogger.Error(err)
 	}
 	data := EnrollRequest{}
@@ -127,18 +128,18 @@ func NodeEnrollRequest(respwritter http.ResponseWriter, request *http.Request) {
 				enroll_request_response := EnrollRequestResponse{node_key, false}
 				// Handle enrollment defaults here.  Default configs for widerps, osux, Linux
 				osc := osquery_types.OsqueryClient{
-					Host_identifier: data.Host_identifier,
-					Node_key: node_key,
-					Node_invalid: false,
-					HostDetails: data.HostDetails,
+					Host_identifier:               data.Host_identifier,
+					Node_key:                      node_key,
+					Node_invalid:                  false,
+					HostDetails:                   data.HostDetails,
 					Pending_registration_approval: true,
-					Tags: []string{},
-					Config_name: "default",
+					Tags:                []string{},
+					Config_name:         "default",
 					Configuration_group: "",
 				}
 				osc.Timestamp()
 				// might be good to check for dupe hostnames here before ACTUALLY issuing new key
-				err := dyndb.UpsertClient(osc, dyn_svc,  mut)
+				err := dyndb.UpsertClient(osc, dyn_svc, mut)
 				if err != nil {
 					nodeEnrollRequestLogger.WithFields(log.Fields{
 						"hostname": data.Host_identifier,
@@ -173,7 +174,7 @@ func NodeConfigureRequest(respwritter http.ResponseWriter, request *http.Request
 	defer request.Body.Close()
 	logger := logger.WithFields(log.Fields{
 		"node_ip_address": request.RemoteAddr,
-		"user_agent": request.UserAgent(),
+		"user_agent":      request.UserAgent(),
 	})
 	if err != nil {
 		logger.Error(err)

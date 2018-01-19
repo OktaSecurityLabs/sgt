@@ -1,41 +1,42 @@
 package deploy
 
 import (
-	"os/exec"
-	"github.com/oktasecuritylabs/sgt/logger"
-	"os"
-	"fmt"
+	"bytes"
 	"encoding/json"
 	"errors"
-	"path/filepath"
+	"fmt"
 	"io"
-	"github.com/briandowns/spinner"
-	"time"
 	"io/ioutil"
-	"strings"
 	"net/http"
-	"bytes"
-	osq_types "github.com/oktasecuritylabs/sgt/osquery_types"
-	"github.com/oktasecuritylabs/sgt/handlers/auth"
-	"github.com/oktasecuritylabs/sgt/dyndb"
-	"github.com/oktasecuritylabs/sgt/handlers/helpers"
-	"sync"
+	"os"
+	"os/exec"
 	"os/user"
+	"path/filepath"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/briandowns/spinner"
+	"github.com/oktasecuritylabs/sgt/dyndb"
+	"github.com/oktasecuritylabs/sgt/handlers/auth"
+	"github.com/oktasecuritylabs/sgt/handlers/helpers"
+	"github.com/oktasecuritylabs/sgt/logger"
+	osq_types "github.com/oktasecuritylabs/sgt/osquery_types"
 )
 
 type DeploymentConfig struct {
-	Environment string `json:"environment"`
-	AWSProfile string `json:"aws_profile"`
-	UserIPAddress string `json:"user_ip_address"`
+	Environment                 string `json:"environment"`
+	AWSProfile                  string `json:"aws_profile"`
+	UserIPAddress               string `json:"user_ip_address"`
 	SgtOsqueryResultsBucketName string `json:"sgt_osquery_results_bucket_name"`
-	SgtConfigBucketName string `json:"sgt_config_bucket_name"`
-	Domain string `json:"domain"`
-	Subdomain string `json:"subdomain"`
-	AwsKeypair string `json:"aws_keypair"`
-	FullSslCertchain string `json:"full_ssl_certchain"`
-	SslPrivateKey string `json:"ssl_private_key"`
-	SgtNodeSecret string `json:"sgt_node_secret"`
-	SgtAppSecret string `json:"sgt_app_secret"`
+	SgtConfigBucketName         string `json:"sgt_config_bucket_name"`
+	Domain                      string `json:"domain"`
+	Subdomain                   string `json:"subdomain"`
+	AwsKeypair                  string `json:"aws_keypair"`
+	FullSslCertchain            string `json:"full_ssl_certchain"`
+	SslPrivateKey               string `json:"ssl_private_key"`
+	SgtNodeSecret               string `json:"sgt_node_secret"`
+	SgtAppSecret                string `json:"sgt_app_secret"`
 }
 
 func CopyFile(src, dst string) error {
@@ -59,7 +60,7 @@ func CopyFile(src, dst string) error {
 	return out.Close()
 }
 
-func ErrorCheck(err error) error{
+func ErrorCheck(err error) error {
 	if err != nil {
 		logger.Error(err)
 		logger.Fatal(err)
@@ -86,11 +87,11 @@ func ParseDeploymentConfig(config_file string) (DeploymentConfig, error) {
 	return dep_conf, nil
 }
 
-func CreateDeployDirectory(environ string) (error) {
+func CreateDeployDirectory(environ string) error {
 	path := fmt.Sprintf("terraform/%s", environ)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		logger.Info(fmt.Sprintf("creating new deployment environment: %s", environ))
-    	os.Mkdir(path, 0755)
+		os.Mkdir(path, 0755)
 	} else {
 		logger.Info("environment already exists, are you sure you meant to to use deploy to\n")
 		logger.Info(environ)
@@ -108,7 +109,7 @@ func CreateDeployDirectory(environ string) (error) {
 	return nil
 }
 
-func CheckEnvironMatchConfig(environ, config_file string) (error) {
+func CheckEnvironMatchConfig(environ, config_file string) error {
 	dep_conf, err := ParseDeploymentConfig(config_file)
 	if err != nil {
 		logger.Fatal(err)
@@ -140,7 +141,9 @@ func VPC(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
-	if err = ErrorCheck(err); err != nil {return err}
+	if err = ErrorCheck(err); err != nil {
+		return err
+	}
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s", config.AWSProfile)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
@@ -190,7 +193,7 @@ func Datastore(top_level_dir, environ string) error {
 	return nil
 }
 
-func ElasticSearchMappings(top_level_dir, environ string) (error) {
+func ElasticSearchMappings(top_level_dir, environ string) error {
 	err := os.Chdir(fmt.Sprintf("terraform/%s/elasticsearch", environ))
 	ErrorCheck(err)
 	fn := "terraform.tfstate"
@@ -279,7 +282,9 @@ func Elasticsearch(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
-	if err = ErrorCheck(err); err != nil {return err}
+	if err = ErrorCheck(err); err != nil {
+		return err
+	}
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s -var user_ip_address=%s", config.AWSProfile, config.UserIPAddress)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
@@ -299,8 +304,7 @@ func Elasticsearch(top_level_dir, environ string) error {
 	}
 	//ElasticSearchMappings("https://search-sgt-osquery-results-r6owrsyarql42ttzy26fz6nf24.us-east-1.es.amazonaws.com")
 	return nil
-	}
-
+}
 
 func Firehose(top_level_dir, environ string) error {
 	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
@@ -322,7 +326,9 @@ func Firehose(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
-	if err = ErrorCheck(err); err != nil {return err}
+	if err = ErrorCheck(err); err != nil {
+		return err
+	}
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s -var s3_bucket_name=%s", config.AWSProfile, config.LogBucketName)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
@@ -335,8 +341,7 @@ func Firehose(top_level_dir, environ string) error {
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
 	return nil
-	}
-
+}
 
 func S3(top_level_dir, environ string) error {
 	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
@@ -363,7 +368,7 @@ func S3(top_level_dir, environ string) error {
 	cmd = exec.Command("bash", "-c", "terraform init")
 	stdoutStderr, err := cmd.CombinedOutput()
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s -var sgt_config_bucket=%s -var full_cert_chain=%s -var priv_key=%s",
-		//config.AWSProfile, config.ConfigBucketName, config.SslFullKeychain, config.SslPrivateKey)
+	//config.AWSProfile, config.ConfigBucketName, config.SslFullKeychain, config.SslPrivateKey)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd = exec.Command("bash", "-c", args)
@@ -395,7 +400,7 @@ func Secrets(top_level_dir, environ string) error {
 	stdoutStderr, err := cmd.CombinedOutput()
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	fmt.Println(args)
-		//config.AWSProfile, config.NodeSecret, config.AppSecret)
+	//config.AWSProfile, config.NodeSecret, config.AppSecret)
 	logger.Info("Args hidden due to sensitive nature...")
 	cmd = exec.Command("bash", "-c", args)
 	stdoutStderr, err = cmd.CombinedOutput()
@@ -404,7 +409,6 @@ func Secrets(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	return nil
 }
-
 
 func Autoscaling(top_level_dir, environ string) error {
 	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
@@ -426,7 +430,9 @@ func Autoscaling(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
-	if err = ErrorCheck(err); err != nil {return err}
+	if err = ErrorCheck(err); err != nil {
+		return err
+	}
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s -var domain=%s -var subdomain=%s -var keypair=%s", config.AWSProfile, config.DomainName, config.Subdomain, config.AwsKeypair)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
@@ -450,7 +456,9 @@ func DestroyAutoscaling(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	err = os.Chdir(fmt.Sprintf("terraform/%s/autoscaling", environ))
 	ErrorCheck(err)
-	if err = ErrorCheck(err); err != nil {return err}
+	if err = ErrorCheck(err); err != nil {
+		return err
+	}
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s -var domain=%s -var subdomain=%s -var keypair=%s", config.AWSProfile, config.DomainName, config.Subdomain, config.AwsKeypair)
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
 	logger.Info(args)
@@ -475,7 +483,7 @@ func DestroySecrets(top_level_dir, environ string) error {
 	err = os.Chdir(fmt.Sprintf("terraform/%s/secrets", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -var aws_profile=%s -var sgt_node_secret=%s -var sgt_app_secret=%s",
-		//config.AWSProfile, config.NodeSecret, config.AppSecret)
+	//config.AWSProfile, config.NodeSecret, config.AppSecret)
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
 	logger.Info("Args hidden due to sensitive nature...")
 	cmd := exec.Command("bash", "-c", args)
@@ -485,7 +493,6 @@ func DestroySecrets(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	return nil
 }
-
 
 func DestroyS3(top_level_dir, environ string) error {
 	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
@@ -497,7 +504,7 @@ func DestroyS3(top_level_dir, environ string) error {
 	err = os.Chdir(fmt.Sprintf("terraform/%s/s3", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s -var sgt_config_bucket=%s -var full_cert_chain=%s -var priv_key=%s",
-		//config.AWSProfile, config.ConfigBucketName, config.SslFullKeychain, config.SslPrivateKey)
+	//config.AWSProfile, config.ConfigBucketName, config.SslFullKeychain, config.SslPrivateKey)
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd := exec.Command("bash", "-c", args)
@@ -578,7 +585,6 @@ func DestroyDatastore(top_level_dir, environ string) error {
 	return nil
 }
 
-
 func DestroyVPC(top_level_dir, environ string) error {
 	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("Destroying VPC....")
@@ -602,7 +608,7 @@ func DestroyVPC(top_level_dir, environ string) error {
 	return nil
 }
 
-func DeployAll(top_level_dir, environ string) (error) {
+func DeployAll(top_level_dir, environ string) error {
 	err := VPC(top_level_dir, environ)
 	if err != nil {
 		logger.Error(err)
@@ -656,7 +662,7 @@ func DeployAll(top_level_dir, environ string) (error) {
 	return nil
 }
 
-func DeployWizard() (error) {
+func DeployWizard() error {
 	config := DeploymentConfig{}
 	fmt.Print("Enter new environment name.  This is typically something like" +
 		"'Dev' or 'Prod' or 'Testing, but can be anything you want it to be: ")
@@ -675,8 +681,8 @@ func DeployWizard() (error) {
 	config.Environment = env_name
 	fmt.Println("Enter the name for the aws profile you'd like to use to deploy this environment \n" +
 		"if you've never created a profile before, you can read more about how to do this here\n" +
-			"http://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html \n" +
-				"a 'default' profile is created if you've installed and configured the aws cli: ")
+		"http://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html \n" +
+		"a 'default' profile is created if you've installed and configured the aws cli: ")
 	var profile string
 	_, err = fmt.Scanf("%s", &profile)
 	if err != nil {
@@ -686,7 +692,7 @@ func DeployWizard() (error) {
 	config.AWSProfile = profile
 	fmt.Println("Enter an ipaddress or cidr block for access to your elasticsearch cluster. \n" +
 		"Note:  This should probably be your current IP address, as you will need to be able to access \n" +
-			"elasticsearch via API to create the proper indices and mappings when deploying: ")
+		"elasticsearch via API to create the proper indices and mappings when deploying: ")
 	var ip_address string
 	_, err = fmt.Scanf("%s", &ip_address)
 	if err != nil {
@@ -714,7 +720,7 @@ func DeployWizard() (error) {
 	config.SgtConfigBucketName = config_bucket
 	fmt.Println("Enter the domain you will be using for your SGT server. \n" +
 		"Note:  This MUST be a domain which you have previously registered or are managing through" +
-			"aws. \n  This will be used to create a subdomain for the SGT TLS endpoint")
+		"aws. \n  This will be used to create a subdomain for the SGT TLS endpoint")
 	var domain string
 	_, err = fmt.Scanf("%s", &domain)
 	if err != nil {
@@ -733,7 +739,7 @@ func DeployWizard() (error) {
 	config.Subdomain = subdomain
 	fmt.Println("Enter the name of your aws keypair.  This is used to access ec2 instances if" +
 		"the need \n should ever arise (it shouldn't).\n" +
-			"NOTE:  This is the name of the keypair EXCLUDING the .pem flie name and it must already exist in aws")
+		"NOTE:  This is the name of the keypair EXCLUDING the .pem flie name and it must already exist in aws")
 	var keypair string
 	_, err = fmt.Scanf("%s", &keypair)
 	if err != nil {
@@ -778,10 +784,10 @@ func DeployWizard() (error) {
 	config.SgtAppSecret = app_secret
 	fmt.Println("Congratulations, you've successfully configured your SGT deployment! \n" +
 		"That wasn't so bad, was it? \n" +
-			"You're now ready to do the actual deployment")
+		"You're now ready to do the actual deployment")
 	fmt.Println("If you'd like to continue and do the actual deployment, you may continue by\n" +
 		"entering 'Y' at the next prompt.  If you'd like to pause, don't worry! \n" +
-			"next time you're ready to continue, just run ./sgt -deploy -env $your_deployment_name")
+		"next time you're ready to continue, just run ./sgt -deploy -env $your_deployment_name")
 	fmt.Println("Would you like to proceed with deployment? Y/N")
 	d, err := json.Marshal(config)
 	fn := fmt.Sprintf("terraform/%s/%s.json", env_name, env_name)
@@ -822,25 +828,25 @@ func UserAwsCredFile() (string, error) {
 }
 
 type TState struct {
-	Version int `json:"version"`
-	TerraformVersion string `json:"terraform_version"`
-	Serial int `json:"serial"`
-	Lineage string `json:"lineage"`
-	Modules []TFModule `json:"modules"`
+	Version          int        `json:"version"`
+	TerraformVersion string     `json:"terraform_version"`
+	Serial           int        `json:"serial"`
+	Lineage          string     `json:"lineage"`
+	Modules          []TFModule `json:"modules"`
 }
 
 type TFModule struct {
-	Path []string `json:"path"`
+	Path    []string            `json:"path"`
 	Outputs map[string]TFOutput `json:"outputs"`
 }
 
 type TFOutput struct {
-	Sensitive bool `json:"sensitive"`
-	Type string `json:"type"`
-	Value string `json:"value"`
+	Sensitive bool   `json:"sensitive"`
+	Type      string `json:"type"`
+	Value     string `json:"value"`
 }
 
-func DeployDefaultPacks(environ string) (error) {
+func DeployDefaultPacks(environ string) error {
 	var files []string
 	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	config, err := ParseDeploymentConfig(config_file)
@@ -918,7 +924,7 @@ func DeployDefaultPacks(environ string) (error) {
 	return nil
 }
 
-func DeployDefaultConfigs(environ string) (error) {
+func DeployDefaultConfigs(environ string) error {
 	var files []string
 	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	config, err := ParseDeploymentConfig(config_file)
@@ -1013,7 +1019,7 @@ func DeployDefaultConfigs(environ string) (error) {
 	return nil
 }
 
-func CreateDirIfNotExists(path string) (error) {
+func CreateDirIfNotExists(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err = os.Mkdir(path, 0755)
 		if err != nil {
@@ -1024,8 +1030,8 @@ func CreateDirIfNotExists(path string) (error) {
 	return nil
 }
 
-func FindAndReplace(filename, original, replacement string) (error) {
-	fileinfo,_ := os.Stat(filename)
+func FindAndReplace(filename, original, replacement string) error {
+	fileinfo, _ := os.Stat(filename)
 	perms := fileinfo.Mode()
 	input, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -1041,7 +1047,7 @@ func FindAndReplace(filename, original, replacement string) (error) {
 	return nil
 }
 
-func GenerateEndpointDeployScripts(environ string) (error) {
+func GenerateEndpointDeployScripts(environ string) error {
 	logger.Info(fmt.Sprintf("Updating endpoint deployments scripts for %s environment...", environ))
 	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	config, err := ParseDeploymentConfig(config_file)

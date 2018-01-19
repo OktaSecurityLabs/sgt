@@ -1,8 +1,9 @@
 package logger
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
+
+	"github.com/sirupsen/logrus"
 )
 
 var logger = logrus.New()
@@ -18,11 +19,11 @@ func init() {
 }
 
 func Info(args ...interface{}) {
-    logger.Info(args...)
+	logger.Info(args...)
 }
 
 func Debug(args ...interface{}) {
-    logger.Debug(args...)
+	logger.Debug(args...)
 }
 
 func Error(args ...interface{}) {
@@ -42,6 +43,5 @@ func WithFields(args ...interface{}) *logrus.Entry {
 }
 
 //func Warnf(args ...interface{}) {
-	//logger.Warnf(args...)
+//logger.Warnf(args...)
 //}
-

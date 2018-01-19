@@ -1,7 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"flag"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/oktasecuritylabs/sgt/handlers/api"
@@ -11,11 +17,6 @@ import (
 	"github.com/oktasecuritylabs/sgt/handlers/node"
 	"github.com/oktasecuritylabs/sgt/logger"
 	"github.com/urfave/negroni"
-	"log"
-	"net/http"
-	"os"
-	"bufio"
-	"fmt"
 )
 
 func server() {
@@ -318,4 +319,3 @@ func main() {
 	}
 
 }
-
