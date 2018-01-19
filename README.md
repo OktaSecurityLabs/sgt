@@ -106,6 +106,30 @@ If terraform fails at any point during this process, cancel the installation `ct
 your errors.  SGT depends on all previous deploy steps completing successfully, so it is important
 to make sure this occurs before moving on to next steps
 
+### Creating your first user.
+
+To create a user to interact with SGT, pass the `-create_user` flag with the requisite options
+
+```commandline
+./sgt -create_user -credentials_file <cred_file> -profile <profile> -username <username> -role <"Admin"|"User"|"Read-only">
+```
+
+### Getting an Authentication Token
+
+Using any portion of the End-user facing API requires an Authorization token.  To get an auth token, send a post request to
+`/api/v1/get-token` supplying your username and password in the post body
+```json
+{"username": "my_username", "password": "my_password"}
+```
+
+If your credentials are valid, you will recieve a json response back
+```json
+{"Authorization": "<long jtw">}
+```
+
+Provide this token in any subsequent requests in the Authorization header
+
+
 
 ## Documentation notes:
 Documentation is lacking right now due to a rather un-fun flu season.  However, updates to documentation should be expected in teh coming week or so.
