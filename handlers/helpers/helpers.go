@@ -1,11 +1,12 @@
 package helpers
 
 import (
+	"bufio"
 	"os"
 	"path/filepath"
-	"github.com/oktasecuritylabs/sgt/logger"
-	"bufio"
 	"strings"
+
+	"github.com/oktasecuritylabs/sgt/logger"
 )
 
 func CleanPack(filename string) (string, error) {
@@ -42,19 +43,19 @@ func CleanPack(filename string) (string, error) {
 }
 
 type OsqueryPack struct {
-	Queries map[string]PackQuery `json:"queries"`
-	Platform string `json:"platform"`
+	Queries  map[string]PackQuery `json:"queries"`
+	Platform string               `json:"platform"`
 }
 
 type PackQuery struct {
-	Query string `json:"query"`
-	Interval string `json:"interval"`
-	Version string `json:"version"`
+	Query       string `json:"query"`
+	Interval    string `json:"interval"`
+	Version     string `json:"version"`
 	Description string `json:"description"`
-	Value string `json:"value"`
+	Value       string `json:"value"`
 }
 
-func (op OsqueryPack) ListQueries() ([]string) {
+func (op OsqueryPack) ListQueries() []string {
 	queries := []string{}
 	for i, _ := range op.Queries {
 		queries = append(queries, i)

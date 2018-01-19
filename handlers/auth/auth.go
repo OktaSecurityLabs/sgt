@@ -1,8 +1,15 @@
 package auth
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
@@ -18,12 +25,6 @@ import (
 	"github.com/oktasecuritylabs/sgt/osquery_types"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/ssh/terminal"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"sync"
-	"time"
-	"bytes"
 )
 
 /*func init() {
@@ -207,8 +208,8 @@ func GetNodeSecret() (string, error) {
 }
 
 type NodeConfigurePost struct {
-	Enroll_secret string `json:"enroll_secret"`
-	Node_key string `json:"node_key"`
+	Enroll_secret   string `json:"enroll_secret"`
+	Node_key        string `json:"node_key"`
 	Host_identifier string `json:"host_identifier"`
 }
 

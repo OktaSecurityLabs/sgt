@@ -1,16 +1,17 @@
 package api
 
 import (
-	"net/http"
-	"sync"
-	"github.com/gorilla/mux"
-	"fmt"
-	"github.com/oktasecuritylabs/sgt/dyndb"
-	"github.com/oktasecuritylabs/sgt/osquery_types"
 	"encoding/json"
-	"os"
+	"fmt"
 	"io/ioutil"
+	"net/http"
+	"os"
+	"sync"
+
+	"github.com/gorilla/mux"
+	"github.com/oktasecuritylabs/sgt/dyndb"
 	"github.com/oktasecuritylabs/sgt/logger"
+	"github.com/oktasecuritylabs/sgt/osquery_types"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -21,11 +22,11 @@ func init() {
 	})
 }
 
-func APIConfigurationRequest(respwritter http.ResponseWriter, request *http.Request){
+func APIConfigurationRequest(respwritter http.ResponseWriter, request *http.Request) {
 	mu := sync.Mutex{}
 	dyn_svc := dyndb.DbInstance()
 	vars := mux.Vars(request)
-	if request.Method == "GET"{
+	if request.Method == "GET" {
 		if vars["config_name"] == "" {
 			ans, err := dyndb.GetNamedConfig(dyn_svc, vars["config_name"])
 			if err != nil {
@@ -72,7 +73,7 @@ func APIConfigurationRequest(respwritter http.ResponseWriter, request *http.Requ
 		}
 		// finally...
 		body, err := ioutil.ReadAll(request.Body)
-		if err != nil{
+		if err != nil {
 			panic(err)
 		}
 		//overlay default + existing with options provided by user
@@ -97,10 +98,11 @@ func APIConfigurationRequest(respwritter http.ResponseWriter, request *http.Requ
 	}
 	return
 }
+
 //(/api/v1/configure/node/{node_key}
 //node
 
-func APIGetNodes(respwritter http.ResponseWriter, request * http.Request) {
+func APIGetNodes(respwritter http.ResponseWriter, request *http.Request) {
 	dyn_svc := dyndb.DbInstance()
 	//nodes := osquery_types.OsqueryClient{}
 	if request.Method == "GET" {
@@ -119,7 +121,6 @@ func APIGetNodes(respwritter http.ResponseWriter, request * http.Request) {
 	}
 }
 
-
 func APIConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 	dyn_svc := dyndb.DbInstance()
 	mu := sync.Mutex{}
@@ -127,9 +128,9 @@ func APIConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 	node_key := vars["node_key"]
 	client := osquery_types.OsqueryClient{}
 	body, err := ioutil.ReadAll(request.Body)
-		if err != nil{
-			panic(err)
-		}
+	if err != nil {
+		panic(err)
+	}
 	//set posted osquery client = client
 	err = json.Unmarshal(body, &client)
 	logger.Warn("%v", client)
@@ -240,7 +241,7 @@ func APIApproveNode(respwritter http.ResponseWriter, request *http.Request) {
 func APIGetPacks(respwritter http.ResponseWriter, request *http.Request) {
 	//dyn_svc := dyndb.DbInstance()
 	//if request.Method == "GET" {
-		//res, err := dyndb.Get
+	//res, err := dyndb.Get
 	//}
 }
 
@@ -283,9 +284,7 @@ func APISearchPackQueries(respwritter http.ResponseWriter, request *http.Request
 	}
 }
 
-
 //(/api/v1/configure/packs/{pack_name}
-
 
 func APIGetQueryPacks(respwritter http.ResponseWriter, request *http.Request) {
 	type pack_query_list struct {
@@ -324,7 +323,6 @@ func APISearchQueryPacks(respwritter http.ResponseWriter, request *http.Request)
 	}
 }
 
-
 func APIConfigurePack(respwritter http.ResponseWriter, request *http.Request) {
 	mu := sync.Mutex{}
 	vars := mux.Vars(request)
@@ -336,15 +334,15 @@ func APIConfigurePack(respwritter http.ResponseWriter, request *http.Request) {
 	//pname := vars["pack_name"]
 	dyn_svc := dyndb.DbInstance()
 	//if request.Method == "GET" {
-		//logger.Println("GOT GET")
-		//s, err := dyndb.GetPackByName(pname, dyn_svc)
-		//logger.Println(s, err)
-		//if err != nil {
-			//logger.Println(err)
-			//return
-		//}
-		//logger.Println(s)
-		//respwritter.Write([]byte(s))
+	//logger.Println("GOT GET")
+	//s, err := dyndb.GetPackByName(pname, dyn_svc)
+	//logger.Println(s, err)
+	//if err != nil {
+	//logger.Println(err)
+	//return
+	//}
+	//logger.Println(s)
+	//respwritter.Write([]byte(s))
 	//}
 	if request.Method == "POST" {
 		body, err := ioutil.ReadAll(request.Body)
@@ -390,13 +388,11 @@ func APIConfigurePackQuery(respwritter http.ResponseWriter, request *http.Reques
 		}
 		respwritter.Write(js)
 
-
-
 	}
 	if request.Method == "POST" {
 		body, err := ioutil.ReadAll(request.Body)
 		defer request.Body.Close()
-		if err != nil{
+		if err != nil {
 			logger.Error(err)
 		}
 		var post_data osquery_types.PackQuery
