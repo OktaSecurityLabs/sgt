@@ -165,8 +165,11 @@ func main() {
 			//err := deploy.CheckEnvironMatchConfig(*environ)
 			deploy.ErrorCheck(err)
 			//deploy.CreateDeployDirectory(*environ)
+
+			// Load the config to be passed to all deploy functions that require it
+			config := deploy.ParseDeploymentConfig(*environ)
 			if *all {
-				err := deploy.DeployAll(curdir, *environ)
+				err := deploy.DeployAll(config, curdir, *environ)
 				if err != nil {
 					logger.Error(err)
 					os.Exit(0)
@@ -215,24 +218,25 @@ func main() {
 					}
 				}
 				if *packs {
-					err := deploy.DeployDefaultPacks(*environ)
+					err := deploy.DeployDefaultPacks(config, *environ)
 					if err != nil {
 						logger.Error(err)
 					}
 				}
 				if *configs {
-					err := deploy.DeployDefaultConfigs(*environ)
+					err := deploy.DeployDefaultConfigs(config, *environ)
 					if err != nil {
 						logger.Error(err)
 					}
 				}
 				if *endpoints {
-					err := deploy.GenerateEndpointDeployScripts(*environ)
+					err := deploy.GenerateEndpointDeployScripts(config, *environ)
 					if err != nil {
 						logger.Error(err)
 					}
 				}
 			}
+			return
 		}
 		if *destroy {
 			curdir, err := os.Getwd()
