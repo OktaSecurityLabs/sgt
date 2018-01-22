@@ -429,7 +429,7 @@ func Autoscaling(top_level_dir, environ string) error {
 func DestroyAutoscaling(top_level_dir, environ string) error {
 	logger.Info("Destroying Autoscaling...")
 
-	err = os.Chdir(fmt.Sprintf("terraform/%s/autoscaling", environ))
+	err := os.Chdir(fmt.Sprintf("terraform/%s/autoscaling", environ))
 	ErrorCheck(err)
 	if err = ErrorCheck(err); err != nil {
 		return err
@@ -451,7 +451,7 @@ func DestroyAutoscaling(top_level_dir, environ string) error {
 func DestroySecrets(top_level_dir, environ string) error {
 	logger.Info("Destroying secrets...")
 
-	err = os.Chdir(fmt.Sprintf("terraform/%s/secrets", environ))
+	err := os.Chdir(fmt.Sprintf("terraform/%s/secrets", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -var aws_profile=%s -var sgt_node_secret=%s -var sgt_app_secret=%s",
 	//config.AWSProfile, config.NodeSecret, config.AppSecret)
@@ -468,7 +468,7 @@ func DestroySecrets(top_level_dir, environ string) error {
 func DestroyS3(top_level_dir, environ string) error {
 	logger.Info("Destroy S3...")
 
-	err = os.Chdir(fmt.Sprintf("terraform/%s/s3", environ))
+	err := os.Chdir(fmt.Sprintf("terraform/%s/s3", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s -var sgt_config_bucket=%s -var full_cert_chain=%s -var priv_key=%s",
 	//config.AWSProfile, config.ConfigBucketName, config.SslFullKeychain, config.SslPrivateKey)
@@ -505,7 +505,7 @@ func DestroyElasticsearch(top_level_dir, environ string) error {
 	logger.Info("Note:  Due to the way Amazon's elasticsearch service is built, this may take up to 30 minutes or more to complete")
 	logger.Info("PS.  Now is probably a good time for some coffee...mmm, coffee")
 
-	err = os.Chdir(fmt.Sprintf("terraform/%s/elasticsearch", environ))
+	err := os.Chdir(fmt.Sprintf("terraform/%s/elasticsearch", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s -var user_ip_address=%s", config.AWSProfile, config.UserIPAddress)
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
@@ -526,7 +526,7 @@ func DestroyDatastore(top_level_dir, environ string) error {
 	//s := spinner.New(spinner.CharSets[0], 500*time.Millisecond)
 	//s.Start()
 
-	err = os.Chdir(fmt.Sprintf("terraform/%s/datastore", environ))
+	err := os.Chdir(fmt.Sprintf("terraform/%s/datastore", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s", config.AWSProfile)
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
@@ -543,7 +543,7 @@ func DestroyDatastore(top_level_dir, environ string) error {
 func DestroyVPC(top_level_dir, environ string) error {
 	logger.Info("Destroying VPC....")
 
-	err = os.Chdir(fmt.Sprintf("terraform/%s/vpc", environ))
+	err := os.Chdir(fmt.Sprintf("terraform/%s/vpc", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s", config.AWSProfile)
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
@@ -746,7 +746,7 @@ func DeployWizard() error {
 			logger.Error(err)
 			return err
 		}
-		err = DeployAll(curdir, config.Environment)
+		err = DeployAll(&config, curdir, config.Environment)
 		if err != nil {
 			logger.Error(err)
 			return err
@@ -885,6 +885,9 @@ func DeployDefaultConfigs(config *DeploymentConfig, environ string) error {
 	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
 	s.Start()
 	credfile, err := UserAwsCredFile()
+	if err != nil {
+		logger.Fatal(err)
+	}
 	dync_svc := auth.CrendentialedDbInstance(credfile, config.AWSProfile)
 	for _, fn := range files {
 		_, filename := filepath.Split(fn)
@@ -976,10 +979,10 @@ func FindAndReplace(filename, original, replacement string) error {
 }
 
 func GenerateEndpointDeployScripts(config *DeploymentConfig, environ string) error {
-	logger.Infof("Updating endpoint deployments scripts for %s environment...", environ)
+	logger.Info(fmt.Sprintf("Updating endpoint deployments scripts for %s environment...", environ))
 
 	// make sure all dirs are created
-	err = CreateDirIfNotExists(filepath.Join("endpoints", "deploy", environ))
+	err := CreateDirIfNotExists(filepath.Join("endpoints", "deploy", environ))
 	if err != nil {
 		logger.Error(err)
 		return err
