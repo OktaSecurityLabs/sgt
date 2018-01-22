@@ -666,7 +666,7 @@ func DeployWizard() error {
 	config := DeploymentConfig{}
 	fmt.Print("Enter new environment name.  This is typically something like" +
 		"'Dev' or 'Prod' or 'Testing, but can be anything you want it to be: ")
-	//env_name, err := reader.ReadString('\n')
+	//envName, err := reader.ReadString('\n')
 	var envName string
 	_, err := fmt.Scan(&envName)
 	if err != nil {
@@ -752,7 +752,7 @@ func DeployWizard() error {
 	if err != nil {
 		return err
 	}
-	config.SslPrivateKey = priv_key
+	config.SslPrivateKey = privKey
 	fmt.Println("Enter the node secret you will use to enroll your endpoints with the SGT server\n" +
 		"This secret will be used by each endpoint to authenticate to your server: ")
 	var nodeSecret string
@@ -777,7 +777,7 @@ func DeployWizard() error {
 		"next time you're ready to continue, just run ./sgt -deploy -env $your_deployment_name")
 	fmt.Println("Would you like to proceed with deployment? Y/N")
 	d, err := json.Marshal(config)
-	fn := fmt.Sprintf("terraform/%s/%s.json", env_name, env_name)
+	fn := fmt.Sprintf("terraform/%s/%s.json", envName, envName)
 	err = ioutil.WriteFile(fn, d, 0644)
 	var ans string
 	_, err = fmt.Scan(&ans)
