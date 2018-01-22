@@ -69,22 +69,34 @@ func ErrorCheck(err error) error {
 	return nil
 }
 
-func ParseDeploymentConfig(config_file string) (DeploymentConfig, error) {
-	dep_conf := DeploymentConfig{}
-	file, err := os.Open(config_file)
+// ParseDeploymentConfig returns the loaded config given its path
+// on disk or exits with status 1 on failure
+func ParseDeploymentConfig(environ string) *DeploymentConfig {
+	configFilePath := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
+	file, err := os.Open(configFilePath)
 	if err != nil {
-		logger.Warn(err)
 		logger.Fatal(err)
-		return dep_conf, err
 	}
+
 	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&dep_conf)
-	if err != nil {
-		logger.Warn(err)
+
+	depConf := &DeploymentConfig{}
+	if err = decoder.Decode(depConf); err != nil {
 		logger.Fatal(err)
-		return dep_conf, err
 	}
-	return dep_conf, nil
+
+	if err = depConf.CheckEnvironMatchConfig(environ); err != nil {
+		logger.Fatal(err)
+	}
+
+	return depConf
+}
+
+func (d *DeploymentConfig) CheckEnvironMatchConfig(environ string) error {
+	if d.Environment != environ {
+		return errors.New("config environment and passed environment variable do not match")
+	}
+	return nil
 }
 
 func CreateDeployDirectory(environ string) error {
@@ -109,23 +121,9 @@ func CreateDeployDirectory(environ string) error {
 	return nil
 }
 
-func CheckEnvironMatchConfig(environ, config_file string) error {
-	dep_conf, err := ParseDeploymentConfig(config_file)
-	if err != nil {
-		logger.Fatal(err)
-		return err
-	}
-	if dep_conf.Environment != environ {
-		return errors.New("config environment and passed environment variable do not match")
-	}
-	return nil
-}
-
 func VPC(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("Building VPC....")
-	//check to make sure terraform files are in place
-	_, err := ParseDeploymentConfig(config_file)
+
 	files, err := filepath.Glob("terraform/example/vpc/*")
 	for _, fn := range files {
 		_, filename := filepath.Split(fn)
@@ -135,8 +133,7 @@ func VPC(top_level_dir, environ string) error {
 			logger.Error(err)
 		}
 	}
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
+
 	err = os.Chdir(fmt.Sprintf("terraform/%s/vpc", environ))
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
@@ -160,12 +157,10 @@ func VPC(top_level_dir, environ string) error {
 }
 
 func Datastore(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("building Datastore...")
 	//s := spinner.New(spinner.CharSets[0], 500*time.Millisecond)
 	//s.Start()
-	//check to make sure terraform files are in place
-	_, err := ParseDeploymentConfig(config_file)
+
 	files, err := filepath.Glob("terraform/example/datastore/*")
 	for _, fn := range files {
 		_, filename := filepath.Split(fn)
@@ -175,8 +170,7 @@ func Datastore(top_level_dir, environ string) error {
 			logger.Error(err)
 		}
 	}
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
+
 	err = os.Chdir(fmt.Sprintf("terraform/%s/datastore", environ))
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
@@ -262,11 +256,9 @@ func ElasticSearchMappings(top_level_dir, environ string) error {
 }
 
 func Elasticsearch(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("building Elasticsearch...")
 	logger.Info("Note:  Due to the way Amazon's elasticsearch service is built, this may take up to 30 minutes or more to complete")
-	//check to make sure terraform files are in place
-	_, err := ParseDeploymentConfig(config_file)
+
 	files, err := filepath.Glob("terraform/example/elasticsearch/*")
 	for _, fn := range files {
 		_, filename := filepath.Split(fn)
@@ -276,8 +268,7 @@ func Elasticsearch(top_level_dir, environ string) error {
 			logger.Error(err)
 		}
 	}
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
+
 	err = os.Chdir(fmt.Sprintf("terraform/%s/elasticsearch", environ))
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
@@ -307,10 +298,8 @@ func Elasticsearch(top_level_dir, environ string) error {
 }
 
 func Firehose(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("building Firehose(n)...")
-	//check to make sure terraform files are in place
-	_, err := ParseDeploymentConfig(config_file)
+
 	files, err := filepath.Glob("terraform/example/firehose/*")
 	for _, fn := range files {
 		_, filename := filepath.Split(fn)
@@ -320,8 +309,7 @@ func Firehose(top_level_dir, environ string) error {
 			logger.Error(err)
 		}
 	}
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
+
 	err = os.Chdir(fmt.Sprintf("terraform/%s/firehose", environ))
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
@@ -344,15 +332,13 @@ func Firehose(top_level_dir, environ string) error {
 }
 
 func S3(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("Making sure binary is built...")
 	cmd := exec.Command("bash", "-c", "go build sgt.go")
 	combinedoutput, err := cmd.CombinedOutput()
 	ErrorCheck(err)
 	logger.Info(combinedoutput)
 	logger.Info("building S3...")
-	//check to make sure terraform files are in place
-	_, err = ParseDeploymentConfig(config_file)
+
 	files, err := filepath.Glob("terraform/example/s3/*")
 	for _, fn := range files {
 		_, filename := filepath.Split(fn)
@@ -361,8 +347,7 @@ func S3(top_level_dir, environ string) error {
 			logger.Error(err)
 		}
 	}
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
+
 	err = os.Chdir(fmt.Sprintf("terraform/%s/s3", environ))
 	ErrorCheck(err)
 	cmd = exec.Command("bash", "-c", "terraform init")
@@ -380,10 +365,8 @@ func S3(top_level_dir, environ string) error {
 }
 
 func Secrets(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("Uploading secrets...")
-	//check to make sure terraform files are in place
-	//_, err := ParseDeploymentConfig(config_file)
+
 	files, err := filepath.Glob("terraform/example/secrets/*")
 	for _, fn := range files {
 		_, filename := filepath.Split(fn)
@@ -392,8 +375,7 @@ func Secrets(top_level_dir, environ string) error {
 			logger.Error(err)
 		}
 	}
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
+
 	err = os.Chdir(fmt.Sprintf("terraform/%s/secrets", environ))
 	ErrorCheck(err)
 	cmd := exec.Command("bash", "-c", "terraform init")
@@ -411,10 +393,8 @@ func Secrets(top_level_dir, environ string) error {
 }
 
 func Autoscaling(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("building Autoscaling...")
-	//check to make sure terraform files are in place
-	//_, err := ParseDeploymentConfig(config_file)
+
 	files, err := filepath.Glob("terraform/example/autoscaling/*")
 	for _, fn := range files {
 		_, filename := filepath.Split(fn)
@@ -424,8 +404,7 @@ func Autoscaling(top_level_dir, environ string) error {
 			logger.Error(err)
 		}
 	}
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
+
 	err = os.Chdir(fmt.Sprintf("terraform/%s/autoscaling", environ))
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
@@ -448,12 +427,8 @@ func Autoscaling(top_level_dir, environ string) error {
 }
 
 func DestroyAutoscaling(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("Destroying Autoscaling...")
-	//check to make sure terraform files are in place
-	_, err := ParseDeploymentConfig(config_file)
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
+
 	err = os.Chdir(fmt.Sprintf("terraform/%s/autoscaling", environ))
 	ErrorCheck(err)
 	if err = ErrorCheck(err); err != nil {
@@ -474,12 +449,8 @@ func DestroyAutoscaling(top_level_dir, environ string) error {
 }
 
 func DestroySecrets(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("Destroying secrets...")
-	//check to make sure terraform files are in place
-	_, err := ParseDeploymentConfig(config_file)
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
+
 	err = os.Chdir(fmt.Sprintf("terraform/%s/secrets", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -var aws_profile=%s -var sgt_node_secret=%s -var sgt_app_secret=%s",
@@ -495,12 +466,8 @@ func DestroySecrets(top_level_dir, environ string) error {
 }
 
 func DestroyS3(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("Destroy S3...")
-	//check to make sure terraform files are in place
-	_, err := ParseDeploymentConfig(config_file)
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
+
 	err = os.Chdir(fmt.Sprintf("terraform/%s/s3", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s -var sgt_config_bucket=%s -var full_cert_chain=%s -var priv_key=%s",
@@ -516,13 +483,9 @@ func DestroyS3(top_level_dir, environ string) error {
 }
 
 func DestroyFirehose(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("Destrying Firehose(n)...")
-	//check to make sure terraform files are in place
-	_, err := ParseDeploymentConfig(config_file)
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
-	err = os.Chdir(fmt.Sprintf("terraform/%s/firehose", environ))
+
+	err := os.Chdir(fmt.Sprintf("terraform/%s/firehose", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s -var s3_bucket_name=%s", config.AWSProfile, config.LogBucketName)
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
@@ -538,14 +501,10 @@ func DestroyFirehose(top_level_dir, environ string) error {
 }
 
 func DestroyElasticsearch(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("Destroying Elasticsearch...")
 	logger.Info("Note:  Due to the way Amazon's elasticsearch service is built, this may take up to 30 minutes or more to complete")
 	logger.Info("PS.  Now is probably a good time for some coffee...mmm, coffee")
-	//check to make sure terraform files are in place
-	_, err := ParseDeploymentConfig(config_file)
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
+
 	err = os.Chdir(fmt.Sprintf("terraform/%s/elasticsearch", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s -var user_ip_address=%s", config.AWSProfile, config.UserIPAddress)
@@ -563,14 +522,10 @@ func DestroyElasticsearch(top_level_dir, environ string) error {
 }
 
 func DestroyDatastore(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("Destroying Datastore...")
 	//s := spinner.New(spinner.CharSets[0], 500*time.Millisecond)
 	//s.Start()
-	//check to make sure terraform files are in place
-	_, err := ParseDeploymentConfig(config_file)
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
+
 	err = os.Chdir(fmt.Sprintf("terraform/%s/datastore", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s", config.AWSProfile)
@@ -586,12 +541,8 @@ func DestroyDatastore(top_level_dir, environ string) error {
 }
 
 func DestroyVPC(top_level_dir, environ string) error {
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	logger.Info("Destroying VPC....")
-	//check to make sure terraform files are in place
-	_, err := ParseDeploymentConfig(config_file)
-	err = CheckEnvironMatchConfig(environ, config_file)
-	ErrorCheck(err)
+
 	err = os.Chdir(fmt.Sprintf("terraform/%s/vpc", environ))
 	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s", config.AWSProfile)
@@ -608,7 +559,7 @@ func DestroyVPC(top_level_dir, environ string) error {
 	return nil
 }
 
-func DeployAll(top_level_dir, environ string) error {
+func DeployAll(config *DeploymentConfig, top_level_dir, environ string) error {
 	err := VPC(top_level_dir, environ)
 	if err != nil {
 		logger.Error(err)
@@ -644,17 +595,17 @@ func DeployAll(top_level_dir, environ string) error {
 		logger.Error(err)
 		os.Exit(1)
 	}
-	err = DeployDefaultPacks(environ)
+	err = DeployDefaultPacks(config, environ)
 	if err != nil {
 		logger.Error(err)
 		os.Exit(1)
 	}
-	err = DeployDefaultConfigs(environ)
+	err = DeployDefaultConfigs(config, environ)
 	if err != nil {
 		logger.Error(err)
 		os.Exit(1)
 	}
-	err = GenerateEndpointDeployScripts(environ)
+	err = GenerateEndpointDeployScripts(config, environ)
 	if err != nil {
 		logger.Error(err)
 		os.Exit(1)
@@ -833,14 +784,9 @@ type TFOutput struct {
 	Value     string `json:"value"`
 }
 
-func DeployDefaultPacks(environ string) error {
+func DeployDefaultPacks(config *DeploymentConfig, environ string) error {
 	var files []string
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
-	config, err := ParseDeploymentConfig(config_file)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
+
 	//if environ specific dir exists in packs, deploy those.  Otherwise use defaults
 	if _, err := os.Stat(filepath.Join("packs", environ)); os.IsNotExist(err) {
 		logger.Info(fmt.Sprintf("No environment specific packs found for: %s", environ))
@@ -911,14 +857,9 @@ func DeployDefaultPacks(environ string) error {
 	return nil
 }
 
-func DeployDefaultConfigs(environ string) error {
+func DeployDefaultConfigs(config *DeploymentConfig, environ string) error {
 	var files []string
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
-	config, err := ParseDeploymentConfig(config_file)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
+
 	//if environ specific dir exists in packs, deploy those.  Otherwise use defaults
 	env_specific_configs := false
 	if _, err := os.Stat(filepath.Join("osquery_configs", environ)); os.IsNotExist(err) {
@@ -1034,14 +975,9 @@ func FindAndReplace(filename, original, replacement string) error {
 	return nil
 }
 
-func GenerateEndpointDeployScripts(environ string) error {
-	logger.Info(fmt.Sprintf("Updating endpoint deployments scripts for %s environment...", environ))
-	config_file := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
-	config, err := ParseDeploymentConfig(config_file)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
+func GenerateEndpointDeployScripts(config *DeploymentConfig, environ string) error {
+	logger.Infof("Updating endpoint deployments scripts for %s environment...", environ)
+
 	// make sure all dirs are created
 	err = CreateDirIfNotExists(filepath.Join("endpoints", "deploy", environ))
 	if err != nil {
