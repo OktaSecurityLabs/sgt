@@ -667,73 +667,65 @@ func DeployWizard() error {
 	fmt.Print("Enter new environment name.  This is typically something like" +
 		"'Dev' or 'Prod' or 'Testing, but can be anything you want it to be: ")
 	//env_name, err := reader.ReadString('\n')
-	var env_name string
-	_, err := fmt.Scanf("%s", &env_name)
+	var envName string
+	_, err := fmt.Scan(&envName)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
-	err = CreateDeployDirectory(env_name)
+	err = CreateDeployDirectory(envName)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
-	config.Environment = env_name
+	config.Environment = envName
 	fmt.Println("Enter the name for the aws profile you'd like to use to deploy this environment \n" +
 		"if you've never created a profile before, you can read more about how to do this here\n" +
 		"http://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html \n" +
 		"a 'default' profile is created if you've installed and configured the aws cli: ")
 	var profile string
-	_, err = fmt.Scanf("%s", &profile)
+	_, err = fmt.Scan(&profile)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
 	config.AWSProfile = profile
 	fmt.Println("Enter an ipaddress or cidr block for access to your elasticsearch cluster. \n" +
 		"Note:  This should probably be your current IP address, as you will need to be able to access \n" +
 		"elasticsearch via API to create the proper indices and mappings when deploying: ")
-	var ip_address string
-	_, err = fmt.Scanf("%s", &ip_address)
+	var ipAddress string
+	_, err = fmt.Scan(&ipAddress)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
-	config.UserIPAddress = ip_address
+	config.UserIPAddress = ipAddress
 	fmt.Println("Enter a name for the s3 bucket that will hold your osquery logs. \n" +
 		"Remeber;  S3 bucket names must be globally unique: ")
-	var log_bucket_name string
-	fmt.Scanf("%s", &log_bucket_name)
+	var logBucketName string
+	fmt.Scan(&logBucketName)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
-	config.SgtOsqueryResultsBucketName = log_bucket_name
+	config.SgtOsqueryResultsBucketName = logBucketName
 	fmt.Println("Enter a name for the s3 bucket that will hold your server configuration \n" +
 		"Remeber;  S3 bucket names must be globally unique: ")
-	var config_bucket string
-	_, err = fmt.Scanf("%s", &config_bucket)
+	var configBucket string
+	_, err = fmt.Scan(&configBucket)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
-	config.SgtConfigBucketName = config_bucket
+	config.SgtConfigBucketName = configBucket
 	fmt.Println("Enter the domain you will be using for your SGT server. \n" +
 		"Note:  This MUST be a domain which you have previously registered or are managing through" +
 		"aws. \n  This will be used to create a subdomain for the SGT TLS endpoint")
 	var domain string
-	_, err = fmt.Scanf("%s", &domain)
+	_, err = fmt.Scan(&domain)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
 	config.Domain = domain
 	fmt.Println("Enter a subdomain to use as the endpoint.  This will be prepended to the \n" +
 		"domain you provided as a subdomain")
 	var subdomain string
-	_, err = fmt.Scanf("%s", &subdomain)
+	_, err = fmt.Scan(&subdomain)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
 	config.Subdomain = subdomain
@@ -741,47 +733,42 @@ func DeployWizard() error {
 		"the need \n should ever arise (it shouldn't).\n" +
 		"NOTE:  This is the name of the keypair EXCLUDING the .pem flie name and it must already exist in aws")
 	var keypair string
-	_, err = fmt.Scanf("%s", &keypair)
+	_, err = fmt.Scan(&keypair)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
 	config.AwsKeypair = keypair
 	fmt.Println("Enter the name of the full ssl certificate chain bundle you will be using for \n" +
 		"your SGT server.  EG - full_chain.pem : ")
-	var full_chain string
-	_, err = fmt.Scanf("%s", &full_chain)
+	var fullChain string
+	_, err = fmt.Scan(&fullChain)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
-	config.FullSslCertchain = full_chain
+	config.FullSslCertchain = fullChain
 	fmt.Println("Enter the name of the private key for your ssl certificate.  Eg - privkey.pem: ")
-	var priv_key string
-	_, err = fmt.Scanf("%s", &priv_key)
+	var privKey string
+	_, err = fmt.Scan(&privKey)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
 	config.SslPrivateKey = priv_key
 	fmt.Println("Enter the node secret you will use to enroll your endpoints with the SGT server\n" +
 		"This secret will be used by each endpoint to authenticate to your server: ")
-	var node_secret string
-	_, err = fmt.Scanf("%s", &node_secret)
+	var nodeSecret string
+	_, err = fmt.Scan(&nodeSecret)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
-	config.SgtNodeSecret = node_secret
+	config.SgtNodeSecret = nodeSecret
 	fmt.Println("Enter the app secret key which will be used to generate session tokens when \n" +
 		"interacting with the API as an authenticated end-user.  Make this long, random and complex: ")
-	var app_secret string
-	_, err = fmt.Scanf("%s", &app_secret)
+	var appSecret string
+	_, err = fmt.Scan(&appSecret)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
-	config.SgtAppSecret = app_secret
+	config.SgtAppSecret = appSecret
 	fmt.Println("Congratulations, you've successfully configured your SGT deployment! \n" +
 		"That wasn't so bad, was it? \n" +
 		"You're now ready to do the actual deployment")
@@ -793,7 +780,7 @@ func DeployWizard() error {
 	fn := fmt.Sprintf("terraform/%s/%s.json", env_name, env_name)
 	err = ioutil.WriteFile(fn, d, 0644)
 	var ans string
-	_, err = fmt.Scanf("%s", &ans)
+	_, err = fmt.Scan(&ans)
 	confirm_strings := []string{"y", "Y", "yes", "YES"}
 	var deploy bool
 	for _, i := range confirm_strings {
