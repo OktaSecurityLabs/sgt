@@ -101,8 +101,7 @@ func main() {
 	if *wizard {
 		err := deploy.DeployWizard()
 		if err != nil {
-			logger.Error(err)
-			os.Exit(1)
+			logger.Fatal(err)
 		}
 		return
 	}
