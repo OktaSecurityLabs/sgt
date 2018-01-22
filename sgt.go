@@ -277,7 +277,7 @@ func main() {
 					}
 				}
 				if *secrets {
-					err := deploy.Secrets(curdir, *environ)
+					err := deploy.DestroySecrets(curdir, *environ)
 					if err != nil {
 						logger.Fatal(err)
 					}
