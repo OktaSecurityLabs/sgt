@@ -548,53 +548,43 @@ func DestroyVPC(top_level_dir, environ string) error {
 func DeployAll(config DeploymentConfig, top_level_dir, environ string) error {
 	err := VPC(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = Datastore(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = Elasticsearch(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = Firehose(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = S3(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = Secrets(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = Autoscaling(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = DeployDefaultPacks(config, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = DeployDefaultConfigs(config, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = GenerateEndpointDeployScripts(config, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	return nil
 }
@@ -734,8 +724,7 @@ func DeployWizard() error {
 		}
 		err = DeployAll(config, curdir, config.Environment)
 		if err != nil {
-			logger.Error(err)
-			return err
+			logger.Fatal(err)
 		}
 	}
 	return nil
