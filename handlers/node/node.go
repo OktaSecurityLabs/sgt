@@ -235,7 +235,7 @@ func NodeConfigureRequest(respwritter http.ResponseWriter, request *http.Request
 		if named_config.Osquery_config.Options.Aws_firehose_stream == "" {
 			named_config.Osquery_config.Options.Aws_firehose_stream = config.FirehoseStreamName
 		}
-		raw_pack_json := dyndb.BuildOsqueryPacksAsJson(named_config)
+		raw_pack_json := dyndb.BuildOsqueryPacksAsJSON(named_config)
 		named_config.Osquery_config.Packs = &raw_pack_json
 		js, err := json.Marshal(named_config.Osquery_config)
 		if err != nil {

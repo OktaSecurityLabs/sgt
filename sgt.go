@@ -69,16 +69,16 @@ func server() {
 		negroni.HandlerFunc(auth.AnotherValidation),
 		negroni.Wrap(apiRouter),
 	))
-	web_server := http.ListenAndServeTLS(":443",
+	webServer := http.ListenAndServeTLS(":443",
 		"fullchain.pem", "privkey.pem", handlers.LoggingHandler(os.Stdout, router))
-	log.Panic("web server", web_server)
+	log.Panic("web server", webServer)
 }
 
 func main() {
-	credentials_file := flag.String("credentials_file", "~/.aws/credentials", "path to credentials file")
+	credentialsFile := flag.String("credentialsFile", "~/.aws/credentials", "path to credentials file")
 	profile := flag.String("profile", "", "profile name")
 	createuser := flag.Bool("create_user", false, "create new user")
-	deploy_flag := flag.Bool("deploy", false, "deploy new sgt environment")
+	deployFlag := flag.Bool("deploy", false, "deploy new sgt environment")
 	//config_file := flag.String("configfile", "", "config file for deploy")
 	vpc := flag.Bool("vpc", false, "deploy VPC component")
 	datastore := flag.Bool("datastore", false, "deploy datastore component")
@@ -92,7 +92,7 @@ func main() {
 	username := flag.String("username", "", "username")
 	role := flag.String("role", "user", "user role")
 	destroy := flag.Bool("destroy", false, "destroy existing infrastructure")
-	new_deploy := flag.Bool("new-deployment", false, "created new deployment")
+	newDeploy := flag.Bool("new-deployment", false, "created new deployment")
 	wizard := flag.Bool("wizard", false, "Run deployment configuration wizard")
 	packs := flag.Bool("packs", false, "update packs")
 	configs := flag.Bool("configs", false, "update osquery configs")
@@ -105,49 +105,47 @@ func main() {
 		}
 		return
 	}
-	if *new_deploy {
-		env_name := ""
+	if *newDeploy {
+		envName := ""
 		if len(os.Args[0]) > 0 {
-			env_name = os.Args[0]
-			if len(env_name) > 0 {
-				err := deploy.CreateDeployDirectory(env_name)
+			envName = os.Args[0]
+			if len(envName) > 0 {
+				err := deploy.CreateDeployDirectory(envName)
 				if err != nil {
 					logger.Error(err)
 					os.Exit(1)
 				}
 			}
-			return
 
 		} else {
 			reader := bufio.NewReader(os.Stdin)
 			fmt.Print("Enter new environment name: ")
-			env_name, err := reader.ReadString('\n')
+			envName, err := reader.ReadString('\n')
 			if err != nil {
 				logger.Error(err)
 				os.Exit(1)
 			}
-			if len(env_name) > 0 {
-				err = deploy.CreateDeployDirectory(env_name)
+			if len(envName) > 0 {
+				err = deploy.CreateDeployDirectory(envName)
 				if err != nil {
 					logger.Error(err)
 					os.Exit(1)
 				}
 			}
-			return
 		}
 		logger.Warn("New deployment created.  Remember to go change the defaults in your $environment.json files!")
 		return
 	}
-	if *createuser || *deploy_flag || *destroy {
+	if *createuser || *deployFlag || *destroy {
 		if *createuser {
 			if !(len(*username) > 4) {
 				flag.Usage()
 				logger.Error("username required, please pass username via -username flag")
 				os.Exit(0)
 			}
-			if !(len(*credentials_file) > 4) {
+			if !(len(*credentialsFile) > 4) {
 				flag.Usage()
-				logger.Error("aws credentials file required, please pass via -credentials_file flag")
+				logger.Error("aws credentials file required, please pass via -credentialsFile flag")
 				os.Exit(0)
 			}
 			if !(len(*profile) > 4) {
@@ -155,12 +153,12 @@ func main() {
 				logger.Error("aws profile name required, please pass via -profile flag")
 				os.Exit(0)
 			}
-			auth.NewUser(*credentials_file, *profile, *username, *role)
+			auth.NewUser(*credentialsFile, *profile, *username, *role)
 			return
 		}
-		if *deploy_flag {
+		if *deployFlag {
 			log.Printf("beginning deployment to %s using configuration specified in %s.json", *environ, *environ)
-			log.Printf("Using credentials found in : %s", *credentials_file)
+			log.Printf("Using credentials found in : %s", *credentialsFile)
 			curdir, err := os.Getwd()
 			//err := deploy.CheckEnvironMatchConfig(*environ)
 			deploy.ErrorCheck(err)
