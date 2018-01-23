@@ -99,7 +99,7 @@ func (d *DeploymentConfig) CheckEnvironMatchConfig(environ string) error {
 func CreateDeployDirectory(environ string) error {
 	path := fmt.Sprintf("terraform/%s", environ)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		logger.Info(fmt.Sprintf("creating new deployment environment: %s", environ))
+		logger.Infof("creating new deployment environment: %s\n", environ)
 		os.Mkdir(path, 0755)
 	} else {
 		logger.Info("environment already exists, are you sure you meant to to use deploy to\n")
@@ -111,7 +111,7 @@ func CreateDeployDirectory(environ string) error {
 		dir := filepath.Join(path, p)
 		//logger.Info(dir)
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			logger.Info(fmt.Sprintf("Creating %s directory", dir))
+			logger.Infof("Creating %s directory\n", dir)
 			os.Mkdir(dir, 0755)
 		}
 	}
@@ -775,7 +775,7 @@ func DeployDefaultPacks(config *DeploymentConfig, environ string) error {
 
 	//if environ specific dir exists in packs, deploy those.  Otherwise use defaults
 	if _, err := os.Stat(filepath.Join("packs", environ)); os.IsNotExist(err) {
-		logger.Info(fmt.Sprintf("No environment specific packs found for: %s", environ))
+		logger.Infof("No environment specific packs found for: %s\n", environ)
 		logger.Info("using default packs")
 		files, err = filepath.Glob("packs/*")
 		if err != nil {
@@ -783,7 +783,7 @@ func DeployDefaultPacks(config *DeploymentConfig, environ string) error {
 			return err
 		}
 	} else {
-		logger.Info(fmt.Sprintf("Environment specific folder found for: %s \nUsing %s query packs", environ, environ))
+		logger.Infof("Environment specific folder found for: %s\nUsing %s query packs\n", environ, environ)
 		path := fmt.Sprintf("packs/%s/*", environ)
 		files, err = filepath.Glob(path)
 		if err != nil {
@@ -849,7 +849,7 @@ func DeployDefaultConfigs(config *DeploymentConfig, environ string) error {
 	//if environ specific dir exists in packs, deploy those.  Otherwise use defaults
 	env_specific_configs := false
 	if _, err := os.Stat(filepath.Join("osquery_configs", environ)); os.IsNotExist(err) {
-		logger.Info(fmt.Sprintf("No environment specific configs found for: %s", environ))
+		logger.Infof("No environment specific configs found for: %s\n", environ)
 		logger.Info("using default configs")
 		files, err = filepath.Glob("osquery_configs/defaults/*")
 		environ = "defaults"
@@ -859,7 +859,7 @@ func DeployDefaultConfigs(config *DeploymentConfig, environ string) error {
 			return err
 		}
 	} else {
-		logger.Info(fmt.Sprintf("Environment specific folder found for: %s \nUsing %s configs", environ, environ))
+		logger.Infof("Environment specific folder found for: %s\nUsing %s configs\n", environ, environ)
 		path := fmt.Sprintf("osquery_configs/%s/*", environ)
 		env_specific_configs = true
 		files, err = filepath.Glob(path)
@@ -928,9 +928,9 @@ func DeployDefaultConfigs(config *DeploymentConfig, environ string) error {
 		ans := dyndb.UpsertNamedConfig(dync_svc, &named_config, mu)
 		s.Stop()
 		if ans {
-			logger.Info(fmt.Sprintf("%s: success", named_config.Config_name))
+			logger.Infof("%s: success\n", named_config.Config_name)
 		} else {
-			logger.Info(fmt.Sprintf("%s: failed", named_config.Config_name))
+			logger.Infof("%s: failed\n", named_config.Config_name)
 		}
 	}
 	return nil
@@ -965,7 +965,7 @@ func FindAndReplace(filename, original, replacement string) error {
 }
 
 func GenerateEndpointDeployScripts(config *DeploymentConfig, environ string) error {
-	logger.Info(fmt.Sprintf("Updating endpoint deployments scripts for %s environment...", environ))
+	logger.Infof("Updating endpoint deployments scripts for %s environment...\n", environ)
 
 	// make sure all dirs are created
 	err := CreateDirIfNotExists(filepath.Join("endpoints", "deploy", environ))
