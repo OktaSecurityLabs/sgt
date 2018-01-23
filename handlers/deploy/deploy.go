@@ -60,13 +60,10 @@ func CopyFile(src, dst string) error {
 	return out.Close()
 }
 
-func ErrorCheck(err error) error {
+func ErrorCheck(err error) {
 	if err != nil {
-		logger.Error(err)
 		logger.Fatal(err)
-		return err
 	}
-	return nil
 }
 
 // ParseDeploymentConfig returns the loaded config given its path
@@ -138,9 +135,7 @@ func VPC(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
-	if err = ErrorCheck(err); err != nil {
-		return err
-	}
+	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s", config.AWSProfile)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
@@ -273,9 +268,7 @@ func Elasticsearch(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
-	if err = ErrorCheck(err); err != nil {
-		return err
-	}
+	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s -var user_ip_address=%s", config.AWSProfile, config.UserIPAddress)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
@@ -314,9 +307,7 @@ func Firehose(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
-	if err = ErrorCheck(err); err != nil {
-		return err
-	}
+	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s -var s3_bucket_name=%s", config.AWSProfile, config.LogBucketName)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
@@ -409,9 +400,7 @@ func Autoscaling(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
-	if err = ErrorCheck(err); err != nil {
-		return err
-	}
+	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s -var domain=%s -var subdomain=%s -var keypair=%s", config.AWSProfile, config.DomainName, config.Subdomain, config.AwsKeypair)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
@@ -431,9 +420,6 @@ func DestroyAutoscaling(top_level_dir, environ string) error {
 
 	err := os.Chdir(fmt.Sprintf("terraform/%s/autoscaling", environ))
 	ErrorCheck(err)
-	if err = ErrorCheck(err); err != nil {
-		return err
-	}
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s -var domain=%s -var subdomain=%s -var keypair=%s", config.AWSProfile, config.DomainName, config.Subdomain, config.AwsKeypair)
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
 	logger.Info(args)
