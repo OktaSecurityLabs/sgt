@@ -24,6 +24,8 @@ import (
 	osq_types "github.com/oktasecuritylabs/sgt/osquery_types"
 )
 
+var spin = spinner.New(spinner.CharSets[43], time.Millisecond*500)
+
 type DeploymentConfig struct {
 	Environment                 string `json:"environment"`
 	AWSProfile                  string `json:"aws_profile"`
@@ -82,14 +84,14 @@ func ParseDeploymentConfig(environ string) DeploymentConfig {
 		logger.Fatal(err)
 	}
 
-	if err = depConf.CheckEnvironMatchConfig(environ); err != nil {
+	if err = depConf.checkEnvironMatchConfig(environ); err != nil {
 		logger.Fatal(err)
 	}
 
 	return depConf
 }
 
-func (d DeploymentConfig) CheckEnvironMatchConfig(environ string) error {
+func (d DeploymentConfig) checkEnvironMatchConfig(environ string) error {
 	if d.Environment != environ {
 		return errors.New("config environment and passed environment variable do not match")
 	}
@@ -139,15 +141,13 @@ func VPC(top_level_dir, environ string) error {
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s", config.AWSProfile)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	cmd = exec.Command("bash", "-c", args)
 	stdoutStderr, err = cmd.CombinedOutput()
 	logger.Info(string(stdoutStderr))
-	s.Stop()
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
-	s.Stop()
 	return nil
 }
 
@@ -178,7 +178,6 @@ func Datastore(top_level_dir, environ string) error {
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
-	//s.Stop()
 	return nil
 }
 
@@ -273,11 +272,10 @@ func Elasticsearch(top_level_dir, environ string) error {
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd = exec.Command("bash", "-c", args)
-	s := spinner.New(spinner.CharSets[43], 500*time.Millisecond)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	stdoutStderr, err = cmd.CombinedOutput()
 	logger.Info(string(stdoutStderr))
-	s.Stop()
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
 	time.Sleep(time.Second * 10)
@@ -311,11 +309,11 @@ func Firehose(top_level_dir, environ string) error {
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s -var s3_bucket_name=%s", config.AWSProfile, config.LogBucketName)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	cmd = exec.Command("bash", "-c", args)
 	stdoutStderr, err = cmd.CombinedOutput()
-	s.Stop()
+
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
@@ -405,10 +403,10 @@ func Autoscaling(top_level_dir, environ string) error {
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd = exec.Command("bash", "-c", args)
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	stdoutStderr, err = cmd.CombinedOutput()
-	s.Stop()
+
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
@@ -424,10 +422,10 @@ func DestroyAutoscaling(top_level_dir, environ string) error {
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd := exec.Command("bash", "-c", args)
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	stdoutStderr, err := cmd.CombinedOutput()
-	s.Stop()
+
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
@@ -477,9 +475,9 @@ func DestroyFirehose(top_level_dir, environ string) error {
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd := exec.Command("bash", "-c", args)
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
+	spin.Start()
+	defer spin.Stop()
 	stdoutStderr, err := cmd.CombinedOutput()
-	s.Stop()
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
@@ -497,10 +495,10 @@ func DestroyElasticsearch(top_level_dir, environ string) error {
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd := exec.Command("bash", "-c", args)
-	s := spinner.New(spinner.CharSets[43], 500*time.Millisecond)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	stdoutStderr, err := cmd.CombinedOutput()
-	s.Stop()
+
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
@@ -522,7 +520,6 @@ func DestroyDatastore(top_level_dir, environ string) error {
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
-	//s.Stop()
 	return nil
 }
 
@@ -535,10 +532,10 @@ func DestroyVPC(top_level_dir, environ string) error {
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd := exec.Command("bash", "-c", args)
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	stdoutStderr, err := cmd.CombinedOutput()
-	s.Stop()
+
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
@@ -780,8 +777,8 @@ func DeployDefaultPacks(config DeploymentConfig, environ string) error {
 			return err
 		}
 	}
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	for _, fn := range files {
 		_, filename := filepath.Split(fn)
 		if strings.HasSuffix(filename, "json") {
@@ -828,7 +825,7 @@ func DeployDefaultPacks(config DeploymentConfig, environ string) error {
 			}
 		}
 	}
-	s.Stop()
+
 	return nil
 }
 
@@ -857,8 +854,8 @@ func DeployDefaultConfigs(config DeploymentConfig, environ string) error {
 			return err
 		}
 	}
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	credfile, err := UserAwsCredFile()
 	if err != nil {
 		logger.Fatal(err)
@@ -915,7 +912,7 @@ func DeployDefaultConfigs(config DeploymentConfig, environ string) error {
 		named_config.Osquery_config = config
 		mu := sync.Mutex{}
 		ans := dyndb.UpsertNamedConfig(dync_svc, &named_config, mu)
-		s.Stop()
+
 		if ans {
 			logger.Infof("%s: success\n", named_config.Config_name)
 		} else {
