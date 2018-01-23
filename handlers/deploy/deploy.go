@@ -68,7 +68,7 @@ func ErrorCheck(err error) {
 
 // ParseDeploymentConfig returns the loaded config given its path
 // on disk or exits with status 1 on failure
-func ParseDeploymentConfig(environ string) *DeploymentConfig {
+func ParseDeploymentConfig(environ string) DeploymentConfig {
 	configFilePath := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	file, err := os.Open(configFilePath)
 	if err != nil {
@@ -77,8 +77,8 @@ func ParseDeploymentConfig(environ string) *DeploymentConfig {
 
 	decoder := json.NewDecoder(file)
 
-	depConf := &DeploymentConfig{}
-	if err = decoder.Decode(depConf); err != nil {
+	depConf := DeploymentConfig{}
+	if err = decoder.Decode(&depConf); err != nil {
 		logger.Fatal(err)
 	}
 
@@ -89,7 +89,7 @@ func ParseDeploymentConfig(environ string) *DeploymentConfig {
 	return depConf
 }
 
-func (d *DeploymentConfig) CheckEnvironMatchConfig(environ string) error {
+func (d DeploymentConfig) CheckEnvironMatchConfig(environ string) error {
 	if d.Environment != environ {
 		return errors.New("config environment and passed environment variable do not match")
 	}
@@ -545,7 +545,7 @@ func DestroyVPC(top_level_dir, environ string) error {
 	return nil
 }
 
-func DeployAll(config *DeploymentConfig, top_level_dir, environ string) error {
+func DeployAll(config DeploymentConfig, top_level_dir, environ string) error {
 	err := VPC(top_level_dir, environ)
 	if err != nil {
 		logger.Error(err)
@@ -732,7 +732,7 @@ func DeployWizard() error {
 			logger.Error(err)
 			return err
 		}
-		err = DeployAll(&config, curdir, config.Environment)
+		err = DeployAll(config, curdir, config.Environment)
 		if err != nil {
 			logger.Error(err)
 			return err
@@ -770,7 +770,7 @@ type TFOutput struct {
 	Value     string `json:"value"`
 }
 
-func DeployDefaultPacks(config *DeploymentConfig, environ string) error {
+func DeployDefaultPacks(config DeploymentConfig, environ string) error {
 	var files []string
 
 	//if environ specific dir exists in packs, deploy those.  Otherwise use defaults
@@ -843,7 +843,7 @@ func DeployDefaultPacks(config *DeploymentConfig, environ string) error {
 	return nil
 }
 
-func DeployDefaultConfigs(config *DeploymentConfig, environ string) error {
+func DeployDefaultConfigs(config DeploymentConfig, environ string) error {
 	var files []string
 
 	//if environ specific dir exists in packs, deploy those.  Otherwise use defaults
@@ -964,7 +964,7 @@ func FindAndReplace(filename, original, replacement string) error {
 	return nil
 }
 
-func GenerateEndpointDeployScripts(config *DeploymentConfig, environ string) error {
+func GenerateEndpointDeployScripts(config DeploymentConfig, environ string) error {
 	logger.Infof("Updating endpoint deployments scripts for %s environment...\n", environ)
 
 	// make sure all dirs are created
