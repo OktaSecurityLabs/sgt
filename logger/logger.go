@@ -22,6 +22,10 @@ func Info(args ...interface{}) {
 	logger.Info(args...)
 }
 
+func Infof(format string, args ...interface{}) {
+	logger.Infof(format, args...)
+}
+
 func Debug(args ...interface{}) {
 	logger.Debug(args...)
 }

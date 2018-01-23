@@ -169,8 +169,7 @@ func main() {
 			if *all {
 				err := deploy.DeployAll(config, curdir, *environ)
 				if err != nil {
-					logger.Error(err)
-					os.Exit(0)
+					logger.Fatal(err)
 				}
 			} else {
 				if *vpc {

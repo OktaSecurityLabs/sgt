@@ -24,6 +24,8 @@ import (
 	osq_types "github.com/oktasecuritylabs/sgt/osquery_types"
 )
 
+var spin = spinner.New(spinner.CharSets[43], time.Millisecond*500)
+
 type DeploymentConfig struct {
 	Environment                 string `json:"environment"`
 	AWSProfile                  string `json:"aws_profile"`
@@ -60,18 +62,15 @@ func CopyFile(src, dst string) error {
 	return out.Close()
 }
 
-func ErrorCheck(err error) error {
+func ErrorCheck(err error) {
 	if err != nil {
-		logger.Error(err)
 		logger.Fatal(err)
-		return err
 	}
-	return nil
 }
 
 // ParseDeploymentConfig returns the loaded config given its path
 // on disk or exits with status 1 on failure
-func ParseDeploymentConfig(environ string) *DeploymentConfig {
+func ParseDeploymentConfig(environ string) DeploymentConfig {
 	configFilePath := fmt.Sprintf("terraform/%s/%s.json", environ, environ)
 	file, err := os.Open(configFilePath)
 	if err != nil {
@@ -80,19 +79,19 @@ func ParseDeploymentConfig(environ string) *DeploymentConfig {
 
 	decoder := json.NewDecoder(file)
 
-	depConf := &DeploymentConfig{}
-	if err = decoder.Decode(depConf); err != nil {
+	depConf := DeploymentConfig{}
+	if err = decoder.Decode(&depConf); err != nil {
 		logger.Fatal(err)
 	}
 
-	if err = depConf.CheckEnvironMatchConfig(environ); err != nil {
+	if err = depConf.checkEnvironMatchConfig(environ); err != nil {
 		logger.Fatal(err)
 	}
 
 	return depConf
 }
 
-func (d *DeploymentConfig) CheckEnvironMatchConfig(environ string) error {
+func (d DeploymentConfig) checkEnvironMatchConfig(environ string) error {
 	if d.Environment != environ {
 		return errors.New("config environment and passed environment variable do not match")
 	}
@@ -102,7 +101,7 @@ func (d *DeploymentConfig) CheckEnvironMatchConfig(environ string) error {
 func CreateDeployDirectory(environ string) error {
 	path := fmt.Sprintf("terraform/%s", environ)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		logger.Info(fmt.Sprintf("creating new deployment environment: %s", environ))
+		logger.Infof("creating new deployment environment: %s\n", environ)
 		os.Mkdir(path, 0755)
 	} else {
 		logger.Info("environment already exists, are you sure you meant to to use deploy to\n")
@@ -114,7 +113,7 @@ func CreateDeployDirectory(environ string) error {
 		dir := filepath.Join(path, p)
 		//logger.Info(dir)
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			logger.Info(fmt.Sprintf("Creating %s directory", dir))
+			logger.Infof("Creating %s directory\n", dir)
 			os.Mkdir(dir, 0755)
 		}
 	}
@@ -138,21 +137,17 @@ func VPC(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
-	if err = ErrorCheck(err); err != nil {
-		return err
-	}
+	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s", config.AWSProfile)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	cmd = exec.Command("bash", "-c", args)
 	stdoutStderr, err = cmd.CombinedOutput()
 	logger.Info(string(stdoutStderr))
-	s.Stop()
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
-	s.Stop()
 	return nil
 }
 
@@ -183,7 +178,6 @@ func Datastore(top_level_dir, environ string) error {
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
-	//s.Stop()
 	return nil
 }
 
@@ -273,18 +267,15 @@ func Elasticsearch(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
-	if err = ErrorCheck(err); err != nil {
-		return err
-	}
+	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s -var user_ip_address=%s", config.AWSProfile, config.UserIPAddress)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd = exec.Command("bash", "-c", args)
-	s := spinner.New(spinner.CharSets[43], 500*time.Millisecond)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	stdoutStderr, err = cmd.CombinedOutput()
 	logger.Info(string(stdoutStderr))
-	s.Stop()
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
 	time.Sleep(time.Second * 10)
@@ -314,17 +305,15 @@ func Firehose(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
-	if err = ErrorCheck(err); err != nil {
-		return err
-	}
+	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s -var s3_bucket_name=%s", config.AWSProfile, config.LogBucketName)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	cmd = exec.Command("bash", "-c", args)
 	stdoutStderr, err = cmd.CombinedOutput()
-	s.Stop()
+
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
@@ -409,17 +398,15 @@ func Autoscaling(top_level_dir, environ string) error {
 	ErrorCheck(err)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
-	if err = ErrorCheck(err); err != nil {
-		return err
-	}
+	ErrorCheck(err)
 	//args := fmt.Sprintf("terraform apply -var aws_profile=%s -var domain=%s -var subdomain=%s -var keypair=%s", config.AWSProfile, config.DomainName, config.Subdomain, config.AwsKeypair)
 	args := fmt.Sprintf("terraform apply -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd = exec.Command("bash", "-c", args)
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	stdoutStderr, err = cmd.CombinedOutput()
-	s.Stop()
+
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
@@ -431,17 +418,14 @@ func DestroyAutoscaling(top_level_dir, environ string) error {
 
 	err := os.Chdir(fmt.Sprintf("terraform/%s/autoscaling", environ))
 	ErrorCheck(err)
-	if err = ErrorCheck(err); err != nil {
-		return err
-	}
 	//args := fmt.Sprintf("terraform destroy -force -var aws_profile=%s -var domain=%s -var subdomain=%s -var keypair=%s", config.AWSProfile, config.DomainName, config.Subdomain, config.AwsKeypair)
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd := exec.Command("bash", "-c", args)
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	stdoutStderr, err := cmd.CombinedOutput()
-	s.Stop()
+
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
@@ -491,9 +475,9 @@ func DestroyFirehose(top_level_dir, environ string) error {
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd := exec.Command("bash", "-c", args)
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
+	spin.Start()
+	defer spin.Stop()
 	stdoutStderr, err := cmd.CombinedOutput()
-	s.Stop()
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
@@ -511,10 +495,10 @@ func DestroyElasticsearch(top_level_dir, environ string) error {
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd := exec.Command("bash", "-c", args)
-	s := spinner.New(spinner.CharSets[43], 500*time.Millisecond)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	stdoutStderr, err := cmd.CombinedOutput()
-	s.Stop()
+
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
@@ -536,7 +520,6 @@ func DestroyDatastore(top_level_dir, environ string) error {
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
-	//s.Stop()
 	return nil
 }
 
@@ -549,66 +532,56 @@ func DestroyVPC(top_level_dir, environ string) error {
 	args := fmt.Sprintf("terraform destroy -force -var-file=../%s.json", environ)
 	logger.Info(args)
 	cmd := exec.Command("bash", "-c", args)
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	stdoutStderr, err := cmd.CombinedOutput()
-	s.Stop()
+
 	logger.Info(string(stdoutStderr))
 	err = os.Chdir(top_level_dir)
 	ErrorCheck(err)
 	return nil
 }
 
-func DeployAll(config *DeploymentConfig, top_level_dir, environ string) error {
+func DeployAll(config DeploymentConfig, top_level_dir, environ string) error {
 	err := VPC(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = Datastore(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = Elasticsearch(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = Firehose(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = S3(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = Secrets(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = Autoscaling(top_level_dir, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = DeployDefaultPacks(config, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = DeployDefaultConfigs(config, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	err = GenerateEndpointDeployScripts(config, environ)
 	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return err
 	}
 	return nil
 }
@@ -746,10 +719,9 @@ func DeployWizard() error {
 			logger.Error(err)
 			return err
 		}
-		err = DeployAll(&config, curdir, config.Environment)
+		err = DeployAll(config, curdir, config.Environment)
 		if err != nil {
-			logger.Error(err)
-			return err
+			logger.Fatal(err)
 		}
 	}
 	return nil
@@ -784,12 +756,12 @@ type TFOutput struct {
 	Value     string `json:"value"`
 }
 
-func DeployDefaultPacks(config *DeploymentConfig, environ string) error {
+func DeployDefaultPacks(config DeploymentConfig, environ string) error {
 	var files []string
 
 	//if environ specific dir exists in packs, deploy those.  Otherwise use defaults
 	if _, err := os.Stat(filepath.Join("packs", environ)); os.IsNotExist(err) {
-		logger.Info(fmt.Sprintf("No environment specific packs found for: %s", environ))
+		logger.Infof("No environment specific packs found for: %s\n", environ)
 		logger.Info("using default packs")
 		files, err = filepath.Glob("packs/*")
 		if err != nil {
@@ -797,7 +769,7 @@ func DeployDefaultPacks(config *DeploymentConfig, environ string) error {
 			return err
 		}
 	} else {
-		logger.Info(fmt.Sprintf("Environment specific folder found for: %s \nUsing %s query packs", environ, environ))
+		logger.Infof("Environment specific folder found for: %s\nUsing %s query packs\n", environ, environ)
 		path := fmt.Sprintf("packs/%s/*", environ)
 		files, err = filepath.Glob(path)
 		if err != nil {
@@ -805,8 +777,8 @@ func DeployDefaultPacks(config *DeploymentConfig, environ string) error {
 			return err
 		}
 	}
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	for _, fn := range files {
 		_, filename := filepath.Split(fn)
 		if strings.HasSuffix(filename, "json") {
@@ -853,17 +825,17 @@ func DeployDefaultPacks(config *DeploymentConfig, environ string) error {
 			}
 		}
 	}
-	s.Stop()
+
 	return nil
 }
 
-func DeployDefaultConfigs(config *DeploymentConfig, environ string) error {
+func DeployDefaultConfigs(config DeploymentConfig, environ string) error {
 	var files []string
 
 	//if environ specific dir exists in packs, deploy those.  Otherwise use defaults
 	env_specific_configs := false
 	if _, err := os.Stat(filepath.Join("osquery_configs", environ)); os.IsNotExist(err) {
-		logger.Info(fmt.Sprintf("No environment specific configs found for: %s", environ))
+		logger.Infof("No environment specific configs found for: %s\n", environ)
 		logger.Info("using default configs")
 		files, err = filepath.Glob("osquery_configs/defaults/*")
 		environ = "defaults"
@@ -873,7 +845,7 @@ func DeployDefaultConfigs(config *DeploymentConfig, environ string) error {
 			return err
 		}
 	} else {
-		logger.Info(fmt.Sprintf("Environment specific folder found for: %s \nUsing %s configs", environ, environ))
+		logger.Infof("Environment specific folder found for: %s\nUsing %s configs\n", environ, environ)
 		path := fmt.Sprintf("osquery_configs/%s/*", environ)
 		env_specific_configs = true
 		files, err = filepath.Glob(path)
@@ -882,8 +854,8 @@ func DeployDefaultConfigs(config *DeploymentConfig, environ string) error {
 			return err
 		}
 	}
-	s := spinner.New(spinner.CharSets[43], time.Millisecond*500)
-	s.Start()
+	spin.Start()
+	defer spin.Stop()
 	credfile, err := UserAwsCredFile()
 	if err != nil {
 		logger.Fatal(err)
@@ -940,11 +912,11 @@ func DeployDefaultConfigs(config *DeploymentConfig, environ string) error {
 		named_config.Osquery_config = config
 		mu := sync.Mutex{}
 		ans := dyndb.UpsertNamedConfig(dync_svc, &named_config, mu)
-		s.Stop()
+
 		if ans {
-			logger.Info(fmt.Sprintf("%s: success", named_config.Config_name))
+			logger.Infof("%s: success\n", named_config.Config_name)
 		} else {
-			logger.Info(fmt.Sprintf("%s: failed", named_config.Config_name))
+			logger.Infof("%s: failed\n", named_config.Config_name)
 		}
 	}
 	return nil
@@ -978,8 +950,8 @@ func FindAndReplace(filename, original, replacement string) error {
 	return nil
 }
 
-func GenerateEndpointDeployScripts(config *DeploymentConfig, environ string) error {
-	logger.Info(fmt.Sprintf("Updating endpoint deployments scripts for %s environment...", environ))
+func GenerateEndpointDeployScripts(config DeploymentConfig, environ string) error {
+	logger.Infof("Updating endpoint deployments scripts for %s environment...\n", environ)
 
 	// make sure all dirs are created
 	err := CreateDirIfNotExists(filepath.Join("endpoints", "deploy", environ))
