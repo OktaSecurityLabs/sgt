@@ -27,14 +27,8 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-/*func init() {
-	//logger.SetFormatter(&logger.JSONFormatter{/I//})
-	f, _ := os.OpenFile("/var/log/osquery-sgt", os.O_WRONLY | os.O_CREATE, 0755)
-	logger.SetOutput(f)
-	logger.SetLevel(logger.InfoLevel)
-}
-*/
 
+//SsmClient returns an instance of ssm client with credentials provided by ec2 assumed role
 func SsmClient() *ssm.SSM {
 	sess := session.Must(session.NewSession(
 		&aws.Config{
@@ -47,13 +41,14 @@ func SsmClient() *ssm.SSM {
 				Client: ec2metadata.New(sess),
 			},
 		})
-	ssm_svc := ssm.New(session.Must(session.NewSession(&aws.Config{
+	ssmSVC := ssm.New(session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String("us-east-1"),
 		Credentials: creds,
 	})))
-	return ssm_svc
+	return ssmSVC
 }
 
+//GetSsmParam returns value of a named ssm parameter
 func GetSsmParam(s string) (string, error) {
 	svc := SsmClient()
 	ans, err := svc.GetParameter(&ssm.GetParameterInput{
@@ -64,19 +59,23 @@ func GetSsmParam(s string) (string, error) {
 		logger.Error(err)
 		return "", err
 	}
-	param_val := *ans.Parameter.Value
-	return param_val, nil
+	paramValue := *ans.Parameter.Value
+	return paramValue, nil
 }
 
+//CrendentialedDbInstance returns an instance of dynamodb using an aws credential profile
 func CrendentialedDbInstance(fn, profile string) *dynamodb.DynamoDB {
 	creds := credentials.NewSharedCredentials(fn, profile)
-	dyn_svc := dynamodb.New(session.Must(session.NewSession(&aws.Config{
+	dynDB := dynamodb.New(session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String("us-east-1"),
 		Credentials: creds,
 	})))
-	return dyn_svc
+	return dynDB
 }
 
+//GetPass gets password
+//
+// Deprecated: no longer in use
 func GetPass() ([]byte, error) {
 	fmt.Println("Enter Password")
 	pass, err := terminal.ReadPassword(0)
@@ -87,7 +86,8 @@ func GetPass() ([]byte, error) {
 	return pass, nil
 }
 
-func NewUser(credentials_file, profile, username, role string) error {
+//NewUser creates new user
+func NewUser(credentialsFile, profile, username, role string) error {
 	u := osquery_types.User{}
 	u.Username = username
 	logger.Info("Enter password")
@@ -105,11 +105,11 @@ func NewUser(credentials_file, profile, username, role string) error {
 	if err != nil {
 		logger.Error(err)
 	}
-	dyn_svc := CrendentialedDbInstance(credentials_file, profile)
+	dynDB := CrendentialedDbInstance(credentialsFile, profile)
 	u.Password = hash
 	u.Role = role
 	mu := sync.Mutex{}
-	err = dyndb.NewUser(u, dyn_svc, mu)
+	err = dyndb.NewUser(u, dynDB, mu)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -117,12 +117,13 @@ func NewUser(credentials_file, profile, username, role string) error {
 	return nil
 }
 
+//ValidateUser checks if user is valid
 func ValidateUser(request *http.Request) error {
-	type user_post struct {
+	type userPost struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
-	up := user_post{}
+	up := userPost{}
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		panic(err)
@@ -132,8 +133,8 @@ func ValidateUser(request *http.Request) error {
 		logger.Error(err)
 		return err
 	}
-	dyn_svc := dyndb.DbInstance()
-	user, err := dyndb.GetUser(up.Username, dyn_svc)
+	dynDB := dyndb.DbInstance()
+	user, err := dyndb.GetUser(up.Username, dynDB)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -145,15 +146,15 @@ func ValidateUser(request *http.Request) error {
 	return nil
 }
 
+//GetTokenHandler handles requests to get-token api endpoint
 func GetTokenHandler(respwritter http.ResponseWriter, request *http.Request) {
 	err := ValidateUser(request)
 	if err != nil {
 		logger.Error(err)
 		respwritter.Write([]byte(`{"Error": "Invalid Username or Password"`))
 		return
-	} else {
-		logger.Info("valid user!")
 	}
+	logger.Info("valid user!")
 	appSecret, err := GetSsmParam("sgt_app_secret")
 	secret := []byte(appSecret)
 	if err != nil {
@@ -175,13 +176,14 @@ func GetTokenHandler(respwritter http.ResponseWriter, request *http.Request) {
 	respwritter.Write([]byte(fmt.Sprintf(`{"Authorization": %q}`, tokenString)))
 }
 
+//AnotherValidation validates authorization tokens.  Is poorly named and up for refactor as time permits
 func AnotherValidation(respwritter http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 	appSecret, err := (GetSsmParam("sgt_app_secret"))
 	secret := []byte(appSecret)
 	if err != nil {
 		logger.Error(err)
 		logger.Info("Invalid User or Password")
-		respwritter.Write([]byte(`{"Error": "Invalid Username or Password"`))
+		respwritter.Write([]byte(`{"Error": "Invalid Username or Password"}`))
 		return
 	}
 	token, err := request.ParseFromRequest(req, request.AuthorizationHeaderExtractor,
@@ -198,6 +200,7 @@ func AnotherValidation(respwritter http.ResponseWriter, req *http.Request, next 
 	}
 }
 
+//GetNodeSecret gets current node secret from ssm parameter store
 func GetNodeSecret() (string, error) {
 	secret, err := GetSsmParam("sgt_node_secret")
 	if err != nil {
@@ -207,17 +210,19 @@ func GetNodeSecret() (string, error) {
 	return secret, nil
 }
 
+//NodeConfigurePost type for handling post requests made by node
 type NodeConfigurePost struct {
-	Enroll_secret   string `json:"enroll_secret"`
-	Node_key        string `json:"node_key"`
-	Host_identifier string `json:"host_identifier"`
+	EnrollSecret   string `json:"enroll_secret"`
+	NodeKey        string `json:"node_key"`
+	HostIdentifier string `json:"host_identifier"`
 }
 
+//ValidNodeKey validates posted node key
 func ValidNodeKey(respwritter http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 	logger.Info("validating node...")
 
 	//req_copy := req
-	dyn_svc := dyndb.DbInstance()
+	dynDB := dyndb.DbInstance()
 	respwritter.Header().Set("Content-Type", "application/json")
 	body, err := ioutil.ReadAll(req.Body)
 	req.Body.Close()
@@ -237,17 +242,17 @@ func ValidNodeKey(respwritter http.ResponseWriter, req *http.Request, next http.
 		respwritter.Write([]byte(`{"Error": "Invalid Credentials"}`))
 		return
 	}
-	valid_node, err := dyndb.ValidNode(data.Node_key, dyn_svc)
+	validNode, err := dyndb.ValidNode(data.NodeKey, dynDB)
 	if err != nil {
 		logger.Error(err)
 		respwritter.Write([]byte(`{"Error": "Invalid Credentials"}`))
 		return
 	}
-	if !valid_node {
+	if !validNode {
 		respwritter.Write([]byte(`{"Error": "Invalid Credentials"}`))
 		return
 	}
-	if valid_node {
+	if validNode {
 		next(respwritter, req)
 	}
 }
