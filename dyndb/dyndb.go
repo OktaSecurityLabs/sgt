@@ -75,6 +75,28 @@ func UpsertNamedConfig(dynamoDB *dynamodb.DynamoDB, onc *osq_types.OsqueryNamedC
 	return true
 }
 
+//GetNamedConfigs returns all named configs
+func GetNamedConfigs(dynamoDB *dynamodb.DynamoDB) ([]osq_types.OsqueryNamedConfig, error) {
+	results := []osq_types.OsqueryNamedConfig{}
+	scanItems, err := dynamoDB.Scan(&dynamodb.ScanInput{
+		TableName: aws.String("osquery_configurations"),
+	})
+	if err != nil {
+		logger.Error(err)
+		return results, err
+	}
+	for _, i := range scanItems.Items {
+		config := osq_types.OsqueryNamedConfig{}
+		err = dynamodbattribute.UnmarshalMap(i, &config)
+		if err != nil {
+			logger.Error(err)
+			return results, err
+		}
+		results = append(results, config)
+	}
+	return results, nil
+}
+
 //GetNamedConfig returns named config specified by string configName
 func GetNamedConfig(dynamoDB *dynamodb.DynamoDB, configName string) (osq_types.OsqueryNamedConfig, error) {
 	namedConfig := osq_types.OsqueryNamedConfig{}
