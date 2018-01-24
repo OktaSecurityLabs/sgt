@@ -22,6 +22,23 @@ func init() {
 	})
 }
 
+func GetNamedConfigs(w http.ResponseWriter, r *http.Request) {
+	dynDBInstance := dyndb.DbInstance()
+	ans, err := dyndb.GetNamedConfigs(dynDBInstance)
+	if err != nil {
+		logger.Error(err)
+		w.Write([]byte(`{"error": true}`))
+		return
+	}
+	js, err := json.Marshal(ans)
+	if err != nil {
+		logger.Error(err)
+		w.Write([]byte(`{"error": true}`))
+		return
+	}
+	w.Write(js)
+}
+
 //ConfigurationRequest accepts a json post body of a NamedConfig
 func ConfigurationRequest(respwritter http.ResponseWriter, request *http.Request) {
 	mu := sync.Mutex{}
