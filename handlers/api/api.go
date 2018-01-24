@@ -18,7 +18,7 @@ import (
 func init() {
 	//logger.SetFormatter(&logger.JSONFormatter{/I//})
 	logger.WithFields(log.Fields{
-		"Module": "",
+		"Module": "API",
 	})
 }
 
