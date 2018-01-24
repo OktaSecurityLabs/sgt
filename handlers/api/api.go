@@ -18,17 +18,18 @@ import (
 func init() {
 	//logger.SetFormatter(&logger.JSONFormatter{/I//})
 	logger.WithFields(log.Fields{
-		"Module": "API",
+		"Module": "",
 	})
 }
 
-func APIConfigurationRequest(respwritter http.ResponseWriter, request *http.Request) {
+//ConfigurationRequest accepts a json post body of a NamedConfig
+func ConfigurationRequest(respwritter http.ResponseWriter, request *http.Request) {
 	mu := sync.Mutex{}
-	dyn_svc := dyndb.DbInstance()
+	dynDBInstance := dyndb.DbInstance()
 	vars := mux.Vars(request)
 	if request.Method == "GET" {
 		if vars["config_name"] == "" {
-			ans, err := dyndb.GetNamedConfig(dyn_svc, vars["config_name"])
+			ans, err := dyndb.GetNamedConfig(dynDBInstance, vars["config_name"])
 			if err != nil {
 				logger.Error(err)
 			}
@@ -40,7 +41,7 @@ func APIConfigurationRequest(respwritter http.ResponseWriter, request *http.Requ
 			//return list of configs
 		} else {
 			//return named config
-			ans, err := dyndb.GetNamedConfig(dyn_svc, vars["config_name"])
+			ans, err := dyndb.GetNamedConfig(dynDBInstance, vars["config_name"])
 			if err != nil {
 				logger.Error(err)
 			}
@@ -57,16 +58,16 @@ func APIConfigurationRequest(respwritter http.ResponseWriter, request *http.Requ
 			return
 		}
 		//Create base osquery named config with default options
-		named_config := osquery_types.OsqueryNamedConfig{}
-		named_config.Osquery_config.Options = osquery_types.NewOsqueryOptions()
-		existing_named_config, err := dyndb.GetNamedConfig(dyn_svc, vars["config_name"])
+		namedConfig := osquery_types.OsqueryNamedConfig{}
+		namedConfig.Osquery_config.Options = osquery_types.NewOsqueryOptions()
+		existingNamedConfig, err := dyndb.GetNamedConfig(dynDBInstance, vars["config_name"])
 		//now merge what's already in teh database with our defaults
-		js, err := json.Marshal(existing_named_config)
+		js, err := json.Marshal(existingNamedConfig)
 		if err != nil {
 			logger.Error(err)
 			return
 		}
-		err = json.Unmarshal(js, &named_config)
+		err = json.Unmarshal(js, &namedConfig)
 		if err != nil {
 			logger.Error(err)
 			return
@@ -77,17 +78,17 @@ func APIConfigurationRequest(respwritter http.ResponseWriter, request *http.Requ
 			panic(err)
 		}
 		//overlay default + existing with options provided by user
-		err = json.Unmarshal(body, &named_config)
+		err = json.Unmarshal(body, &namedConfig)
 		if err != nil {
 			panic(fmt.Sprintln(err, os.Stdout))
 		}
-		if vars["config_name"] != named_config.Config_name {
+		if vars["config_name"] != namedConfig.Config_name {
 			respwritter.Write([]byte(`{"result":"failure", "reason": "named config endpoint does not match posted data config_name"}`))
 			return
 		}
-		ans := dyndb.UpsertNamedConfig(dyn_svc, &named_config, mu)
+		ans := dyndb.UpsertNamedConfig(dynDBInstance, &namedConfig, mu)
 		if ans {
-			js, err := json.Marshal(named_config)
+			js, err := json.Marshal(namedConfig)
 			if err != nil {
 				respwritter.Write([]byte(`{"result":"failure"}`))
 				return
@@ -99,14 +100,13 @@ func APIConfigurationRequest(respwritter http.ResponseWriter, request *http.Requ
 	return
 }
 
-//(/api/v1/configure/node/{node_key}
-//node
 
-func APIGetNodes(respwritter http.ResponseWriter, request *http.Request) {
-	dyn_svc := dyndb.DbInstance()
+//GetNodes returns json reponse of a list of nodes
+func GetNodes(respwritter http.ResponseWriter, request *http.Request) {
+	dynDBInstance := dyndb.DbInstance()
 	//nodes := osquery_types.OsqueryClient{}
 	if request.Method == "GET" {
-		results, err := dyndb.SearchByHostIdentifier("", dyn_svc)
+		results, err := dyndb.SearchByHostIdentifier("", dynDBInstance)
 		if err != nil {
 			logger.Error(err)
 			return
@@ -121,11 +121,13 @@ func APIGetNodes(respwritter http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func APIConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
-	dyn_svc := dyndb.DbInstance()
+
+//ConfigureNode accepts json node configuration
+func ConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
+	dynDBInstance := dyndb.DbInstance()
 	mu := sync.Mutex{}
 	vars := mux.Vars(request)
-	node_key := vars["node_key"]
+	nodeKey := vars["nodeKey"]
 	client := osquery_types.OsqueryClient{}
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
@@ -135,8 +137,8 @@ func APIConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 	err = json.Unmarshal(body, &client)
 	logger.Warn("%v", client)
 	if request.Method == "GET" {
-		if vars["node_key"] != "" {
-			result, err := dyndb.SearchByNodeKey(client.Node_key, dyn_svc)
+		if vars["nodeKey"] != "" {
+			result, err := dyndb.SearchByNodeKey(client.Node_key, dynDBInstance)
 			if err != nil {
 				logger.Error(err)
 			}
@@ -151,42 +153,42 @@ func APIConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 		}
 	}
 	if request.Method == "POST" {
-		if vars["node_key"] != "" {
+		if vars["nodeKey"] != "" {
 			//verify that node exists
 			//get existing client config
-			existing_client, err := dyndb.SearchByNodeKey(node_key, dyn_svc)
+			existingClient, err := dyndb.SearchByNodeKey(nodeKey, dynDBInstance)
 			if err != nil {
 				logger.Error(err)
 			}
-			logger.Warn("%v", existing_client)
+			logger.Warn("%v", existingClient)
 			if err != nil {
 				logger.Error(err)
 				respwritter.Write([]byte(`{"error": "node invalid"}`))
 				return
 			}
-			if len(existing_client.Node_key) > 0 {
+			if len(existingClient.Node_key) > 0 {
 				//map missing keys to client
-				client.Node_key = node_key
+				client.Node_key = nodeKey
 				if len(client.Config_name) <= 0 {
-					client.Config_name = existing_client.Config_name
+					client.Config_name = existingClient.Config_name
 				}
-				client.Host_identifier = existing_client.Host_identifier
+				client.Host_identifier = existingClient.Host_identifier
 				if client.Node_invalid != true {
 					if client.Node_invalid != false {
-						client.Node_invalid = existing_client.Node_invalid
+						client.Node_invalid = existingClient.Node_invalid
 					}
 				}
-				client.HostDetails = existing_client.HostDetails
+				client.HostDetails = existingClient.HostDetails
 				if client.Pending_registration_approval != false {
 					if client.Pending_registration_approval != true {
-						client.Pending_registration_approval = existing_client.Pending_registration_approval
+						client.Pending_registration_approval = existingClient.Pending_registration_approval
 					}
 				}
 				if len(client.Tags) < 1 {
-					client.Tags = existing_client.Tags
+					client.Tags = existingClient.Tags
 				}
 				logger.Warn("%v", client)
-				err := dyndb.UpsertClient(client, dyn_svc, mu)
+				err := dyndb.UpsertClient(client, dynDBInstance, mu)
 				if err != nil {
 					logger.Error(err)
 					respwritter.Write([]byte(`{"error": "update failed"}`))
@@ -201,11 +203,11 @@ func APIConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 				return
 			}
 		}
-		//Results := dyndb.SearchByHostIdentifier("", dyn_svc)
+		//Results := dyndb.SearchByHostIdentifier("", dynDBInstance)
 	}
 	if request.Method == "GET" {
-		//node_key := vars["node_key"]
-		client, err := dyndb.SearchByNodeKey(node_key, dyn_svc)
+		//nodeKey := vars["nodeKey"]
+		client, err := dyndb.SearchByNodeKey(nodeKey, dynDBInstance)
 		if err != nil {
 			logger.Error(err)
 		}
@@ -219,13 +221,14 @@ func APIConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func APIApproveNode(respwritter http.ResponseWriter, request *http.Request) {
-	dync_svc := dyndb.DbInstance()
+//ApproveNode helper function as a shortcut to approving node.  Takes no body input
+func ApproveNode(respwritter http.ResponseWriter, request *http.Request) {
+	dynDBInstance := dyndb.DbInstance()
 	mu := sync.Mutex{}
 	vars := mux.Vars(request)
 	if request.Method == "POST" {
 		logger.Warn("posting approval")
-		err := dyndb.ApprovePendingNode(vars["node_key"], dync_svc, mu)
+		err := dyndb.ApprovePendingNode(vars["nodeKey"], dynDBInstance, mu)
 		if err != nil {
 			logger.Error(err)
 			respwritter.Write([]byte(`{"result": "error"}`))
@@ -236,23 +239,15 @@ func APIApproveNode(respwritter http.ResponseWriter, request *http.Request) {
 	}
 }
 
-//func APIGet
-
-func APIGetPacks(respwritter http.ResponseWriter, request *http.Request) {
-	//dyn_svc := dyndb.DbInstance()
-	//if request.Method == "GET" {
-	//res, err := dyndb.Get
-	//}
-}
-
-func APIGetPackQueries(respwritter http.ResponseWriter, request *http.Request) {
-	type pack_query_list struct {
+//GetPackQueries returns json response of a list of packqueries
+func GetPackQueries(respwritter http.ResponseWriter, request *http.Request) {
+	type packQueryList struct {
 		packqueries []osquery_types.PackQuery `json:"packqueries"`
 	}
-	//pql := pack_query_list{}
-	dyn_svc := dyndb.DbInstance()
+	//pql := packQueryList{}
+	dynDBInstance := dyndb.DbInstance()
 	if request.Method == "GET" {
-		results, err := dyndb.APIGetPackQueries(dyn_svc)
+		results, err := dyndb.GetPackQueries(dynDBInstance)
 		if err != nil {
 			logger.Error(err)
 		}
@@ -264,15 +259,16 @@ func APIGetPackQueries(respwritter http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func APISearchPackQueries(respwritter http.ResponseWriter, request *http.Request) {
+//SearchPackQueries searches all packqueries by substring
+func SearchPackQueries(respwritter http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
-	type pack_query_list struct {
+	type packQueryList struct {
 		packqueries []osquery_types.PackQuery `json:"packqueries"`
 	}
-	//pql := pack_query_list{}
-	dyn_svc := dyndb.DbInstance()
+	//pql := packQueryList{}
+	dynDBInstance := dyndb.DbInstance()
 	if request.Method == "GET" {
-		results, err := dyndb.APISearchPackQueries(vars["search_string"], dyn_svc)
+		results, err := dyndb.SearchPackQueries(vars["search_string"], dynDBInstance)
 		if err != nil {
 			logger.Error(err)
 		}
@@ -284,15 +280,14 @@ func APISearchPackQueries(respwritter http.ResponseWriter, request *http.Request
 	}
 }
 
-//(/api/v1/configure/packs/{pack_name}
-
-func APIGetQueryPacks(respwritter http.ResponseWriter, request *http.Request) {
-	type pack_query_list struct {
+//GetQueryPacks returns all querypacks
+func GetQueryPacks(respwritter http.ResponseWriter, request *http.Request) {
+	type packQueryList struct {
 		QueryPacks []osquery_types.QueryPack `json:"query_packs"`
 	}
-	dyn_svc := dyndb.DbInstance()
+	dynDBInstance := dyndb.DbInstance()
 	if request.Method == "GET" {
-		results, err := dyndb.SearchQueryPacks("", dyn_svc)
+		results, err := dyndb.SearchQueryPacks("", dynDBInstance)
 		if err != nil {
 			logger.Error(err)
 		}
@@ -304,14 +299,15 @@ func APIGetQueryPacks(respwritter http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func APISearchQueryPacks(respwritter http.ResponseWriter, request *http.Request) {
+//SearchQueryPacks search for substring in query pack name
+func SearchQueryPacks(respwritter http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
-	type pack_query_list struct {
+	type packQueryList struct {
 		QueryPacks []osquery_types.QueryPack `json:"query_packs"`
 	}
-	dyn_svc := dyndb.DbInstance()
+	dynDBInstance := dyndb.DbInstance()
 	if request.Method == "GET" {
-		results, err := dyndb.SearchQueryPacks(vars["search_string"], dyn_svc)
+		results, err := dyndb.SearchQueryPacks(vars["search_string"], dynDBInstance)
 		if err != nil {
 			logger.Error(err)
 		}
@@ -323,7 +319,8 @@ func APISearchQueryPacks(respwritter http.ResponseWriter, request *http.Request)
 	}
 }
 
-func APIConfigurePack(respwritter http.ResponseWriter, request *http.Request) {
+//ConfigurePack configures named pack
+func ConfigurePack(respwritter http.ResponseWriter, request *http.Request) {
 	mu := sync.Mutex{}
 	vars := mux.Vars(request)
 	if len(vars["pack_name"]) < 1 {
@@ -332,18 +329,7 @@ func APIConfigurePack(respwritter http.ResponseWriter, request *http.Request) {
 		return
 	}
 	//pname := vars["pack_name"]
-	dyn_svc := dyndb.DbInstance()
-	//if request.Method == "GET" {
-	//logger.Println("GOT GET")
-	//s, err := dyndb.GetPackByName(pname, dyn_svc)
-	//logger.Println(s, err)
-	//if err != nil {
-	//logger.Println(err)
-	//return
-	//}
-	//logger.Println(s)
-	//respwritter.Write([]byte(s))
-	//}
+	dynDBInstance := dyndb.DbInstance()
 	if request.Method == "POST" {
 		body, err := ioutil.ReadAll(request.Body)
 		defer request.Body.Close()
@@ -356,7 +342,7 @@ func APIConfigurePack(respwritter http.ResponseWriter, request *http.Request) {
 			logger.Error(err)
 			return
 		}
-		err = dyndb.UpsertPack(querypack, dyn_svc, mu)
+		err = dyndb.UpsertPack(querypack, dynDBInstance, mu)
 		if err != nil {
 			logger.Error(err)
 			return
@@ -365,7 +351,8 @@ func APIConfigurePack(respwritter http.ResponseWriter, request *http.Request) {
 
 }
 
-func APIConfigurePackQuery(respwritter http.ResponseWriter, request *http.Request) {
+//ConfigurePackQuery accepts post body with packquery config
+func ConfigurePackQuery(respwritter http.ResponseWriter, request *http.Request) {
 	mut := sync.Mutex{}
 	vars := mux.Vars(request)
 	if len(vars["query_name"]) < 1 {
@@ -374,14 +361,14 @@ func APIConfigurePackQuery(respwritter http.ResponseWriter, request *http.Reques
 		return
 	}
 	qname := vars["query_name"]
-	dyn_svc := dyndb.DbInstance()
+	dynDBInstance := dyndb.DbInstance()
 	if request.Method == "GET" {
-		pack_query, err := dyndb.GetPackQuery(qname, dyn_svc)
+		packQuery, err := dyndb.GetPackQuery(qname, dynDBInstance)
 		if err != nil {
 			logger.Error(err)
 			return
 		}
-		js, err := json.Marshal(pack_query)
+		js, err := json.Marshal(packQuery)
 		if err != nil {
 			logger.Error(err)
 			return
@@ -395,13 +382,13 @@ func APIConfigurePackQuery(respwritter http.ResponseWriter, request *http.Reques
 		if err != nil {
 			logger.Error(err)
 		}
-		var post_data osquery_types.PackQuery
-		err = json.Unmarshal(body, &post_data)
+		var postData osquery_types.PackQuery
+		err = json.Unmarshal(body, &postData)
 		if err != nil {
 			logger.Error(err)
 			return
 		}
-		ok, err := dyndb.UpsertPackQuery(post_data, dyn_svc, mut)
+		ok, err := dyndb.UpsertPackQuery(postData, dynDBInstance, mut)
 		if ok {
 			return
 		}
