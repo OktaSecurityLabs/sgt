@@ -105,7 +105,7 @@ func NewUser(credentialsFile, profile, username, role string) error {
 	if err != nil {
 		logger.Error(err)
 	}
-	dynDB := CrendentialedDbInstance(credentials_file, profile)
+	dynDB := CrendentialedDbInstance(credentialsFile, profile)
 	u.Password = hash
 	u.Role = role
 	mu := sync.Mutex{}

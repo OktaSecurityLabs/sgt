@@ -270,7 +270,7 @@ func SearchByNodeKey(nk string, s *dynamodb.DynamoDB) (osq_types.OsqueryClient, 
 	return osqNode, nil
 }
 
-//APIGetPackQueries returns slice of packQueries
+//GetPackQueries returns slice of packQueries
 func APIGetPackQueries(dynamoDB *dynamodb.DynamoDB) ([]osq_types.PackQuery, error) {
 	results := []osq_types.PackQuery{}
 	scanItems, err := dynamoDB.Scan(&dynamodb.ScanInput{

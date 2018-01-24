@@ -247,7 +247,7 @@ func GetPackQueries(respwritter http.ResponseWriter, request *http.Request) {
 	//pql := packQueryList{}
 	dynDBInstance := dyndb.DbInstance()
 	if request.Method == "GET" {
-		results, err := dyndb.GetPackQueries(dynDBInstance)
+		results, err := dyndb.APIGetPackQueries(dynDBInstance)
 		if err != nil {
 			logger.Error(err)
 		}
@@ -268,7 +268,7 @@ func SearchPackQueries(respwritter http.ResponseWriter, request *http.Request) {
 	//pql := packQueryList{}
 	dynDBInstance := dyndb.DbInstance()
 	if request.Method == "GET" {
-		results, err := dyndb.SearchPackQueries(vars["search_string"], dynDBInstance)
+		results, err := dyndb.APISearchPackQueries(vars["search_string"], dynDBInstance)
 		if err != nil {
 			logger.Error(err)
 		}
