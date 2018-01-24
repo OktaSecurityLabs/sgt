@@ -6,16 +6,16 @@
     * Returns all named configs
     ```
     {
-    "configs":
-    [
-      {
-        "config_name": "default,
-        "osquery_config
-      },
-      {
-      "config_name": "default-mac",
-
-    ]
+        [
+          {
+            "config_name": "default,
+            "osquery_config: {<snip>}
+          },
+          {
+            "config_name": "default-mac",
+            "osquery_config": {<snip>}
+          }
+        ]
     ```
 * config/{config_name}
   * Methods: GET, POST
@@ -60,7 +60,10 @@ the existing values of the client will be used (eg not changed)
 * /packs/{pack_name}
   * Methods: POST
     * POST: sets the packqueries for a given pack
-      * Data: ```{"pack_name": "osx-attacks", "queries": ["OSX_Komplex", "Conduit", "Vsearch"]}```
+      * Data:
+          ```json
+          {"pack_name": "osx-attacks", "queries": ["OSX_Komplex", "Conduit", "Vsearch"]}
+          ```
 
 
 Node configuration example:
