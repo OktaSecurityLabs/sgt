@@ -30,20 +30,20 @@ func server() {
 	apiRouter := mux.NewRouter().PathPrefix("/api/v1/configuration").Subrouter()
 
 	//apiRouter.HandleFunc("/config", api.APIConfigurationRequest)
-	apiRouter.HandleFunc("/config/{config_name}", api.APIConfigurationRequest)
+	apiRouter.HandleFunc("/config/{config_name}", api.ConfigurationRequest)
 	//Nodes
-	apiRouter.HandleFunc("/nodes", api.APIGetNodes).Methods("GET")
-	apiRouter.HandleFunc("/nodes/{node_key}", api.APIConfigureNode).Methods("POST", "GET")
-	apiRouter.HandleFunc("/nodes/{node_key}/approve", api.APIApproveNode).Methods("POST")
+	apiRouter.HandleFunc("/nodes", api.GetNodes).Methods("GET")
+	apiRouter.HandleFunc("/nodes/{node_key}", api.ConfigureNode).Methods("POST", "GET")
+	apiRouter.HandleFunc("/nodes/{node_key}/approve", api.ApproveNode).Methods("POST")
 	//apiRouter.HandleFunc("/nodes/approve/_bulk", api.Placeholder).Methods("POST)
 	//Packs
-	apiRouter.HandleFunc("/packs", api.APIGetQueryPacks).Methods("GET")
-	apiRouter.HandleFunc("/packs/search/{search_string}", api.APISearchQueryPacks).Methods("GET")
-	apiRouter.HandleFunc("/packs/{pack_name}", api.APIConfigurePack).Methods("POST")
+	apiRouter.HandleFunc("/packs", api.GetQueryPacks).Methods("GET")
+	apiRouter.HandleFunc("/packs/search/{search_string}", api.SearchQueryPacks).Methods("GET")
+	apiRouter.HandleFunc("/packs/{pack_name}", api.ConfigurePack).Methods("POST")
 	//PackQueries
-	apiRouter.HandleFunc("/packqueries", api.APIGetPackQueries).Methods("GET")
-	apiRouter.HandleFunc("/packqueries/{query_name}", api.APIConfigurePackQuery)
-	apiRouter.HandleFunc("/packqueries/search/{search_string}", api.APISearchPackQueries)
+	apiRouter.HandleFunc("/packqueries", api.GetPackQueries).Methods("GET")
+	apiRouter.HandleFunc("/packqueries/{query_name}", api.ConfigurePackQuery)
+	apiRouter.HandleFunc("/packqueries/search/{search_string}", api.SearchPackQueries)
 	apiRouter.HandleFunc("/distributed/add", distributed.DistributedQueryAdd)
 	//Enforce uiAuth for all our api configuration endpoints
 	router.PathPrefix("/api/v1/configuration").Handler(negroni.New(
