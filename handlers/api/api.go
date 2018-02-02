@@ -22,6 +22,7 @@ func init() {
 	})
 }
 
+//GetNamedConfigs returns all named configs in a json list
 func GetNamedConfigs(w http.ResponseWriter, r *http.Request) {
 	dynDBInstance := dyndb.DbInstance()
 	ans, err := dyndb.GetNamedConfigs(dynDBInstance)
