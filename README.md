@@ -77,7 +77,7 @@ create the proper directory structure and the environment specific configuration
 files and stand up the environment if you choose to do so
 
 ```commandline
-./sgt -wizard
+./sgt wizard
 ```
 
 When you are done with the wizard, you will be prompted to either continue to deploy
@@ -91,13 +91,13 @@ still requires their dependencies to be built, they may just be updated individu
 To deploy SGT...
 
 ```commandline
-./sgt -deploy -env <environment> -all
+./sgt deploy -env <environment> -all
 ```
 
 To deploy/update an individual component..
 
 ```commandline
-./sgt -deploy -env <environment> -elasticsearch
+./sgt deploy -env <environment> -components elasticsearch,firehose
 ```
 
 for a full list of commands, issue the -h flag
@@ -111,7 +111,7 @@ to make sure this occurs before moving on to next steps
 To create a user to interact with SGT, pass the `-create_user` flag with the requisite options
 
 ```commandline
-./sgt -create_user -credentials_file <cred_file> -profile <profile> -username <username> -role <"Admin"|"User"|"Read-only">
+./sgt create-user -credentials-file <cred_file> -profile <profile> -username <username> -role <"Admin"|"User"|"Read-only">
 ```
 
 ### Getting an Authentication Token
@@ -134,4 +134,3 @@ Provide this token in any subsequent requests in the Authorization header
 ## Documentation notes:
 Documentation is lacking right now due to a rather un-fun flu season.  However, updates to documentation should be expected in teh coming week or so.
 (This note marked: 1/17/18)
-
