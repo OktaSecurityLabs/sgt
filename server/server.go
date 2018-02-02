@@ -24,8 +24,8 @@ func Serve() error {
 	//Configuration (management) endpoint
 	apiRouter := mux.NewRouter().PathPrefix("/api/v1/configuration").Subrouter()
 
-	//apiRouter.HandleFunc("/config", api.APIConfigurationRequest)
-	apiRouter.HandleFunc("/config/{config_name}", api.ConfigurationRequest)
+	apiRouter.HandleFunc("/configs", api.GetNamedConfigs).Methods("GET", "POST")
+	apiRouter.HandleFunc("/configs/{config_name}", api.ConfigurationRequest).Methods("POST")
 	//Nodes
 	apiRouter.HandleFunc("/nodes", api.GetNodes).Methods("GET")
 	apiRouter.HandleFunc("/nodes/{node_key}", api.ConfigureNode).Methods("POST", "GET")
