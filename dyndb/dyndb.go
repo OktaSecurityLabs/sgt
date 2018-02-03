@@ -433,7 +433,7 @@ func GetNewPackByName(packName string, dynamoDB *dynamodb.DynamoDB) (osq_types.P
 	pack := osq_types.Pack{}
 	//create query string from pack name
 	type QS struct {
-		PackName string `json:"packName"`
+		PackName string `json:"pack_name"`
 	}
 	queryString := QS{}
 	queryString.PackName = packName
@@ -449,7 +449,6 @@ func GetNewPackByName(packName string, dynamoDB *dynamodb.DynamoDB) (osq_types.P
 		TableName: aws.String("osquery_querypacks"),
 		Key:       js,
 	})
-	logger.Warn(err)
 	if err != nil {
 		//panic(fmt.Sprintln(err, os.Stdout))
 		log.Panic(err)
@@ -554,9 +553,7 @@ func DeleteQueryPack(queryPackName string, dynamoDB *dynamodb.DynamoDB, mu sync.
 //UpsertPack upserts pack
 func UpsertPack(qp osq_types.QueryPack, dynamoDB *dynamodb.DynamoDB, mu sync.Mutex) error {
 	//Additive upsert.
-	logger.Warn(qp.PackName)
 	existing, err := GetNewPackByName(qp.PackName, dynamoDB)
-	logger.Warn(existing)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -636,7 +633,6 @@ func SearchDistributedNodeKey(nk string, dynamoDB *dynamodb.DynamoDB) (osq_types
 	if len(resp.Item) > 0 {
 		err = dynamodbattribute.UnmarshalMap(resp.Item, &dq)
 		if err != nil {
-			logger.Warn("Error unmarshalling distributed query")
 			logger.Error(err)
 			return dq, err
 		}

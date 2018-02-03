@@ -229,7 +229,6 @@ func osqueryDefaultPacks(config DeploymentConfig, environ string) error {
 			//logger.Info("queries done\n")
 			pack.Queries = helperPack.ListQueries()
 			pack.PackName = strings.Split(filename, ".")[0]
-			logger.Infof("%+v", pack)
 			err = dyndb.UpsertPack(pack, dynDBInstance, mu)
 			if err != nil {
 				return err
