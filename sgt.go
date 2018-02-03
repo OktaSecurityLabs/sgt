@@ -206,24 +206,22 @@ func runSGT() error {
 				return err
 			}
 		}
-
-		chosenOptions, err := validateChoices(validComponentOptions, chosenDeployOptions)
-		if err != nil {
-			deployCommand.Usage()
-			return err
-		}
-
-		log.Printf("Beginning deployment to %[1]s using configuration specified in %[1]s.json", envName)
-
 		config, err := deploy.ParseDeploymentConfig(envName)
 		if err != nil {
 			return err
 		}
 
 		if *allFlag {
-			if err = deploy.AllComponents(config, envName); err != nil {
+			if err := deploy.AllComponents(config, envName); err != nil {
 				return err
 			}
+		}
+
+		chosenOptions, err := validateChoices(validComponentOptions, chosenDeployOptions)
+		if err != nil {
+			deployCommand.Usage()
+			return err
+
 		} else {
 
 			// Prompt for deployment confirmation
@@ -236,6 +234,7 @@ func runSGT() error {
 				}
 			}
 		}
+		log.Printf("Beginning deployment to %[1]s using configuration specified in %[1]s.json", envName)
 
 	case runDestroy:
 

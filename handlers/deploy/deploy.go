@@ -214,6 +214,8 @@ func osqueryDefaultPacks(config DeploymentConfig, environ string) error {
 			}
 			dynDBInstance := auth.CrendentialedDbInstance(credfile, config.AWSProfile)
 			mu := sync.Mutex{}
+			//logger.Infof("%+v", pack)
+			//logger.Infof("%+v", helperPack)
 			for k, v := range helperPack.Queries {
 				pq := osq_types.PackQuery{}
 				pq.QueryName = k
@@ -224,8 +226,10 @@ func osqueryDefaultPacks(config DeploymentConfig, environ string) error {
 				pq.Version = v.Version
 				dyndb.UpsertPackQuery(pq, dynDBInstance, mu)
 			}
+			//logger.Info("queries done\n")
 			pack.Queries = helperPack.ListQueries()
 			pack.PackName = strings.Split(filename, ".")[0]
+			logger.Infof("%+v", pack)
 			err = dyndb.UpsertPack(pack, dynDBInstance, mu)
 			if err != nil {
 				return err

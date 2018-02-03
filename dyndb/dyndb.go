@@ -442,23 +442,25 @@ func GetNewPackByName(packName string, dynamoDB *dynamodb.DynamoDB) (osq_types.P
 	//map queryString to attribute_map
 	js, err := dynamodbattribute.MarshalMap(queryString)
 	if err != nil {
+		logger.Error(err)
 	}
 	//get pack map from dynamo
 	resp, err := dynamoDB.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String("osquery_querypacks"),
 		Key:       js,
 	})
+	logger.Warn(err)
+	if err != nil {
+		//panic(fmt.Sprintln(err, os.Stdout))
+		log.Panic(err)
+		return pack, err
+	}
 	//create empty pack to marshal data into
 	type QueryPack struct {
 		PackName string   `json:"packName"`
 		Queries  []string `json:"queries"`
 	}
 	querypack := QueryPack{}
-	if err != nil {
-		//panic(fmt.Sprintln(err, os.Stdout))
-		log.Panic(err)
-		return pack, err
-	}
 	if len(resp.Item) > 0 {
 		err = dynamodbattribute.UnmarshalMap(resp.Item, &querypack)
 		if err != nil {
@@ -552,7 +554,9 @@ func DeleteQueryPack(queryPackName string, dynamoDB *dynamodb.DynamoDB, mu sync.
 //UpsertPack upserts pack
 func UpsertPack(qp osq_types.QueryPack, dynamoDB *dynamodb.DynamoDB, mu sync.Mutex) error {
 	//Additive upsert.
+	logger.Warn(qp.PackName)
 	existing, err := GetNewPackByName(qp.PackName, dynamoDB)
+	logger.Warn(existing)
 	if err != nil {
 		logger.Error(err)
 		return err
