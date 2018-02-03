@@ -15,4 +15,4 @@ aws s3 cp s3://${bucket_name}/sgt/privkey.pem /opt/sgt/privkey.pem
 chmod +x /opt/sgt/sgt
 cd /opt/sgt
 sleep 30
-/opt/sgt/sgt
+/opt/sgt/sgt server
