@@ -260,19 +260,18 @@ func runSGT() error {
 				return err
 			}
 		}
+		if *allFlag {
+			if err := deploy.DestroyAllComponents(envName); err != nil {
+				return err
+			}
+		}
 
 		chosenOptions, err := validateChoices(deploy.DeployOrder, chosenDestroyOptions)
 		if err != nil {
 			destroyCommand.Usage()
 			return err
-		}
 
-		if *allFlag {
-			if err = deploy.DestroyAllComponents(envName); err != nil {
-				return err
-			}
 		} else {
-
 			// Prompt for destroy confirmation
 			prompt := fmt.Sprintf("The following components will be destroyed: %s\nDo you want to continue?", strings.Join(chosenOptions, ", "))
 			if helpers.ConfirmAction(prompt) {
