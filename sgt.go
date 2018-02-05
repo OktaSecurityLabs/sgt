@@ -206,35 +206,36 @@ func runSGT() error {
 				return err
 			}
 		}
+
 		config, err := deploy.ParseDeploymentConfig(envName)
 		if err != nil {
 			return err
 		}
 
 		if *allFlag {
-			if err := deploy.AllComponents(config, envName); err != nil {
-				return err
+			prompt := fmt.Sprint("All components will be deployed.\nDo you want to continue?")
+			if !helpers.ConfirmAction(prompt) {
+				return nil // User canceled action
 			}
+			return deploy.AllComponents(config, envName)
 		}
 
 		chosenOptions, err := validateChoices(validComponentOptions, chosenDeployOptions)
 		if err != nil {
 			deployCommand.Usage()
 			return err
+		}
 
-		} else {
-
-			// Prompt for deployment confirmation
-			prompt := fmt.Sprintf("The following components will be deployed: %s\nDo you want to continue?", strings.Join(chosenOptions, ", "))
-			if helpers.ConfirmAction(prompt) {
-				for _, componentName := range chosenOptions {
-					if err = deploy.Component(config, componentName, envName); err != nil {
-						return err
-					}
+		// Prompt for deployment confirmation
+		prompt := fmt.Sprintf("The following components will be deployed: %s\nDo you want to continue?", strings.Join(chosenOptions, ", "))
+		if helpers.ConfirmAction(prompt) {
+			log.Printf("Beginning deployment to %[1]s using configuration specified in %[1]s.json", envName)
+			for _, componentName := range chosenOptions {
+				if err = deploy.Component(config, componentName, envName); err != nil {
+					return err
 				}
 			}
 		}
-		log.Printf("Beginning deployment to %[1]s using configuration specified in %[1]s.json", envName)
 
 	case runDestroy:
 
@@ -260,24 +261,26 @@ func runSGT() error {
 				return err
 			}
 		}
+
 		if *allFlag {
-			if err := deploy.DestroyAllComponents(envName); err != nil {
-				return err
+			prompt := fmt.Sprint("All components will be destroyed.\nDo you want to continue?")
+			if !helpers.ConfirmAction(prompt) {
+				return nil // User canceled action
 			}
+			return deploy.DestroyAllComponents(envName)
 		}
 
 		chosenOptions, err := validateChoices(deploy.DeployOrder, chosenDestroyOptions)
 		if err != nil {
 			destroyCommand.Usage()
 			return err
+		}
 
-		} else {
-			// Prompt for destroy confirmation
-			prompt := fmt.Sprintf("The following components will be destroyed: %s\nDo you want to continue?", strings.Join(chosenOptions, ", "))
-			if helpers.ConfirmAction(prompt) {
-				for _, componentName := range chosenOptions {
-					deploy.DestroyComponent(componentName, envName)
-				}
+		// Prompt for destroy confirmation
+		prompt := fmt.Sprintf("The following components will be destroyed: %s\nDo you want to continue?", strings.Join(chosenOptions, ", "))
+		if helpers.ConfirmAction(prompt) {
+			for _, componentName := range chosenOptions {
+				deploy.DestroyComponent(componentName, envName)
 			}
 		}
 
