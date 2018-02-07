@@ -112,15 +112,15 @@ resource "aws_iam_role_policy_attachment" "sgt_lambda_policy_attachment" {
 
 resource "aws_lambda_function" "sgt_osquery_results_date_transform" {
   provisioner "local-exec" {
-    command = "../../modules/firehose/build_lambda.sh"
+    command = "./build_lambda.sh"
   }
   function_name = "sgt_osquery_results_date_transform"
-  filename = "../../modules/firehose/lambda.zip"
-  handler = "lambda_function.lambda_handler"
+  filename = "lambda.zip"
+  handler = "main"
   role = "${aws_iam_role.sgt-osquery-firehose-lambda_role.arn}"
-  runtime = "python2.7"
+  runtime = "go1.x"
   timeout = 120
-  source_code_hash = "${base64sha256(file("../../../lambda_functions/osquery_date_to_elastic_lambda/lambda.zip"))}"
+  source_code_hash = "${base64sha256(file("lambda.zip"))}"
 }
 
 
