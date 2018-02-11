@@ -36,9 +36,9 @@ func NodeEnrollRequest(respwritter http.ResponseWriter, request *http.Request) {
 	dump, _ := httputil.DumpRequest(request, true)
 	logger.Debug(string(dump))
 	dyn_svc := dyndb.DbInstance()
-	var (
-		mut sync.Mutex
-	)
+
+	mu := sync.Mutex{}
+
 	respwritter.Header().Set("Content-Type", "application/json")
 	//test if enrol secret is correct
 	dump, err := httputil.DumpRequest(request, true)
@@ -106,7 +106,7 @@ func NodeEnrollRequest(respwritter http.ResponseWriter, request *http.Request) {
 				enroll_request_response := EnrollRequestResponse{ans[0].Node_key, false}
 				osc := ans[0]
 				osc.Timestamp()
-				err := dyndb.UpsertClient(osc, dyn_svc, mut)
+				err := dyndb.UpsertClient(osc, dyn_svc, &mu)
 				if err != nil {
 					nodeEnrollRequestLogger.Error(err)
 					return
@@ -139,7 +139,7 @@ func NodeEnrollRequest(respwritter http.ResponseWriter, request *http.Request) {
 				}
 				osc.Timestamp()
 				// might be good to check for dupe hostnames here before ACTUALLY issuing new key
-				err := dyndb.UpsertClient(osc, dyn_svc, mut)
+				err := dyndb.UpsertClient(osc, dyn_svc, &mu)
 				if err != nil {
 					nodeEnrollRequestLogger.WithFields(log.Fields{
 						"hostname": data.Host_identifier,
@@ -185,68 +185,66 @@ func NodeConfigureRequest(respwritter http.ResponseWriter, request *http.Request
 	if err != nil {
 		logger.Warn("unmarshal error")
 	}
-	valid_node, err := dyndb.ValidNode(data.Node_key, dyn_svc)
+
+	err = dyndb.ValidNode(data.Node_key, dyn_svc)
 	if err != nil {
 		logger.Error(err)
-		return
-	}
-	//query dyndb for node state with key
-	if valid_node {
-		logger.WithFields(log.Fields{
-			"hostname": data.Host_identifier,
-			"node_key": data.Node_key,
-		}).Debug("valid node")
-		//get type of config for endpoint, return config
-		osq_node, err := dyndb.SearchByNodeKey(data.Node_key, dyn_svc)
-		osq_node.Timestamp()
-		if err != nil {
-			logger.Panic(err)
-		}
-		mu := sync.Mutex{}
-		err = dyndb.UpsertClient(osq_node, dyn_svc, mu)
-		if err != nil {
-			logger.Error(err)
-			return
-		}
-		named_config := osquery_types.OsqueryNamedConfig{}
-		if len(osq_node.Config_name) > 0 {
-			named_config, err = dyndb.GetNamedConfig(dyn_svc, osq_node.Config_name)
-			if err != nil {
-				logger.Panicf("[node.go]: Error returned when getting Named config: \n %s", err)
-			}
-		} else {
-			logger.Info("No named config found, setting default config")
-			named_config, err = dyndb.GetNamedConfig(dyn_svc, "default")
-			if err != nil {
-				logger.Panic(err)
-			}
-		}
-		config, err := osquery_types.GetServerConfig("config.json")
-		if err != nil {
-			logger.Error(err)
-			return
-		}
-		//named_config.Osquery_config.Options.Aws_access_key_id = os.Getenv("FIREHOSE_AWS_ACCESS_KEY_ID")
-		//named_config.Osquery_config.Options.Aws_secret_access_key = os.Getenv("FIREHOSE_AWS_SECRET_ACCESS_KEY")
-		//named_config.Osquery_config.Options.Aws_firehose_stream = os.Getenv("AWS_FIREHOSE_STREAM")
-		logger.Debug(config)
-		named_config.Osquery_config.Options.Aws_access_key_id = config.FirehoseAWSAccessKeyID
-		named_config.Osquery_config.Options.Aws_secret_access_key = config.FirehoseAWSSecretAccessKey
-		if named_config.Osquery_config.Options.Aws_firehose_stream == "" {
-			named_config.Osquery_config.Options.Aws_firehose_stream = config.FirehoseStreamName
-		}
-		raw_pack_json := dyndb.BuildOsqueryPacksAsJSON(named_config)
-		named_config.Osquery_config.Packs = &raw_pack_json
-		js, err := json.Marshal(named_config.Osquery_config)
-		if err != nil {
-			logger.Error(err)
-		}
-		respwritter.Header().Set("Content-Type", "application/json")
-		respwritter.Write(js)
-		return
-	} else {
 		respwritter.Header().Set("Content-Type", "application/json")
 		respwritter.Write([]byte(`{"node_invalid": true}`))
 		return
 	}
+
+	//query dyndb for node state with key
+	logger.WithFields(log.Fields{
+		"hostname": data.Host_identifier,
+		"node_key": data.Node_key,
+	}).Debug("valid node")
+	//get type of config for endpoint, return config
+	osq_node, err := dyndb.SearchByNodeKey(data.Node_key, dyn_svc)
+	osq_node.Timestamp()
+	if err != nil {
+		logger.Panic(err)
+	}
+	mu := sync.Mutex{}
+	err = dyndb.UpsertClient(osq_node, dyn_svc, &mu)
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+	named_config := osquery_types.OsqueryNamedConfig{}
+	if len(osq_node.Config_name) > 0 {
+		named_config, err = dyndb.GetNamedConfig(dyn_svc, osq_node.Config_name)
+		if err != nil {
+			logger.Panicf("[node.go]: Error returned when getting Named config: \n %s", err)
+		}
+	} else {
+		logger.Info("No named config found, setting default config")
+		named_config, err = dyndb.GetNamedConfig(dyn_svc, "default")
+		if err != nil {
+			logger.Panic(err)
+		}
+	}
+	config, err := osquery_types.GetServerConfig("config.json")
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+	//named_config.Osquery_config.Options.Aws_access_key_id = os.Getenv("FIREHOSE_AWS_ACCESS_KEY_ID")
+	//named_config.Osquery_config.Options.Aws_secret_access_key = os.Getenv("FIREHOSE_AWS_SECRET_ACCESS_KEY")
+	//named_config.Osquery_config.Options.Aws_firehose_stream = os.Getenv("AWS_FIREHOSE_STREAM")
+	logger.Debug(config)
+	named_config.Osquery_config.Options.Aws_access_key_id = config.FirehoseAWSAccessKeyID
+	named_config.Osquery_config.Options.Aws_secret_access_key = config.FirehoseAWSSecretAccessKey
+	if named_config.Osquery_config.Options.Aws_firehose_stream == "" {
+		named_config.Osquery_config.Options.Aws_firehose_stream = config.FirehoseStreamName
+	}
+	raw_pack_json := dyndb.BuildOsqueryPacksAsJSON(named_config)
+	named_config.Osquery_config.Packs = &raw_pack_json
+	js, err := json.Marshal(named_config.Osquery_config)
+	if err != nil {
+		logger.Error(err)
+	}
+
+	respwritter.Header().Set("Content-Type", "application/json")
+	respwritter.Write(js)
 }

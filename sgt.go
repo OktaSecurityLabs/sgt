@@ -179,7 +179,10 @@ func runSGT() error {
 			return errors.New("aws profile name required, please pass via -profile flag")
 		}
 
-		auth.NewUser(*credFileFlag, *profileFlag, *usernameFlag, *roleFlag)
+		err := auth.NewUser(*credFileFlag, *profileFlag, *usernameFlag, *roleFlag)
+		if err != nil {
+			return err
+		}
 
 	case runDeploy:
 

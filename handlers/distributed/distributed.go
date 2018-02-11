@@ -60,7 +60,7 @@ func DistributedQueryRead(respwritter http.ResponseWriter, request *http.Request
 		{
 			respwritter.Write([]byte(distributed_q.ToJson()))
 			mu := sync.Mutex{}
-			err = dyndb.DeleteDistributedQuery(distributed_q, dyn_svc, mu)
+			err = dyndb.DeleteDistributedQuery(distributed_q, dyn_svc, &mu)
 			if err != nil {
 				logger.Error(err)
 				return
@@ -217,40 +217,48 @@ if len(records) == 450 || a == len(s) -1 {
 }*/
 
 func DistributedQueryAdd(respwritter http.ResponseWriter, request *http.Request) {
-	type distributed_query_add struct {
+	type distributedQueryAdd struct {
 		Nodes []osquery_types.DistributedQuery `json:"nodes"`
 	}
+
 	body, err := ioutil.ReadAll(request.Body)
 	defer request.Body.Close()
 	if err != nil {
 		logger.Error(err)
 		return
 	}
-	nodes := distributed_query_add{}
+
+	nodes := distributedQueryAdd{}
 	err = json.Unmarshal(body, &nodes)
 	if err != nil {
 		logger.Error(err)
+		return
 	}
-	dyn_svc := dyndb.DbInstance()
+
+	dynSVC := dyndb.DbInstance()
 	mu := sync.Mutex{}
 	success := map[string]bool{}
 	for _, j := range nodes.Nodes {
-		valid_node, err := dyndb.ValidNode(j.NodeKey, dyn_svc)
+		err = dyndb.ValidNode(j.NodeKey, dynSVC)
 		if err != nil {
 			logger.Error(err)
-			return
-		}
-		if valid_node {
-			err = dyndb.UpsertDistributedQuery(j, dyn_svc, mu)
-			if err != nil {
-				logger.Error(err)
-				success[j.NodeKey] = false
-			} else {
-				success[j.NodeKey] = true
-			}
+			continue
 		}
 
+		err = dyndb.UpsertDistributedQuery(j, dynSVC, &mu)
+		if err != nil {
+			logger.Error(err)
+			success[j.NodeKey] = false
+		} else {
+			success[j.NodeKey] = true
+		}
 	}
+
 	js, err := json.Marshal(success)
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+
 	respwritter.Write(js)
 }

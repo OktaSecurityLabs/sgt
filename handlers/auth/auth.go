@@ -3,10 +3,10 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 
@@ -26,7 +26,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/ssh/terminal"
 )
-
 
 //SsmClient returns an instance of ssm client with credentials provided by ec2 assumed role
 func SsmClient() *ssm.SSM {
@@ -88,33 +87,37 @@ func GetPass() ([]byte, error) {
 
 //NewUser creates new user
 func NewUser(credentialsFile, profile, username, role string) error {
-	u := osquery_types.User{}
-	u.Username = username
-	logger.Info("Enter password")
+	fmt.Print("Enter password: ")
 	pass1, err := gopass.GetPasswd()
-	logger.Info("Enter password again")
-	pass2, err := gopass.GetPasswd()
-	if string(pass1) != string(pass2) {
-		logger.Info("passwords do not match, please try again")
-		os.Exit(0)
-	}
 	if err != nil {
-		logger.Error(err)
-	}
-	hash, err := bcrypt.GenerateFromPassword(pass1, bcrypt.DefaultCost)
-	if err != nil {
-		logger.Error(err)
-	}
-	dynDB := CrendentialedDbInstance(credentialsFile, profile)
-	u.Password = hash
-	u.Role = role
-	mu := sync.Mutex{}
-	err = dyndb.NewUser(u, dynDB, mu)
-	if err != nil {
-		fmt.Println(err)
 		return err
 	}
-	return nil
+
+	fmt.Print("Enter password again: ")
+	pass2, err := gopass.GetPasswd()
+	if err != nil {
+		return err
+	}
+
+	if string(pass1) != string(pass2) {
+		return errors.New("passwords do not match, please try again")
+	}
+
+	hash, err := bcrypt.GenerateFromPassword(pass1, bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	user := osquery_types.User{
+		Username: username,
+		Password: hash,
+		Role:     role,
+	}
+
+	mu := sync.Mutex{}
+	dynDB := CrendentialedDbInstance(credentialsFile, profile)
+
+	return dyndb.NewUser(user, dynDB, &mu)
 }
 
 //ValidateUser checks if user is valid
@@ -213,7 +216,7 @@ func GetNodeSecret() (string, error) {
 //NodeConfigurePost type for handling post requests made by node
 type NodeConfigurePost struct {
 	EnrollSecret   string `json:"enroll_secret"`
-	NodeKey        string `json:"node_key"`
+	Node_key       string `json:"node_key"`
 	HostIdentifier string `json:"host_identifier"`
 }
 
@@ -242,17 +245,13 @@ func ValidNodeKey(respwritter http.ResponseWriter, req *http.Request, next http.
 		respwritter.Write([]byte(`{"Error": "Invalid Credentials"}`))
 		return
 	}
-	validNode, err := dyndb.ValidNode(data.NodeKey, dynDB)
+
+	err = dyndb.ValidNode(data.Node_key, dynDB)
 	if err != nil {
 		logger.Error(err)
 		respwritter.Write([]byte(`{"Error": "Invalid Credentials"}`))
 		return
 	}
-	if !validNode {
-		respwritter.Write([]byte(`{"Error": "Invalid Credentials"}`))
-		return
-	}
-	if validNode {
-		next(respwritter, req)
-	}
+
+	next(respwritter, req)
 }
