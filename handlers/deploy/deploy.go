@@ -224,12 +224,12 @@ func osqueryDefaultPacks(config DeploymentConfig, environ string) error {
 				pq.Description = v.Description
 				pq.Interval = v.Interval
 				pq.Version = v.Version
-				dyndb.UpsertPackQuery(pq, dynDBInstance, mu)
+				dyndb.UpsertPackQuery(pq, dynDBInstance, &mu)
 			}
 			//logger.Info("queries done\n")
 			pack.Queries = helperPack.ListQueries()
 			pack.PackName = strings.Split(filename, ".")[0]
-			err = dyndb.UpsertPack(pack, dynDBInstance, mu)
+			err = dyndb.UpsertPack(pack, dynDBInstance, &mu)
 			if err != nil {
 				return err
 			}
@@ -315,14 +315,15 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 		config.Packs = nil
 		namedConfig.Osquery_config = config
 		mu := sync.Mutex{}
-		ans := dyndb.UpsertNamedConfig(dynDB, &namedConfig, mu)
-
-		if ans {
-			logger.Infof("%s: success\n", namedConfig.Config_name)
-		} else {
+		err = dyndb.UpsertNamedConfig(dynDB, &namedConfig, &mu)
+		if err != nil {
 			logger.Infof("%s: failed\n", namedConfig.Config_name)
+			return err
 		}
+
+		logger.Infof("%s: success\n", namedConfig.Config_name)
 	}
+
 	return nil
 }
 

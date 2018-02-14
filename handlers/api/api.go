@@ -104,20 +104,15 @@ func ConfigurationRequest(respwritter http.ResponseWriter, request *http.Request
 			respwritter.Write([]byte(`{"result":"failure", "reason": "named config endpoint does not match posted data config_name"}`))
 			return
 		}
-		ans := dyndb.UpsertNamedConfig(dynDBInstance, &namedConfig, mu)
-		if ans {
-			js, err := json.Marshal(namedConfig)
-			if err != nil {
-				respwritter.Write([]byte(`{"result":"failure"}`))
-				return
-			}
-			respwritter.Write(js)
+
+		err = dyndb.UpsertNamedConfig(dynDBInstance, &namedConfig, &mu)
+		if err != nil {
+			logger.Error(err)
+			return
 		}
-		fmt.Println(ans)
 	}
 	return
 }
-
 
 //GetNodes returns json reponse of a list of nodes
 func GetNodes(respwritter http.ResponseWriter, request *http.Request) {
@@ -138,7 +133,6 @@ func GetNodes(respwritter http.ResponseWriter, request *http.Request) {
 		return
 	}
 }
-
 
 //ConfigureNode accepts json node configuration
 func ConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
@@ -206,7 +200,7 @@ func ConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 					client.Tags = existingClient.Tags
 				}
 				logger.Warn("%v", client)
-				err := dyndb.UpsertClient(client, dynDBInstance, mu)
+				err := dyndb.UpsertClient(client, dynDBInstance, &mu)
 				if err != nil {
 					logger.Error(err)
 					respwritter.Write([]byte(`{"error": "update failed"}`))
@@ -246,7 +240,7 @@ func ApproveNode(respwritter http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	if request.Method == "POST" {
 		logger.Warn("posting approval")
-		err := dyndb.ApprovePendingNode(vars["nodeKey"], dynDBInstance, mu)
+		err := dyndb.ApprovePendingNode(vars["nodeKey"], dynDBInstance, &mu)
 		if err != nil {
 			logger.Error(err)
 			respwritter.Write([]byte(`{"result": "error"}`))
@@ -360,7 +354,7 @@ func ConfigurePack(respwritter http.ResponseWriter, request *http.Request) {
 			logger.Error(err)
 			return
 		}
-		err = dyndb.UpsertPack(querypack, dynDBInstance, mu)
+		err = dyndb.UpsertPack(querypack, dynDBInstance, &mu)
 		if err != nil {
 			logger.Error(err)
 			return
@@ -371,7 +365,7 @@ func ConfigurePack(respwritter http.ResponseWriter, request *http.Request) {
 
 //ConfigurePackQuery accepts post body with packquery config
 func ConfigurePackQuery(respwritter http.ResponseWriter, request *http.Request) {
-	mut := sync.Mutex{}
+	mu := sync.Mutex{}
 	vars := mux.Vars(request)
 	if len(vars["query_name"]) < 1 {
 		respwritter.Write([]byte(`No pack specified`))
@@ -406,10 +400,7 @@ func ConfigurePackQuery(respwritter http.ResponseWriter, request *http.Request) 
 			logger.Error(err)
 			return
 		}
-		ok, err := dyndb.UpsertPackQuery(postData, dynDBInstance, mut)
-		if ok {
-			return
-		}
+		err = dyndb.UpsertPackQuery(postData, dynDBInstance, &mu)
 		if err != nil {
 			logger.Error(err)
 			return
