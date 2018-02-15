@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -9,9 +8,10 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/ryandeivert/sgt/logger"
+	"github.com/oktasecuritylabs/sgt/logger"
 )
 
+// convertData reformats an osquery date/timestamp to an ElasticSearch readable date/timestamp
 func convertData(date string) (string, error) {
 
 	oldDate := strings.TrimRight(date, " UTC")
@@ -21,20 +21,16 @@ func convertData(date string) (string, error) {
 	}
 
 	// Return the properly formatted date
-	return t.Format("2006-01-02T15:04:05"), nil
+	return t.Format("2006-01-02 15:04:05"), nil
 }
 
+// transform recieves a KinesisFirehoseEvent Record
+// converts the timestamp to ElasticSearch readable
+// and returns the new json representation of the record data
 func transform(rec events.KinesisFirehoseEventRecord) ([]byte, error) {
 
-	recordData := make([]byte, base64.StdEncoding.DecodedLen(len(rec.Data)))
-	_, err := base64.StdEncoding.Decode(recordData, rec.Data)
-	if err != nil {
-		return rec.Data, err
-	}
-
 	var data map[string]interface{}
-	dec := json.NewDecoder(strings.NewReader(string(recordData)))
-	err = dec.Decode(&data)
+	err := json.Unmarshal(rec.Data, &data)
 	if err != nil {
 		return rec.Data, err
 	}
@@ -52,10 +48,7 @@ func transform(rec events.KinesisFirehoseEventRecord) ([]byte, error) {
 		return rec.Data, err
 	}
 
-	newData := make([]byte, base64.StdEncoding.EncodedLen(len(rec.Data)))
-	base64.StdEncoding.Encode(newData, jsonData)
-
-	return newData, nil
+	return jsonData, nil
 }
 
 // Handler is the main AWS Lambda entry point
@@ -72,15 +65,14 @@ func Handler(event events.KinesisFirehoseEvent) (events.KinesisFirehoseResponse,
 
 		var err error
 		responseRec.Data, err = transform(record)
-		if err == nil {
-			responseRec.Result = events.KinesisFirehoseTransformedStateOk
-		} else {
+		if err != nil {
 			logger.Error("could not transform record:", err)
 			responseRec.Result = events.KinesisFirehoseTransformedStateProcessingFailed
 			failed++
+		} else {
+			responseRec.Result = events.KinesisFirehoseTransformedStateOk
 		}
 
-		// Append the record to the list of records
 		results.Records = append(results.Records, responseRec)
 	}
 
