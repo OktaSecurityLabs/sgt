@@ -13,15 +13,15 @@ import (
 )
 
 type OsqueryClient struct {
-	Host_identifier               string                       `json:"host_identifier"`
-	Node_key                      string                       `json:"node_key"`
-	Node_invalid                  bool                         `json:"node_invalid"`
-	HostDetails                   map[string]map[string]string `json:"host_details"`
-	Pending_registration_approval bool                         `json:"pending_registration_approval"`
-	Tags                          []string                     `json:"tags,omitempty"`
-	Configuration_group           string                       `json:"configuration_group,omitempty"`
-	Config_name                   string                       `json:"config_name"`
-	LastUpdated                   string                       `json:"last_updated"`
+	HostIdentifier              string                       `json:"host_identifier"`
+	NodeKey                     string                       `json:"node_key"`
+	NodeInvalid                 bool                         `json:"node_invalid"`
+	HostDetails                 map[string]map[string]string `json:"host_details"`
+	PendingRegistrationApproval bool                         `json:"pending_registration_approval"`
+	Tags                        []string                     `json:"tags,omitempty"`
+	ConfigurationGroup          string                       `json:"configuration_group,omitempty"`
+	ConfigName                  string                       `json:"config_name"`
+	LastUpdated                 string                       `json:"last_updated"`
 }
 
 func (os *OsqueryClient) Timestamp() {
@@ -30,162 +30,138 @@ func (os *OsqueryClient) Timestamp() {
 
 type OsqueryOptions struct {
 	//Audit
-	Audit_allow_config bool `json:"audit_allow_config"`
-	AuditAllowSockets  bool `json:"audit_allow_sockets"`
-	AuditPersist       bool `json:"audit_persist"`
+	AuditAllowConfig  bool `json:"audit_allow_config"`
+	AuditAllowSockets bool `json:"audit_allow_sockets"`
+	AuditPersist      bool `json:"audit_persist"`
 	//aws options
-	Aws_access_key_id                string `json:"aws_access_key_id,omitempty"`
-	Aws_firehose_period              int    `json:"aws_firehose_period,omitempty"`
-	Aws_firehose_stream              string `json:"aws_firehose_stream"`
-	Aws_kinesis_period               int    `json:"aws_kinesis_period,omitempty"`
-	Aws_kinesis_random_partition_key bool   `json:"aws_kinesis_random_partition_key,omitempty"`
-	Aws_kinesis_stream               string `json:"aws_kinesis_stream,omitempty"`
-	Aws_profile_name                 string `json:"aws_profile_name,omitempty"`
-	Aws_region                       string `json:"aws_region,omitempty"`
-	Aws_secret_access_key            string `json:"aws_secret_access_key,omitempty"`
-	Aws_sts_arn_role                 string `json:"aws_sts_arn_role,omitempty"`
-	Aws_sts_region                   string `json:"aws_sts_region,omitempty"`
-	Aws_sts_session_name             string `json:"aws_sts_session_name,omitempty"`
-	Aws_sts_timeout                  string `json:"aws_sts_timeout,omitempty"`
+	AwsAccessKeyID               string `json:"aws_access_key_id,omitempty"`
+	AwsFirehosePeriod            int    `json:"aws_firehose_period,omitempty"`
+	AwsFirehoseStream            string `json:"aws_firehose_stream"`
+	AwsKinesisPeriod             int    `json:"aws_kinesis_period,omitempty"`
+	AwsKinesisRandomPartitionKey bool   `json:"aws_kinesis_random_partition_key,omitempty"`
+	AwsKinesisStream             string `json:"aws_kinesis_stream,omitempty"`
+	AwsProfileName               string `json:"aws_profile_name,omitempty"`
+	AwsRegion                    string `json:"aws_region,omitempty"`
+	AwsSecretAccessKey           string `json:"aws_secret_access_key,omitempty"`
+	AwsSTSARNRole                string `json:"aws_sts_arn_role,omitempty"`
+	AwsSTSRegion                 string `json:"aws_sts_region,omitempty"`
+	AwsSTSSessionName            string `json:"aws_sts_session_name,omitempty"`
+	AwsSTSTimeout                string `json:"aws_sts_timeout,omitempty"`
 	//Carver settings
-	Carver_block_size        int    `json:"carver_block_size,omitempty"`
-	Carver_continue_endpoint string `json:"carver_continue_endpoint,omitempty"`
-	Carver_start_endpoint    string `json:"carver_start_endpoint,omitempty"`
+	CarverBlockSize        int    `json:"carver_block_size,omitempty"`
+	CarverContinueEndpoint string `json:"carver_continue_endpoint,omitempty"`
+	CarverStartEndpoint    string `json:"carver_start_endpoint,omitempty"`
 	//config_settings
-	Config_refresh int  `json:"config_refresh"`
-	CSV            bool `json:"csv,omitempty"`
-	//disables
+	ConfigRefresh int  `json:"config_refresh"`
+	CSV           bool `json:"csv,omitempty"`
 
-	Disable_audit        bool `json:"disable_audit"`
-	Disable_caching      bool `json:"disable_caching"`
-	Disable_carver       bool `json:"disable_carver"`
-	Disable_database     bool `json:"disable_database"`
-	Disable_decorators   bool `json:"disable_decorators"`
-	Disable_distributed  bool `json:"disable_distributed"`
-	Disable_enrollment   bool `json:"disable_enrollment"`
-	Disable_events       bool `json:"disable_events"`
-	Disable_extensions   bool `json:"disable_extensions"`
-	Disable_forensic     bool `json:"disable_forensic"`
-	Disable_kernel       bool `json:"disable_kernel"`
-	Disable_logging      bool `json:"disable_logging"`
-	Disable_memory       bool `json:"disable_memory"`
-	Disable_reenrollment bool `json:"disable_reenrollment"`
-	Disable_tables       bool `json:"disable_tables"`
-	Disable_watchdog     bool `json:"disable_watchdog"`
+	//Disables
+	DisableAudit        bool `json:"disable_audit"`
+	DisableCaching      bool `json:"disable_caching"`
+	DisableCarver       bool `json:"disable_carver"`
+	DisableDatabase     bool `json:"disable_database"`
+	DisableDecorators   bool `json:"disable_decorators"`
+	DisableDistributed  bool `json:"disable_distributed"`
+	DisableEnrollment   bool `json:"disable_enrollment"`
+	DisableEvents       bool `json:"disable_events"`
+	DisableExtensions   bool `json:"disable_extensions"`
+	DisableForensic     bool `json:"disable_forensic"`
+	DisableKernel       bool `json:"disable_kernel"`
+	DisableLogging      bool `json:"disable_logging"`
+	DisableMemory       bool `json:"disable_memory"`
+	DisableReenrollment bool `json:"disable_reenrollment"`
+	DisableTables       bool `json:"disable_tables"`
+	DisableWatchdog     bool `json:"disable_watchdog"`
 
 	//Distributed
-	Distributed_interval           int    `json:"distributed_interval,omitempty"`
-	Distributed_plugin             string `json:"distributed_plugin,omitempty"`
-	Distributed_tls_max_attempts   int    `json:"distributed_tls_max_attempts,omitempty"`
-	Distributed_tls_read_endpoint  string `json:"distributed_tls_read_endpoint,omitempty"`
-	Distributed_tls_write_endpoint string `json:"distributed_tls_write_endpoint,omitempty"`
+	DistributedInterval         int    `json:"distributed_interval,omitempty"`
+	DistributedPlugin           string `json:"distributed_plugin,omitempty"`
+	DistributedTLSMaxAttempts   int    `json:"distributed_tls_max_attempts,omitempty"`
+	DistributedTLSReadEndpoint  string `json:"distributed_tls_read_endpoint,omitempty"`
+	DistributedTLSWriteEndpoint string `json:"distributed_tls_write_endpoint,omitempty"`
 	//Enables
 
-	Enable_foreign bool `json:"enable_foreign"`
-	Enable_monitor bool `json:"enable_monitor"`
-	Enable_syslog  bool `json:"enable_syslog"`
+	EnableForeign bool `json:"enable_foreign"`
+	EnableMonitor bool `json:"enable_monitor"`
+	EnableSyslog  bool `json:"enable_syslog"`
 
 	//Enroll (these are handled by flags on host, not set in tls config
 
 	//Events
-	Events_expiry   int  `json:"events_expiry"`
-	Events_max      int  `json:"events_max"`
-	Events_optimize bool `json:"events_optimize"`
+	EventsExpiry   int  `json:"events_expiry"`
+	EventsMax      int  `json:"events_max"`
+	EventsOptimize bool `json:"events_optimize"`
 
 	//Extensions
-	Extensions_autoload bool   `json:"extenstions_autoload,omitempty"`
-	Extensions_interval int    `json:"extensions_interval,omitempty"`
-	Extensions_require  string `json:"extensions_require,omitempty"`
-	Extensions_timeout  int    `json:"extensions_timeout,omitempty"`
+	ExtensionsAutoload bool   `json:"extenstions_autoload,omitempty"`
+	ExtensionsInterval int    `json:"extensions_interval,omitempty"`
+	ExtensionsRequire  string `json:"extensions_require,omitempty"`
+	ExtensionsTimeout  int    `json:"extensions_timeout,omitempty"`
 
-	Force                   bool   `json:"force,omitempty"`
-	Hardware_disabled_types string `json:"hardware_disabled_types,omitempty"`
-	Header                  bool   `json:"header,omitempty"`
-	Host_identifier         string `json:"host_identifier"`
+	Force                 bool   `json:"force,omitempty"`
+	HardwareDisabledTypes string `json:"hardware_disabled_types,omitempty"`
+	Header                bool   `json:"header,omitempty"`
+	HostIdentifier        string `json:"host_identifier"`
 	//output
-	Json bool `json:"json,omitempty"`
+	JSON bool `json:"json,omitempty"`
 	Line bool `json:"line,omitempty"`
 	List bool `json:"list,omitempty"`
 
 	//Logger
-	Logger_event_type bool   `json:"logger_event_type,omitempty"`
-	Logger_min_status int    `json:"logger_min_status,omitempty"`
-	Logger_mode       int    `json:"logger_mode,omitempty"`
-	Logger_path       string `json:"logger_path,omitempty"`
-	Logger_plugin     string `json:"logger_plugin"`
+	LoggerEventType bool   `json:"logger_event_type,omitempty"`
+	LoggerMinStatus int    `json:"logger_min_status,omitempty"`
+	LoggerMode      int    `json:"logger_mode,omitempty"`
+	LoggerPath      string `json:"logger_path,omitempty"`
+	LoggerPlugin    string `json:"logger_plugin"`
 
-	Logger_secondary_status_only bool `json:"logger_secondary_status_only,omitempty"`
-	Logger_status_sync           bool `json:"logger_status_sync,omitempty"`
+	LoggerSecondaryStatusOnly bool `json:"logger_secondary_status_only,omitempty"`
+	LoggerStatusSync          bool `json:"logger_status_sync,omitempty"`
 
-	Logger_syslog_facility    int  `json:"logger_syslog_facility,omitempty"`
-	Logger_syslog_prepend_cee bool `json:"logger_syslog_prepend_cee,omitempty"`
-	Logger_tls_compress       bool `json:"logger_tls_compress,omitempty"`
+	LoggerSyslogFacility   int  `json:"logger_syslog_facility,omitempty"`
+	LoggerSyslogPrependCee bool `json:"logger_syslog_prepend_cee,omitempty"`
+	LoggerTLSCompress      bool `json:"logger_tls_compress,omitempty"`
 	//Endpoints provided by flags
-	Logger_tls_max    int  `json:"logger_tls_max,omitempty"`
-	Logger_tls_period int  `json:"logger_tls_period,omitempty"`
-	Logtostderr       bool `json:"logtostderr,omitempty"`
+	LoggerTLSMax    int  `json:"logger_tls_max,omitempty"`
+	LoggerTLSPeriod int  `json:"logger_tls_period,omitempty"`
+	Logtostderr     bool `json:"logtostderr,omitempty"`
 	//Schedule
-	Schedule_default_interval int `json:"schedule_default_interval,omitempty"`
-	Schedule_splay_percent    int `json:"schedule_splay_percent,omitempty"`
+	ScheduleDefaultInterval int `json:"schedule_default_interval,omitempty"`
+	ScheduleSplayPercent    int `json:"schedule_splay_percent,omitempty"`
 	//Syslog
-	Syslog_events_expiry int    `json:"syslog_events_expiry,omitempty"`
-	Syslog_events_max    int    `json:"syslog_events_max,omitempty"`
-	Syslog_pipe_path     string `json:"syslog_pipe_path,omitempty"`
-	Syslog_rate_limit    int    `json:"syslog_rate_limit,omitempty"`
+	SyslogEventsExpiry int    `json:"syslog_events_expiry,omitempty"`
+	SyslogEventsMax    int    `json:"syslog_events_max,omitempty"`
+	SyslogPipePath     string `json:"syslog_pipe_path,omitempty"`
+	SyslogRateLimit    int    `json:"syslog_rate_limit,omitempty"`
 	//TLS settings should be specified in flags file, since there is no guarantee of tls communcation without it
-	Utc     bool `json:"utc,omitempty"`
+	UTC     bool `json:"utc,omitempty"`
 	Verbose bool `json:"verbose"`
 	//Watchdog
-	Watchdog_level             int `json:"watchdog_level,omitempty"`
-	Watchdog_memory_limit      int `json:"watchdog_memory_limit,omitempty"`
-	Watchdog_utilization_limit int `json:"watchdog_utilization_limit,omitempty"`
+	WatchdogLevel            int `json:"watchdog_level,omitempty"`
+	WatchdogMemoryLimit      int `json:"watchdog_memory_limit,omitempty"`
+	WatchdogUtilizationLimit int `json:"watchdog_utilization_limit,omitempty"`
 }
 
+// NewOsqueryOptions returns some default options for osquery
 func NewOsqueryOptions() OsqueryOptions {
-	options := OsqueryOptions{}
-	options.Audit_allow_config = false
-	options.AuditAllowSockets = false
-	options.AuditPersist = true
-	options.Config_refresh = 300
-	options.Disable_audit = true
-	options.Disable_caching = false
-	options.Disable_carver = true
-	options.Disable_database = false
-	options.Disable_decorators = false
-	options.Disable_distributed = false
-	options.Disable_enrollment = false
-	options.Disable_events = false
-	options.Disable_extensions = false
-	options.Disable_forensic = false
-	options.Disable_kernel = false
-	options.Disable_logging = false
-	options.Disable_memory = false
-	options.Disable_reenrollment = false
-	options.Disable_tables = false
-	options.Disable_watchdog = false
-	options.Distributed_interval = 60
-	options.Distributed_tls_max_attempts = 5
-	options.Enable_foreign = false
-	options.Enable_monitor = false
-	options.Enable_syslog = false
-	options.Events_expiry = 14400
-	options.Events_max = 100000
-	options.Events_optimize = true
-	options.Extensions_autoload = false
-	options.Host_identifier = "hostname"
-	options.Logger_plugin = "firehose"
-	options.Verbose = false
+	options := OsqueryOptions{
+		AuditPersist:              true,
+		ConfigRefresh:             300,
+		DisableAudit:              true,
+		DisableCarver:             true,
+		DistributedInterval:       60,
+		DistributedTLSMaxAttempts: 5,
+		EventsExpiry:              14400,
+		EventsMax:                 100000,
+		EventsOptimize:            true,
+		HostIdentifier:            "hostname",
+		LoggerPlugin:              "firehose",
+	}
 	return options
 }
 
 type OsqueryPacks struct {
 	Fedramp string `json:"fedramp"`
 }
-
-//type OsqueryDecorators struct {
-//Load []OsqueryQuery `json:"load"`
-//Always []OsqueryQuery `json:"always"`
-//}
 
 type OsqueryDecorators struct {
 	Load   []string `json:"load,omitempty"`
@@ -207,19 +183,19 @@ type OsquerySchedule struct {
 
 type OsqueryConfig struct {
 	//Node_invalid string
-	Node_invalid bool
-	Options      OsqueryOptions    `json:"options"`
-	Decorators   OsqueryDecorators `json:"decorators,omitemtpy"`
-	Schedule     OsquerySchedule   `json:"schedule,omitempty"`
+	NodeInvalid bool
+	Options     OsqueryOptions    `json:"options"`
+	Decorators  OsqueryDecorators `json:"decorators,omitemtpy"`
+	Schedule    OsquerySchedule   `json:"schedule,omitempty"`
 	//Packs OsqueryPacks `json:"packs"`
 	Packs *json.RawMessage `json:"packs,omitempty"`
 }
 
 type OsqueryNamedConfig struct {
-	Config_name    string        `json:"config_name"`
-	Osquery_config OsqueryConfig `json:"osquery_config"`
-	Os_type        string        `json:"os_type"`
-	PackList       []string      `json:"pack_list"`
+	ConfigName    string        `json:"config_name"`
+	OsqueryConfig OsqueryConfig `json:"osquery_config"`
+	OsType        string        `json:"os_type"`
+	PackList      []string      `json:"pack_list"`
 }
 
 type Pack struct {
@@ -265,21 +241,21 @@ func PackQueryToString(p *PackQuery) string {
 }
 
 func BuildPackQueries(pqs []PackQuery) string {
-	queries_string := "{"
+	queriesString := "{"
 	for c, i := range pqs {
 		switch c {
 		case 0:
-			queries_string += i.AsString()
+			queriesString += i.AsString()
 		case len(pqs):
-			queries_string += i.AsString()
-			queries_string += "}"
-			return queries_string
+			queriesString += i.AsString()
+			queriesString += "}"
+			return queriesString
 		default:
-			queries_string += ", "
-			queries_string += i.AsString()
+			queriesString += ", "
+			queriesString += i.AsString()
 		}
 	}
-	return queries_string
+	return queriesString
 }
 
 type DistributedQuery struct {
