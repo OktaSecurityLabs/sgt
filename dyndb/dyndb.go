@@ -383,7 +383,8 @@ func UpsertPackQuery(pq osq_types.PackQuery, db *dynamodb.DynamoDB, mu *sync.Mut
 
 	av, err := dynamodbattribute.MarshalMap(pq)
 	if err != nil {
-		fmt.Println("Marshal failed")
+		logger.Warn("Marshal failed")
+		logger.Error(err)
 		return err
 	}
 
@@ -391,6 +392,10 @@ func UpsertPackQuery(pq osq_types.PackQuery, db *dynamodb.DynamoDB, mu *sync.Mut
 		TableName: aws.String("osquery_packqueries"),
 		Item:      av,
 	})
+	if err != nil {
+		logger.Error(err)
+		return  err
+	}
 
 	return err
 }
@@ -552,16 +557,16 @@ func DeleteQueryPack(queryPackName string, dynamoDB *dynamodb.DynamoDB, mu *sync
 }
 
 //UpsertPack upserts pack
-func UpsertPack(qp osq_types.QueryPack, dynamoDB *dynamodb.DynamoDB, mu *sync.Mutex) error {
+func UpsertPack(qp osq_types.QueryPack, dynamoDB *dynamodb.DynamoDB) error {
 	//Additive upsert.
+	//placeholder  mutex until  they can all be removed
+	placeholderMutex := sync.Mutex{}
+	mu := &placeholderMutex
 	existing, err := GetNewPackByName(qp.PackName, dynamoDB)
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
-
-	mu.Lock()
-	defer mu.Unlock()
 
 	switch len(existing.PackName) > 0 {
 	case true:

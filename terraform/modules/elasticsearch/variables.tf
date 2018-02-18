@@ -7,3 +7,8 @@ variable "aws_region" {
 variable "elasticsearch_domain_name" {
   default = "sgt-osquery-results"
 }
+
+variable "create_elasticsearch" {
+  default = 1
+  description = "toggles the creation of elasticsearch"
+}
