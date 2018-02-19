@@ -3,6 +3,14 @@ provider "aws" {
   region = "${var.aws_region}"
 }
 
+data "terraform_remote_state" "elasticsearch" {
+  backend = "local"
+  config {
+    path = "../elasticsearch/terraform.tfstate"
+  }
+}
+
+
 resource "aws_s3_bucket" "sgt-osquery_results-s3" {
   bucket = "${var.sgt-s3-osquery-results-bucket-name}"
 }
@@ -103,7 +111,7 @@ resource "aws_lambda_function" "sgt_osquery_results_date_transform" {
 
 resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-osquery_results" {
   name = "sgt-firehose-osquery_results"
-  destination = "s3"
+  destination = "elasticsearch"
   #commented out until terraform supports data transformation outside of extended s3.  For the time being, this needs to be enabled via console
   /*extended_s3_configuration {
     role_arn = "${aws_iam_role.sgt-firehose-assume-role.arn}"
@@ -122,6 +130,15 @@ resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-osquery_results" {
       }
     }
   }*/
+  elasticsearch_configuration {
+    domain_arn = "${data.terraform_remote_state.elasticsearch.elasticsearch_domain_arn}"
+    role_arn = "${aws_iam_role.sgt-firehose-assume-role.arn}"
+    index_name = "osquery_results"
+    type_name = "osquery_results"
+    index_rotation_period = "OneMonth"
+    s3_backup_mode = "AllDocuments"
+  }
+
   s3_configuration {
     role_arn = "${aws_iam_role.sgt-firehose-assume-role.arn}"
     bucket_arn = "${aws_s3_bucket.sgt-osquery_results-s3.arn}"
@@ -132,10 +149,9 @@ resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-osquery_results" {
 
 }
 
-
 resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-distributed-osquery_results" {
   name = "sgt-firehose-distributed_osquery_results"
-  destination = "s3"
+  destination = "elasticsearch"
 
   s3_configuration {
     role_arn = "${aws_iam_role.sgt-firehose-assume-role.arn}"
@@ -145,6 +161,14 @@ resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-distributed-osquer
     prefix = "distributed_osquery_results"
   }
 
+  elasticsearch_configuration {
+    domain_arn = "${data.terraform_remote_state.elasticsearch.elasticsearch_domain_arn}"
+    role_arn = "${aws_iam_role.sgt-firehose-assume-role.arn}"
+    index_name = "distributed_osquery_results"
+    type_name = "osquery_results"
+    index_rotation_period = "OneMonth"
+    s3_backup_mode = "AllDocuments"
+  }
 }
 
 ## create iam user to allow nodes to send directly to firehose
@@ -163,7 +187,31 @@ data "aws_iam_policy_document" "sgt-node-user" {
   }
 }
 
+data "aws_iam_policy_document" "elasticsearch_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "es:DescribeElasticsearchDomain",
+      "es:DescribeElasticsearchDomains",
+      "es:DescribeElasticsearchDomainConfig",
+      "es:ESHttpPost",
+      "es:ESHttpPut"
+    ]
+    resources = [
+      "${data.terraform_remote_state.elasticsearch.elasticsearch_domain_arn}",
+      "${data.terraform_remote_state.elasticsearch.elasticsearch_domain_arn}/*"
+    ]
+  }
+}
 
+resource "aws_iam_policy" "elasticsearch_policy" {
+  policy = "${data.aws_iam_policy_document.elasticsearch_policy.json}"
+}
+
+resource "aws_iam_role_policy_attachment" "elasticsearch_policy_attachment" {
+  policy_arn = "${aws_iam_policy.elasticsearch_policy.arn}"
+  role = "${aws_iam_role.sgt-firehose-assume-role.name}"
+}
 
 resource "aws_iam_policy" "sgt-node-user-policy" {
   policy = "${data.aws_iam_policy_document.sgt-node-user.json}"

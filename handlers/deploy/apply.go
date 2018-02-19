@@ -61,7 +61,27 @@ func copyComponentTemplates(component, envName string) (string, error) {
 
 // AllComponents deploys all components
 func AllComponents(config DeploymentConfig, environ string) error {
-	for _, name := range DeployOrder {
+	var DepOrder []string
+	//handle teardown other firehose if exists.
+
+	if config.CreateElasticsearch == 1 {
+		if err := destroyAWSComponent(firehose, environ); err != nil {
+			return err
+		}
+		DepOrder = ElasticDeployOrder
+
+	} else {
+		if err := destroyAWSComponent(elasticsearchFirehose, environ); err != nil {
+			return err
+		}
+
+		if err := destroyAWSComponent(elasticsearch, environ); err != nil {
+			return err
+		}
+		DepOrder = DeployOrder
+	}
+
+	for _, name := range DepOrder {
 		if err := deployAWSComponent(name, environ); err != nil {
 			return err
 		}
@@ -108,6 +128,7 @@ func deployAWSComponent(component, envName string) error {
 		logger.Info(string(combinedOutput))
 	}
 
+
 	logger.Infof("Building %s...\n", component)
 
 	spin.Start()
@@ -122,13 +143,23 @@ func deployAWSComponent(component, envName string) error {
 		return err
 	}
 
+	if component == "firehose" || component == "elasticsearch_firehose" {
+		logger.Info("updating zip file...")
+		cmd := exec.Command("bash", "-c", "../../modules/firehose/build_lambda.sh")
+		combinedOutput, buildErr := cmd.CombinedOutput()
+		if buildErr != nil {
+			return buildErr
+		}
+		logger.Info(string(combinedOutput))
+	}
+
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
 		return err
 	}
 
-	args := fmt.Sprintf("terraform apply -var-file=../%s.json", envName)
+	args := fmt.Sprintf("terraform apply -auto-approve -var-file=../%s.json", envName)
 	logger.Info(args)
 
 	cmd = exec.Command("bash", "-c", args)
@@ -139,7 +170,6 @@ func deployAWSComponent(component, envName string) error {
 	if component == "elasticsearch" {
 		time.Sleep(time.Second * 10)
 
-		// ElasticSearchMappings("https://search-sgt-osquery-results-r6owrsyarql42ttzy26fz6nf24.us-east-1.es.amazonaws.com")
 		return createElasticSearchMappings()
 	}
 

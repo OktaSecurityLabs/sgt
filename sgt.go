@@ -245,9 +245,9 @@ func runSGT() error {
 		componentList := strings.Join(deploy.DeployOrder, ", ")
 
 		// Create a FlagSet for the destory command
-		destroyCommand := flag.NewFlagSet("deploy", flag.ExitOnError)
+		destroyCommand := flag.NewFlagSet("destroy", flag.ExitOnError)
 		envFlag := destroyCommand.String("env", "", "Deployment environment name")
-		allFlag := destroyCommand.Bool("all", false, fmt.Sprintf("Destroy all components [%s]", componentList))
+		allFlag := destroyCommand.Bool("all", false, fmt.Sprintf("Deploy all components [%s]", componentList))
 
 		// Create a list of components to destroy that can be chosen from
 		var chosenDestroyOptions componentChoices
@@ -257,12 +257,11 @@ func runSGT() error {
 
 		destroyCommand.Parse(os.Args[2:])
 		envName := *envFlag
+		config, err := deploy.ParseDeploymentConfig(envName)
+
 		if envName == "" {
-			var err error
-			if envName, err = helpers.GetValueFromUser("Enter new environment name"); err != nil {
-				destroyCommand.Usage()
-				return err
-			}
+			err := errors.New("No environment specified.  Please rerun with an existing environment")
+			logger.Fatal(err)
 		}
 
 		if *allFlag {
@@ -270,7 +269,7 @@ func runSGT() error {
 			if !helpers.ConfirmAction(prompt) {
 				return nil // User canceled action
 			}
-			return deploy.DestroyAllComponents(envName)
+			return deploy.DestroyAllComponents(config, envName)
 		}
 
 		chosenOptions, err := validateChoices(deploy.DeployOrder, chosenDestroyOptions)

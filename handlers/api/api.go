@@ -333,7 +333,6 @@ func SearchQueryPacks(respwritter http.ResponseWriter, request *http.Request) {
 
 //ConfigurePack configures named pack
 func ConfigurePack(respwritter http.ResponseWriter, request *http.Request) {
-	mu := sync.Mutex{}
 	vars := mux.Vars(request)
 	if len(vars["pack_name"]) < 1 {
 		respwritter.Write([]byte(`No pack specified`))
@@ -354,7 +353,7 @@ func ConfigurePack(respwritter http.ResponseWriter, request *http.Request) {
 			logger.Error(err)
 			return
 		}
-		err = dyndb.UpsertPack(querypack, dynDBInstance, &mu)
+		err = dyndb.UpsertPack(querypack, dynDBInstance)
 		if err != nil {
 			logger.Error(err)
 			return
