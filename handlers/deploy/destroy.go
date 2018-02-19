@@ -9,9 +9,19 @@ import (
 )
 
 // DestroyAllComponents destroys all components, in reverse order
-func DestroyAllComponents(envName string) error {
-	for i := len(DeployOrder) - 1; i >= 0; i-- {
-		if err := destroyAWSComponent(DeployOrder[i], envName); err != nil {
+func DestroyAllComponents(config DeploymentConfig, envName string) error {
+	var DepOrder []string
+	//handle teardown other firehose if exists.
+
+	if config.CreateElasticsearch == 1 {
+		DepOrder = ElasticDeployOrder
+
+	} else {
+		DepOrder = DeployOrder
+	}
+	logger.Info(DepOrder)
+	for i := len(DepOrder) - 1; i > 0; i-- {
+		if err := destroyAWSComponent(DeployOrder[i-1], envName); err != nil {
 			return err
 		}
 	}
@@ -20,6 +30,7 @@ func DestroyAllComponents(envName string) error {
 
 // DestroyComponent is a wrapper to match the `deploy.Component` interface style
 func DestroyComponent(component, envName string) error {
+	//logger.Warn("DestroyComponent: %s, %s", component, envName )
 	return destroyAWSComponent(component, envName)
 }
 

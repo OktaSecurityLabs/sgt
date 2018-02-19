@@ -4,7 +4,6 @@ provider "aws" {
 }
 
 data "terraform_remote_state" "elasticsearch" {
-  count = "${var.create_elasticsearch}"
   backend = "local"
   config {
     path = "../elasticsearch/terraform.tfstate"
@@ -100,9 +99,6 @@ resource "aws_iam_role_policy_attachment" "sgt_lambda_policy_attachment" {
 }
 
 resource "aws_lambda_function" "sgt_osquery_results_date_transform" {
-  provisioner "local-exec" {
-    command = "./build_lambda.sh"
-  }
   function_name = "sgt_osquery_results_date_transform"
   filename = "lambda.zip"
   handler = "main"
@@ -153,23 +149,7 @@ resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-osquery_results" {
 
 }
 
-
 resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-distributed-osquery_results" {
-  name = "sgt-firehose-distributed_osquery_results"
-  destination = "s3"
-
-  s3_configuration {
-    role_arn = "${aws_iam_role.sgt-firehose-assume-role.arn}"
-    bucket_arn = "${aws_s3_bucket.sgt-osquery_results-s3.arn}"
-    buffer_size = 5
-    buffer_interval = 60
-    prefix = "distributed_osquery_results"
-  }
-
-}
-
-resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-distributed-osquery_results" {
-  count = "${var.create_elasticsearch}"
   name = "sgt-firehose-distributed_osquery_results"
   destination = "elasticsearch"
 
@@ -208,7 +188,6 @@ data "aws_iam_policy_document" "sgt-node-user" {
 }
 
 data "aws_iam_policy_document" "elasticsearch_policy" {
-  count = "${var.create_elasticsearch}"
   statement {
     effect = "Allow"
     actions = [
@@ -226,12 +205,10 @@ data "aws_iam_policy_document" "elasticsearch_policy" {
 }
 
 resource "aws_iam_policy" "elasticsearch_policy" {
-  count = "${var.create_elasticsearch}"
   policy = "${data.aws_iam_policy_document.elasticsearch_policy.json}"
 }
 
 resource "aws_iam_role_policy_attachment" "elasticsearch_policy_attachment" {
-  count = "${var.create_elasticsearch}"
   policy_arn = "${aws_iam_policy.elasticsearch_policy.arn}"
   role = "${aws_iam_role.sgt-firehose-assume-role.name}"
 }

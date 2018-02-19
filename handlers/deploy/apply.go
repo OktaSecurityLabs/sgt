@@ -62,10 +62,22 @@ func copyComponentTemplates(component, envName string) (string, error) {
 // AllComponents deploys all components
 func AllComponents(config DeploymentConfig, environ string) error {
 	var DepOrder []string
+	//handle teardown other firehose if exists.
+
 	if config.CreateElasticsearch == 1 {
+		if err := destroyAWSComponent(firehose, environ); err != nil {
+			return err
+		}
 		DepOrder = ElasticDeployOrder
 
 	} else {
+		if err := destroyAWSComponent(elasticsearchFirehose, environ); err != nil {
+			return err
+		}
+
+		if err := destroyAWSComponent(elasticsearch, environ); err != nil {
+			return err
+		}
 		DepOrder = DeployOrder
 	}
 
