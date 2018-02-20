@@ -46,8 +46,8 @@ func WriteSuccess(respWriter http.ResponseWriter, optionalMessage string) {
 	respWriter.Write(getResponseJSON(sgtBaseResponse{Message: optionalMessage, Status: statusSuccess}))
 }
 
-// WriteCustom will write the custom response to the http response writer
-func WriteCustom(respWriter http.ResponseWriter, resp interface{}) {
+// WriteCustomJSON will write the custom response to the http response writer as json
+func WriteCustomJSON(respWriter http.ResponseWriter, resp interface{}) {
 	respWriter.Header().Set("Content-Type", "application/json")
 	respWriter.Write(getResponseJSON(resp))
 }
