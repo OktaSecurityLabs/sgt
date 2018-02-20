@@ -307,16 +307,16 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 			return err
 		}
 		//fmt.Printf("%s", config.Packs)
-		namedConfig.Config_name = strings.Split(filename, ".")[0]
+		namedConfig.ConfigName = strings.Split(filename, ".")[0]
 		switch {
 		case strings.Contains(filename, "mac"):
-			namedConfig.Os_type = "mac"
+			namedConfig.OsType = "mac"
 		case strings.Contains(filename, "windows"):
-			namedConfig.Os_type = "windows"
+			namedConfig.OsType = "windows"
 		case strings.Contains(filename, "Linux"):
-			namedConfig.Os_type = "Linux"
+			namedConfig.OsType = "Linux"
 		default:
-			namedConfig.Os_type = "all"
+			namedConfig.OsType = "all"
 		}
 		var pl []string
 		err = json.Unmarshal(*config.Packs, &pl)
@@ -327,15 +327,15 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 		namedConfig.PackList = pl
 		//blank out config packs since the options config doesn't have a packs kv
 		config.Packs = nil
-		namedConfig.Osquery_config = config
+		namedConfig.OsqueryConfig = config
 		mu := sync.Mutex{}
 		err = dyndb.UpsertNamedConfig(dynDB, &namedConfig, &mu)
 		if err != nil {
-			logger.Infof("%s: failed\n", namedConfig.Config_name)
+			logger.Infof("%s: failed\n", namedConfig.ConfigName)
 			return err
 		}
 
-		logger.Infof("%s: success\n", namedConfig.Config_name)
+		logger.Infof("%s: success\n", namedConfig.ConfigName)
 	}
 
 	return nil

@@ -185,7 +185,7 @@ func SearchByHostIdentifier(hid string, s *dynamodb.DynamoDB) ([]osq_types.Osque
 				logger.Error(err)
 				return Results, err
 			}
-			if hid == string(o.Host_identifier) {
+			if hid == string(o.HostIdentifier) {
 				Results = append(Results, o)
 				fmt.Println(o)
 			}
@@ -219,16 +219,16 @@ func ApprovePendingNode(nodeKey string, dyn *dynamodb.DynamoDB, mu *sync.Mutex) 
 		logger.Error(err)
 		return err
 	}
-	if osqNode.Pending_registration_approval {
+	if osqNode.PendingRegistrationApproval {
 		logger.Info("[++] Approving Node")
 		logger.Info(osqNode)
 		newClient := osq_types.OsqueryClient{}
-		newClient.Host_identifier = osqNode.Host_identifier
-		newClient.Config_name = osqNode.Config_name
-		newClient.Node_key = osqNode.Node_key
-		newClient.Node_invalid = false
+		newClient.HostIdentifier = osqNode.HostIdentifier
+		newClient.ConfigName = osqNode.ConfigName
+		newClient.NodeKey = osqNode.NodeKey
+		newClient.NodeInvalid = false
 		newClient.HostDetails = osqNode.HostDetails
-		newClient.Configuration_group = osqNode.Configuration_group
+		newClient.ConfigurationGroup = osqNode.ConfigurationGroup
 		newClient.Tags = osqNode.Tags
 		err := UpsertClient(newClient, dyn, mu)
 		if err != nil {
@@ -246,11 +246,11 @@ func ValidNode(nodeKey string, dyn *dynamodb.DynamoDB) error {
 		return err
 	}
 
-	if len(osqNode.Node_key) == 0 {
+	if len(osqNode.NodeKey) == 0 {
 		return errors.New("size of osquery node key is 0")
 	}
 
-	if osqNode.Pending_registration_approval == true {
+	if osqNode.PendingRegistrationApproval == true {
 		return errors.New("node is pending registration approval")
 	}
 
