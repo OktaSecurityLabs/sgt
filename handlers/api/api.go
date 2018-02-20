@@ -146,9 +146,9 @@ func ConfigureNode(respWriter http.ResponseWriter, request *http.Request) {
 	handleRequest := func() (interface{}, error) {
 
 		vars := mux.Vars(request)
-		nodeKey, ok := vars["nodeKey"]
+		nodeKey, ok := vars["node_key"]
 		if !ok || nodeKey == "" {
-			return nil, errors.New("request does not contain nodeKey")
+			return nil, errors.New("request does not contain node_key")
 		}
 
 		dynDBInstance := dyndb.DbInstance()
@@ -156,6 +156,8 @@ func ConfigureNode(respWriter http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to find node by key [%s]: %s", nodeKey, err)
 		}
+
+		logger.Infof("existing client: %+v", existingClient)
 
 		switch request.Method {
 		case http.MethodGet:
@@ -165,7 +167,7 @@ func ConfigureNode(respWriter http.ResponseWriter, request *http.Request) {
 		case http.MethodPost:
 
 			if existingClient.NodeKey == "" {
-				return nil, errors.New("existing client nodeKey is empty")
+				return nil, errors.New("existing client node_key is empty")
 			}
 
 			body, err := ioutil.ReadAll(request.Body)
@@ -181,7 +183,7 @@ func ConfigureNode(respWriter http.ResponseWriter, request *http.Request) {
 				return nil, fmt.Errorf("failed to unmarshal request body [%s]: %s", string(body), err)
 			}
 
-			logger.Warn("%v", client)
+			logger.Infof("new client: %+v", client)
 
 			//map missing keys to client
 			client.NodeKey = nodeKey
@@ -230,9 +232,9 @@ func ApproveNode(respWriter http.ResponseWriter, request *http.Request) {
 	handleRequest := func() error {
 
 		vars := mux.Vars(request)
-		nodeKey, ok := vars["nodeKey"]
+		nodeKey, ok := vars["node_key"]
 		if !ok || nodeKey == "" {
-			return errors.New("request does not contain nodeKey")
+			return errors.New("request does not contain node_key")
 		}
 
 		logger.Warn("posting approval")
@@ -405,9 +407,8 @@ func ConfigurePack(respWriter http.ResponseWriter, request *http.Request) {
 			return fmt.Errorf("failed to unmarshal request body [%s]: %s", string(body), err)
 		}
 
-		mu := sync.Mutex{}
 		dynDBInstance := dyndb.DbInstance()
-		err = dyndb.UpsertPack(querypack, dynDBInstance, &mu)
+		err = dyndb.UpsertPack(querypack, dynDBInstance)
 		if err != nil {
 			return fmt.Errorf("dynamo pack upsert failed: %s", err)
 		}

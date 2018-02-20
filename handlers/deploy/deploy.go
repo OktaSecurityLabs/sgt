@@ -23,17 +23,17 @@ import (
 )
 
 const (
-	vpc           = "vpc"
-	datastore     = "datastore"
-	elasticsearch = "elasticsearch"
-	firehose      = "firehose"
+	vpc                   = "vpc"
+	datastore             = "datastore"
+	elasticsearch         = "elasticsearch"
+	firehose              = "firehose"
 	elasticsearchFirehose = "elasticsearch_firehose"
-	s3            = "s3"
-	secrets       = "secrets"
-	autoscaling   = "autoscaling"
-	packs         = "packs"
-	configs       = "configs"
-	scripts       = "scripts"
+	s3                    = "s3"
+	secrets               = "secrets"
+	autoscaling           = "autoscaling"
+	packs                 = "packs"
+	configs               = "configs"
+	scripts               = "scripts"
 )
 
 var (
@@ -87,7 +87,7 @@ type DeploymentConfig struct {
 	SslPrivateKey               string `json:"ssl_private_key"`
 	SgtNodeSecret               string `json:"sgt_node_secret"`
 	SgtAppSecret                string `json:"sgt_app_secret"`
-	CreateElasticsearch			int	`json:"create_elasticsearch"`
+	CreateElasticsearch         int    `json:"create_elasticsearch"`
 }
 
 // copyFile copies file from src to dst
@@ -256,7 +256,7 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 	var files []string
 
 	//if environ specific dir exists in packs, deploy those.  Otherwise use defaults
-	envSpecificConfigs := false
+	var envSpecificConfigs bool
 	if _, err := os.Stat(filepath.Join("osquery_configs", environ)); os.IsNotExist(err) {
 		logger.Infof("No environment specific configs found for: %s\n", environ)
 		logger.Info("using default configs")
@@ -273,7 +273,6 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 		files, err = filepath.Glob(path)
 		if err != nil {
 			return err
-			logger.Fatal(err)
 		}
 	}
 	//spin.Start()
@@ -288,7 +287,7 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 		logger.Infof("Updating %s pack", filename)
 		if strings.HasSuffix(filename, "json") {
 		}
-		fp := ""
+		var fp string
 		if envSpecificConfigs {
 			fp = filepath.Join("osquery_configs", environ, filename)
 		} else {

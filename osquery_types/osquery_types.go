@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
-	"github.com/oktasecuritylabs/sgt/logger"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -24,7 +22,8 @@ type OsqueryClient struct {
 	LastUpdated                 string                       `json:"last_updated"`
 }
 
-func (os *OsqueryClient) Timestamp() {
+// SetTimestamp sets the current timestamp with the proper format
+func (os *OsqueryClient) SetTimestamp() {
 	os.LastUpdated = time.Now().UTC().Format("Mon, 01/02/06, 03:04:05PM")
 }
 
@@ -264,16 +263,19 @@ type DistributedQuery struct {
 	NodeInvalid bool     `json:"node_invalid"`
 }
 
-func (dq DistributedQuery) ToJson() string {
-	js := `{"queries": {`
-	var querylist []string
+// ToJSON returns a formatted version of the DistributedQuery
+func (dq DistributedQuery) ToJSON() string {
+	result := make(map[string]interface{})
+	querylist := make(map[string]string)
 	for i, j := range dq.Queries {
-		querylist = append(querylist, fmt.Sprintf(`"id%d": "%s"`, i+1, j))
+		querylist[fmt.Sprintf("id%d", i+1)] = j
 	}
-	qstrings := strings.Join(querylist, ",")
-	js += qstrings
-	js += fmt.Sprintf(`}, "node_invalid": %s}`, strconv.FormatBool(dq.NodeInvalid))
-	return js
+	result["queries"] = querylist
+	result["node_invalid"] = strconv.FormatBool(dq.NodeInvalid)
+
+	js, _ := json.Marshal(result)
+
+	return string(js)
 }
 
 type ServerConfig struct {

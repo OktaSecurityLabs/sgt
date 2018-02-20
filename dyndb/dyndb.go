@@ -174,7 +174,7 @@ func SearchByHostIdentifier(hid string, s *dynamodb.DynamoDB) ([]osq_types.Osque
 		logger.Error(err)
 		return Results, err
 	}
-	if len(hid) > 0 {
+	if hid != "" {
 		for _, i := range a.Items {
 			//fmt.Println(i)
 			o := osq_types.OsqueryClient{}
@@ -293,7 +293,7 @@ func SearchByNodeKey(nk string, s *dynamodb.DynamoDB) (osq_types.OsqueryClient, 
 	return osqNode, nil
 }
 
-//GetPackQueries returns slice of packQueries
+// APIGetPackQueries returns slice of packQueries
 func APIGetPackQueries(dynamoDB *dynamodb.DynamoDB) ([]osq_types.PackQuery, error) {
 	results := []osq_types.PackQuery{}
 	scanItems, err := dynamoDB.Scan(&dynamodb.ScanInput{
@@ -316,7 +316,7 @@ func APIGetPackQueries(dynamoDB *dynamodb.DynamoDB) ([]osq_types.PackQuery, erro
 
 }
 
-//APISearchPackQueries returns slice of packQueries which match the searchString substring
+// APISearchPackQueries returns slice of packQueries which match the searchString substring
 func APISearchPackQueries(searchString string, dynamoDB *dynamodb.DynamoDB) ([]osq_types.PackQuery, error) {
 	results := []osq_types.PackQuery{}
 	scanItems, err := dynamoDB.Scan(&dynamodb.ScanInput{
@@ -392,7 +392,7 @@ func UpsertPackQuery(pq osq_types.PackQuery, db *dynamodb.DynamoDB, mu *sync.Mut
 	})
 	if err != nil {
 		logger.Error(err)
-		return  err
+		return err
 	}
 
 	return err
@@ -554,67 +554,48 @@ func DeleteQueryPack(queryPackName string, dynamoDB *dynamodb.DynamoDB, mu *sync
 	return nil
 }
 
-//UpsertPack upserts pack
+// UpsertPack upserts pack
 func UpsertPack(qp osq_types.QueryPack, dynamoDB *dynamodb.DynamoDB) error {
 	//Additive upsert.
-	//placeholder  mutex until  they can all be removed
-	placeholderMutex := sync.Mutex{}
-	mu := &placeholderMutex
 	existing, err := GetNewPackByName(qp.PackName, dynamoDB)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
 
-	switch len(existing.PackName) > 0 {
-	case true:
-		{
-			existingQueries := map[string]bool{}
-			//
-			for _, packQuery := range existing.Queries {
-				existingQueries[packQuery.QueryName] = true
-			}
-			if err != nil {
-				logger.Error(err)
-				return err
-			}
-			//note:  qp.Queries is a list of strings, not pack_queries
-			for _, query := range qp.Queries {
-				if !existingQueries[query] {
-					//existing.Queries = append(existing.Queries, query)
-					existingQueries[query] = true
-				}
-			}
-			//existing queries should now be a map of both old and new
-			logger.Debug(existingQueries)
-			newQueryPack := osq_types.QueryPack{}
-			newQueryPack.PackName = existing.PackName
-			for query := range existingQueries {
-				newQueryPack.Queries = append(newQueryPack.Queries, query)
-			}
-			err = DeleteQueryPack(qp.PackName, dynamoDB, mu)
-			if err != nil {
-				logger.Error(err)
-				return err
-			}
-			err = NewQueryPack(newQueryPack, dynamoDB, mu)
-			if err != nil {
-				logger.Error(err)
-				return err
-			}
-		}
-	default:
-		{
-			err = NewQueryPack(qp, dynamoDB, mu)
-			if err != nil {
-				logger.Error(err)
-				return err
-			}
-		}
-
+	//placeholder  mutex until  they can all be removed
+	placeholderMutex := sync.Mutex{}
+	mu := &placeholderMutex
+	if existing.PackName == "" {
+		return NewQueryPack(qp, dynamoDB, mu)
 	}
 
-	return nil
+	existingQueries := map[string]bool{}
+	for _, packQuery := range existing.Queries {
+		existingQueries[packQuery.QueryName] = true
+	}
+
+	//note:  qp.Queries is a list of strings, not pack_queries
+	for _, query := range qp.Queries {
+		if !existingQueries[query] {
+			//existing.Queries = append(existing.Queries, query)
+			existingQueries[query] = true
+		}
+	}
+
+	//existing queries should now be a map of both old and new
+	logger.Debug(existingQueries)
+	newQueryPack := osq_types.QueryPack{}
+	newQueryPack.PackName = existing.PackName
+	for query := range existingQueries {
+		newQueryPack.Queries = append(newQueryPack.Queries, query)
+	}
+
+	err = DeleteQueryPack(qp.PackName, dynamoDB, mu)
+	if err != nil {
+		return err
+	}
+
+	return NewQueryPack(newQueryPack, dynamoDB, mu)
 }
 
 //SearchDistributedNodeKey returns a distributed query for node specified by nodeKey
@@ -739,22 +720,14 @@ func UpsertDistributedQuery(dq osq_types.DistributedQuery, dynamoDB *dynamodb.Dy
 	//dynamoDB := dyndb.DbInstance()
 	existing, err := SearchDistributedNodeKey(dq.NodeKey, dynamoDB)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
-	switch len(existing.NodeKey) > 0 {
-	case true:
-		{
-			err = AppendDistributedQuery(dq, dynamoDB, mu)
-		}
-	default:
-		err = NewDistributedQuery(dq, dynamoDB, mu)
+
+	if existing.NodeKey != "" {
+		return AppendDistributedQuery(dq, dynamoDB, mu)
 	}
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-	return nil
+
+	return NewDistributedQuery(dq, dynamoDB, mu)
 }
 
 //NewUser creates new user in DB
@@ -777,9 +750,9 @@ func NewUser(u osq_types.User, dynamoDB *dynamodb.DynamoDB, mu *sync.Mutex) erro
 	return nil
 }
 
-//GetUser returns user from DB
+// GetUser returns user from DB
 func GetUser(username string, dynamoDB *dynamodb.DynamoDB) (osq_types.User, error) {
-	u := osq_types.User{}
+	user := osq_types.User{}
 	type userquery struct {
 		Username string `json:"username"`
 	}
@@ -787,7 +760,7 @@ func GetUser(username string, dynamoDB *dynamodb.DynamoDB) (osq_types.User, erro
 	userQuery := userquery{username}
 	marshalmap, err := dynamodbattribute.MarshalMap(userQuery)
 	if err != nil {
-		return u, err
+		return user, err
 	}
 
 	resp, err := dynamoDB.GetItem(&dynamodb.GetItemInput{
@@ -795,14 +768,14 @@ func GetUser(username string, dynamoDB *dynamodb.DynamoDB) (osq_types.User, erro
 		Key:       marshalmap,
 	})
 	if err != nil {
-		logger.Info("get item failed")
-		logger.Error(err)
-		return u, err
+		logger.Error("get item failed")
+		return user, err
 	}
-	err = dynamodbattribute.UnmarshalMap(resp.Item, &u)
+
+	err = dynamodbattribute.UnmarshalMap(resp.Item, &user)
 	if err != nil {
-		return u, err
+		return user, err
 
 	}
-	return u, nil
+	return user, nil
 }
