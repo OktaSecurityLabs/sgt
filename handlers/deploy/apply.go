@@ -229,7 +229,7 @@ func createElasticSearchMappings() error {
 	uri := fmt.Sprintf("https://%s/%s", esEndpoint, path)
 	logger.Info(uri)
 
-	req, _ := http.NewRequest("PUT", uri, bytes.NewBuffer(rawJSON))
+	req, _ := http.NewRequest(http.MethodPut, uri, bytes.NewBuffer(rawJSON))
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
 	response, _ := client.Do(req)
