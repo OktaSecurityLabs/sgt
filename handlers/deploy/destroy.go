@@ -20,7 +20,7 @@ func DestroyAllComponents(config DeploymentConfig, envName string) error {
 		DepOrder = DeployOrder
 	}
 	logger.Info(DepOrder)
-	for i := len(DepOrder) - 1; i > 0; i-- {
+	for i := len(DepOrder) - 1; i >= 0; i-- {
 		if err := destroyAWSComponent(DeployOrder[i], envName); err != nil {
 			return err
 		}
