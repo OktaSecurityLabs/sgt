@@ -287,17 +287,19 @@ type ServerConfig struct {
 }
 
 func GetServerConfig(fn string) (ServerConfig, error) {
+
+	config := ServerConfig{}
 	file, err := os.Open(fn)
 	if err != nil {
-		logger.Error(err)
-	}
-	decoder := json.NewDecoder(file)
-	config := ServerConfig{}
-	err = decoder.Decode(&config)
-	if err != nil {
-		logger.Error(err)
 		return config, err
 	}
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&config)
+	if err != nil {
+		return config, err
+	}
+
 	return config, nil
 }
 
@@ -308,12 +310,7 @@ type User struct {
 }
 
 func (u User) Validate(plaintext_pw string) error {
-	err := bcrypt.CompareHashAndPassword(u.Password, []byte(plaintext_pw))
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-	return nil
+	return bcrypt.CompareHashAndPassword(u.Password, []byte(plaintext_pw))
 }
 
 type DistributedQueryResult struct {
