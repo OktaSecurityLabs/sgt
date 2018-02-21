@@ -168,6 +168,7 @@ func ConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 		if vars["nodeKey"] != "" {
 			//verify that node exists
 			//get existing client config
+			//rewrite this crappy shit
 			existingClient, err := dyndb.SearchByNodeKey(nodeKey, dynDBInstance)
 			if err != nil {
 				logger.Error(err)
