@@ -27,6 +27,7 @@ const (
 	datastore     = "datastore"
 	elasticsearch = "elasticsearch"
 	firehose      = "firehose"
+	elasticsearchFirehose = "elasticsearch_firehose"
 	s3            = "s3"
 	secrets       = "secrets"
 	autoscaling   = "autoscaling"
@@ -42,8 +43,17 @@ var (
 	DeployOrder = []string{
 		vpc,
 		datastore,
-		elasticsearch,
 		firehose,
+		s3,
+		secrets,
+		autoscaling,
+	}
+
+	ElasticDeployOrder = []string{
+		vpc,
+		datastore,
+		elasticsearch,
+		elasticsearchFirehose,
 		s3,
 		secrets,
 		autoscaling,
@@ -77,6 +87,7 @@ type DeploymentConfig struct {
 	SslPrivateKey               string `json:"ssl_private_key"`
 	SgtNodeSecret               string `json:"sgt_node_secret"`
 	SgtAppSecret                string `json:"sgt_app_secret"`
+	CreateElasticsearch			int	`json:"create_elasticsearch"`
 }
 
 // copyFile copies file from src to dst
@@ -144,7 +155,7 @@ func CreateDeployDirectory(environ string) error {
 		logger.Info(environ)
 		os.Exit(0)
 	}
-	dirs := []string{"vpc", "datastore", "firehose", "elasticsearch", "s3", "autoscaling", "secrets"}
+	dirs := []string{"vpc", "datastore", "firehose", "elasticsearch_firehose", "elasticsearch", "s3", "autoscaling", "secrets"}
 	for _, p := range dirs {
 		dir := filepath.Join(path, p)
 		//logger.Info(dir)
@@ -188,11 +199,12 @@ func osqueryDefaultPacks(config DeploymentConfig, environ string) error {
 			return err
 		}
 	}
-	spin.Start()
-	defer spin.Stop()
+
 	for _, fn := range files {
+
 		_, filename := filepath.Split(fn)
 		if strings.HasSuffix(filename, "json") {
+			logger.Infof("Deploying %s", filename)
 			pack := osq_types.QueryPack{}
 			helperPack := helpers.OsqueryPack{}
 			s, err := helpers.CleanPack(filename)
@@ -229,7 +241,7 @@ func osqueryDefaultPacks(config DeploymentConfig, environ string) error {
 			//logger.Info("queries done\n")
 			pack.Queries = helperPack.ListQueries()
 			pack.PackName = strings.Split(filename, ".")[0]
-			err = dyndb.UpsertPack(pack, dynDBInstance, &mu)
+			err = dyndb.UpsertPack(pack, dynDBInstance)
 			if err != nil {
 				return err
 			}
@@ -261,10 +273,11 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 		files, err = filepath.Glob(path)
 		if err != nil {
 			return err
+			logger.Fatal(err)
 		}
 	}
-	spin.Start()
-	defer spin.Stop()
+	//spin.Start()
+	//defer spin.Stop()
 	credfile, err := UserAwsCredFile()
 	if err != nil {
 		logger.Fatal(err)
@@ -272,6 +285,7 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 	dynDB := auth.CrendentialedDbInstance(credfile, config.AWSProfile)
 	for _, fn := range files {
 		_, filename := filepath.Split(fn)
+		logger.Infof("Updating %s pack", filename)
 		if strings.HasSuffix(filename, "json") {
 		}
 		fp := ""
@@ -293,16 +307,16 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 			return err
 		}
 		//fmt.Printf("%s", config.Packs)
-		namedConfig.Config_name = strings.Split(filename, ".")[0]
+		namedConfig.ConfigName = strings.Split(filename, ".")[0]
 		switch {
 		case strings.Contains(filename, "mac"):
-			namedConfig.Os_type = "mac"
+			namedConfig.OsType = "mac"
 		case strings.Contains(filename, "windows"):
-			namedConfig.Os_type = "windows"
+			namedConfig.OsType = "windows"
 		case strings.Contains(filename, "Linux"):
-			namedConfig.Os_type = "Linux"
+			namedConfig.OsType = "Linux"
 		default:
-			namedConfig.Os_type = "all"
+			namedConfig.OsType = "all"
 		}
 		var pl []string
 		err = json.Unmarshal(*config.Packs, &pl)
@@ -313,15 +327,15 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 		namedConfig.PackList = pl
 		//blank out config packs since the options config doesn't have a packs kv
 		config.Packs = nil
-		namedConfig.Osquery_config = config
+		namedConfig.OsqueryConfig = config
 		mu := sync.Mutex{}
 		err = dyndb.UpsertNamedConfig(dynDB, &namedConfig, &mu)
 		if err != nil {
-			logger.Infof("%s: failed\n", namedConfig.Config_name)
+			logger.Infof("%s: failed\n", namedConfig.ConfigName)
 			return err
 		}
 
-		logger.Infof("%s: success\n", namedConfig.Config_name)
+		logger.Infof("%s: success\n", namedConfig.ConfigName)
 	}
 
 	return nil

@@ -77,7 +77,7 @@ func ConfigurationRequest(respwritter http.ResponseWriter, request *http.Request
 		}
 		//Create base osquery named config with default options
 		namedConfig := osquery_types.OsqueryNamedConfig{}
-		namedConfig.Osquery_config.Options = osquery_types.NewOsqueryOptions()
+		namedConfig.OsqueryConfig.Options = osquery_types.NewOsqueryOptions()
 		existingNamedConfig, err := dyndb.GetNamedConfig(dynDBInstance, vars["config_name"])
 		//now merge what's already in teh database with our defaults
 		js, err := json.Marshal(existingNamedConfig)
@@ -100,7 +100,7 @@ func ConfigurationRequest(respwritter http.ResponseWriter, request *http.Request
 		if err != nil {
 			panic(fmt.Sprintln(err, os.Stdout))
 		}
-		if vars["config_name"] != namedConfig.Config_name {
+		if vars["config_name"] != namedConfig.ConfigName {
 			respwritter.Write([]byte(`{"result":"failure", "reason": "named config endpoint does not match posted data config_name"}`))
 			return
 		}
@@ -150,11 +150,11 @@ func ConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 	logger.Warn("%v", client)
 	if request.Method == "GET" {
 		if vars["nodeKey"] != "" {
-			result, err := dyndb.SearchByNodeKey(client.Node_key, dynDBInstance)
+			result, err := dyndb.SearchByNodeKey(client.NodeKey, dynDBInstance)
 			if err != nil {
 				logger.Error(err)
 			}
-			if result.Host_identifier != "" {
+			if result.HostIdentifier != "" {
 				js, err := json.Marshal(result)
 				if err != nil {
 					logger.Error(err)
@@ -179,22 +179,22 @@ func ConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 				respwritter.Write([]byte(`{"error": "node invalid"}`))
 				return
 			}
-			if len(existingClient.Node_key) > 0 {
+			if len(existingClient.NodeKey) > 0 {
 				//map missing keys to client
-				client.Node_key = nodeKey
-				if len(client.Config_name) <= 0 {
-					client.Config_name = existingClient.Config_name
+				client.NodeKey = nodeKey
+				if len(client.ConfigName) <= 0 {
+					client.ConfigName = existingClient.ConfigName
 				}
-				client.Host_identifier = existingClient.Host_identifier
-				if client.Node_invalid != true {
-					if client.Node_invalid != false {
-						client.Node_invalid = existingClient.Node_invalid
+				client.HostIdentifier = existingClient.HostIdentifier
+				if client.NodeInvalid != true {
+					if client.NodeInvalid != false {
+						client.NodeInvalid = existingClient.NodeInvalid
 					}
 				}
 				client.HostDetails = existingClient.HostDetails
-				if client.Pending_registration_approval != false {
-					if client.Pending_registration_approval != true {
-						client.Pending_registration_approval = existingClient.Pending_registration_approval
+				if client.PendingRegistrationApproval != false {
+					if client.PendingRegistrationApproval != true {
+						client.PendingRegistrationApproval = existingClient.PendingRegistrationApproval
 					}
 				}
 				if len(client.Tags) < 1 {
@@ -334,7 +334,6 @@ func SearchQueryPacks(respwritter http.ResponseWriter, request *http.Request) {
 
 //ConfigurePack configures named pack
 func ConfigurePack(respwritter http.ResponseWriter, request *http.Request) {
-	mu := sync.Mutex{}
 	vars := mux.Vars(request)
 	if len(vars["pack_name"]) < 1 {
 		respwritter.Write([]byte(`No pack specified`))
@@ -355,7 +354,7 @@ func ConfigurePack(respwritter http.ResponseWriter, request *http.Request) {
 			logger.Error(err)
 			return
 		}
-		err = dyndb.UpsertPack(querypack, dynDBInstance, &mu)
+		err = dyndb.UpsertPack(querypack, dynDBInstance)
 		if err != nil {
 			logger.Error(err)
 			return

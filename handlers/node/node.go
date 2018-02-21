@@ -17,10 +17,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// NodeConfigurePost type for handling post requests made by node
 type NodeConfigurePost struct {
-	Enroll_secret   string `json:"enroll_secret"`
-	Node_key        string `json:"node_key"`
-	Host_identifier string `json:"host_identifier"`
+	EnrollSecret   string `json:"enroll_secret"`
+	NodeKey        string `json:"node_key"`
+	HostIdentifier string `json:"host_identifier"`
 }
 
 func RandomString(strlen int) string {
@@ -32,14 +33,14 @@ func RandomString(strlen int) string {
 	return strings.Join(result, "")
 }
 
-func NodeEnrollRequest(respwritter http.ResponseWriter, request *http.Request) {
+func NodeEnrollRequest(respWriter http.ResponseWriter, request *http.Request) {
 	dump, _ := httputil.DumpRequest(request, true)
 	logger.Debug(string(dump))
-	dyn_svc := dyndb.DbInstance()
+	dynSvc := dyndb.DbInstance()
 
 	mu := sync.Mutex{}
 
-	respwritter.Header().Set("Content-Type", "application/json")
+	respWriter.Header().Set("Content-Type", "application/json")
 	//test if enrol secret is correct
 	dump, err := httputil.DumpRequest(request, true)
 	logger.Info(string(dump))
@@ -54,7 +55,7 @@ func NodeEnrollRequest(respwritter http.ResponseWriter, request *http.Request) {
 	}
 	if len(sekret) <= 3 {
 		logger.Warn("Node secret too short, exiting.")
-		respwritter.Write([]byte(fmt.Sprintf("actual secret: %s", sekret)))
+		respWriter.Write([]byte(fmt.Sprintf("actual secret: %s", sekret)))
 		return
 	}
 	//check if enroll secret is accurate
@@ -62,15 +63,15 @@ func NodeEnrollRequest(respwritter http.ResponseWriter, request *http.Request) {
 	//if hostname registered, send config
 	//if not, send back to pending registration
 	type EnrollRequest struct {
-		Enroll_secret   string                       `json:"enroll_secret"`
-		Node_key        string                       `json:"node_key"`
-		Host_identifier string                       `json:"host_identifier"`
-		PlatformType    string                       `json:"platform_type"`
-		HostDetails     map[string]map[string]string `json:"host_details"`
+		EnrollSecret   string                       `json:"enroll_secret"`
+		NodeKey        string                       `json:"node_key"`
+		HostIdentifier string                       `json:"host_identifier"`
+		PlatformType   string                       `json:"platform_type"`
+		HostDetails    map[string]map[string]string `json:"host_details"`
 	}
 	type EnrollRequestResponse struct {
-		Node_key     string `json:"node_key"`
-		Node_invalid bool   `json:"node_invalid"`
+		NodeKey     string `json:"node_key"`
+		NodeInvalid bool   `json:"node_invalid"`
 	}
 	//fmt.Println(request.Body)
 	nodeEnrollRequestLogger := logger.WithFields(log.Fields{
@@ -88,32 +89,32 @@ func NodeEnrollRequest(respwritter http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		nodeEnrollRequestLogger.Error(err)
 	}
-	if string(data.Enroll_secret) == sekret {
+	if string(data.EnrollSecret) == sekret {
 		nodeEnrollRequestLogger.WithFields(log.Fields{
-			"hostname": data.Host_identifier,
+			"hostname": data.HostIdentifier,
 		}).Info("Correct sekret received")
 		//Need more error handling here.  what if node key is valid but hostname is duplicate?
-		if data.Node_key == "" {
-			ans, err := dyndb.SearchByHostIdentifier(data.Host_identifier, dyn_svc)
+		if data.NodeKey == "" {
+			ans, err := dyndb.SearchByHostIdentifier(data.HostIdentifier, dynSvc)
 			if err != nil {
 				logger.Error(err)
 				return
 			}
 			if len(ans) > 0 {
 				nodeEnrollRequestLogger.WithFields(log.Fields{
-					"hostname": data.Host_identifier,
+					"hostname": data.HostIdentifier,
 				}).Info("host already exists, setting host to existing node_key")
-				enroll_request_response := EnrollRequestResponse{ans[0].Node_key, false}
+				enrollRequestResponse := EnrollRequestResponse{ans[0].NodeKey, false}
 				osc := ans[0]
 				osc.Timestamp()
-				err := dyndb.UpsertClient(osc, dyn_svc, &mu)
+				err := dyndb.UpsertClient(osc, dynSvc, &mu)
 				if err != nil {
 					nodeEnrollRequestLogger.Error(err)
 					return
 				}
 				// might be good to check for dupe hostnames here before ACTUALLY issuing new key
-				js, _ := json.Marshal(enroll_request_response)
-				respwritter.Write(js)
+				js, _ := json.Marshal(enrollRequestResponse)
+				respWriter.Write(js)
 			} else {
 				// this will trigger a new enrollment request.  Upon creation of this request, it might be
 				//a good idea to generate a post event to an endpoint to notify of a pending enrollment
@@ -121,33 +122,33 @@ func NodeEnrollRequest(respwritter http.ResponseWriter, request *http.Request) {
 				// this could also be taken care of by a separate worker that sweeps for pending enrollments.
 				// work may be better, as this task can be assigned to a lambda and gives more flexibility to the
 				//post endpoint
-				node_key := RandomString(20)
+				nodeKey := RandomString(20)
 				nodeEnrollRequestLogger.WithFields(log.Fields{
-					"hostname": data.Host_identifier,
+					"hostname": data.HostIdentifier,
 				}).Info("generating new  node_key")
-				enroll_request_response := EnrollRequestResponse{node_key, false}
+				enrollRequestResponse := EnrollRequestResponse{nodeKey, false}
 				// Handle enrollment defaults here.  Default configs for widerps, osux, Linux
 				osc := osquery_types.OsqueryClient{
-					Host_identifier:               data.Host_identifier,
-					Node_key:                      node_key,
-					Node_invalid:                  false,
-					HostDetails:                   data.HostDetails,
-					Pending_registration_approval: true,
-					Tags:                []string{},
-					Config_name:         "default",
-					Configuration_group: "",
+					HostIdentifier:              data.HostIdentifier,
+					NodeKey:                     nodeKey,
+					NodeInvalid:                 false,
+					HostDetails:                 data.HostDetails,
+					PendingRegistrationApproval: true,
+					Tags:               []string{},
+					ConfigName:         "default",
+					ConfigurationGroup: "",
 				}
 				osc.Timestamp()
 				// might be good to check for dupe hostnames here before ACTUALLY issuing new key
-				err := dyndb.UpsertClient(osc, dyn_svc, &mu)
+				err := dyndb.UpsertClient(osc, dynSvc, &mu)
 				if err != nil {
 					nodeEnrollRequestLogger.WithFields(log.Fields{
-						"hostname": data.Host_identifier,
+						"hostname": data.HostIdentifier,
 					}).Info("failed to upsert  node")
 				}
-				//respwritter.Write([]byte(`{"node_invalid": true, "node_key": nodekey}`))
-				js, _ := json.Marshal(enroll_request_response)
-				respwritter.Write(js)
+
+				js, _ := json.Marshal(enrollRequestResponse)
+				respWriter.Write(js)
 				return
 
 			}
@@ -157,17 +158,17 @@ func NodeEnrollRequest(respwritter http.ResponseWriter, request *http.Request) {
 		// if node key INVALID, return node_invalid
 		// if node key configured, check
 	} else {
-		respwritter.Header().Set("Content-Type", "application/json")
-		respwritter.Write([]byte(`{"node_invalid": true}`))
+		respWriter.Header().Set("Content-Type", "application/json")
+		respWriter.Write([]byte(`{"node_invalid": true}`))
 		return
 	}
 	//fmt.Println(string(dump))
 }
 
-func NodeConfigureRequest(respwritter http.ResponseWriter, request *http.Request) {
+func NodeConfigureRequest(respWriter http.ResponseWriter, request *http.Request) {
 	dump, _ := httputil.DumpRequest(request, true)
 	logger.Debug(string(dump))
-	dyn_svc := dyndb.DbInstance()
+	dynSvc := dyndb.DbInstance()
 	//to recieve a valid config, node must have both a valid sekret and
 	//a node_key that is valid
 	body, err := ioutil.ReadAll(request.Body)
@@ -186,40 +187,40 @@ func NodeConfigureRequest(respwritter http.ResponseWriter, request *http.Request
 		logger.Warn("unmarshal error")
 	}
 
-	err = dyndb.ValidNode(data.Node_key, dyn_svc)
+	err = dyndb.ValidNode(data.NodeKey, dynSvc)
 	if err != nil {
 		logger.Error(err)
-		respwritter.Header().Set("Content-Type", "application/json")
-		respwritter.Write([]byte(`{"node_invalid": true}`))
+		respWriter.Header().Set("Content-Type", "application/json")
+		respWriter.Write([]byte(`{"node_invalid": true}`))
 		return
 	}
 
 	//query dyndb for node state with key
 	logger.WithFields(log.Fields{
-		"hostname": data.Host_identifier,
-		"node_key": data.Node_key,
+		"hostname": data.HostIdentifier,
+		"node_key": data.NodeKey,
 	}).Debug("valid node")
 	//get type of config for endpoint, return config
-	osq_node, err := dyndb.SearchByNodeKey(data.Node_key, dyn_svc)
-	osq_node.Timestamp()
+	osqNode, err := dyndb.SearchByNodeKey(data.NodeKey, dynSvc)
+	osqNode.Timestamp()
 	if err != nil {
 		logger.Panic(err)
 	}
 	mu := sync.Mutex{}
-	err = dyndb.UpsertClient(osq_node, dyn_svc, &mu)
+	err = dyndb.UpsertClient(osqNode, dynSvc, &mu)
 	if err != nil {
 		logger.Error(err)
 		return
 	}
-	named_config := osquery_types.OsqueryNamedConfig{}
-	if len(osq_node.Config_name) > 0 {
-		named_config, err = dyndb.GetNamedConfig(dyn_svc, osq_node.Config_name)
+	namedConfig := osquery_types.OsqueryNamedConfig{}
+	if len(osqNode.ConfigName) > 0 {
+		namedConfig, err = dyndb.GetNamedConfig(dynSvc, osqNode.ConfigName)
 		if err != nil {
 			logger.Panicf("[node.go]: Error returned when getting Named config: \n %s", err)
 		}
 	} else {
 		logger.Info("No named config found, setting default config")
-		named_config, err = dyndb.GetNamedConfig(dyn_svc, "default")
+		namedConfig, err = dyndb.GetNamedConfig(dynSvc, "default")
 		if err != nil {
 			logger.Panic(err)
 		}
@@ -229,22 +230,22 @@ func NodeConfigureRequest(respwritter http.ResponseWriter, request *http.Request
 		logger.Error(err)
 		return
 	}
-	//named_config.Osquery_config.Options.Aws_access_key_id = os.Getenv("FIREHOSE_AWS_ACCESS_KEY_ID")
-	//named_config.Osquery_config.Options.Aws_secret_access_key = os.Getenv("FIREHOSE_AWS_SECRET_ACCESS_KEY")
-	//named_config.Osquery_config.Options.Aws_firehose_stream = os.Getenv("AWS_FIREHOSE_STREAM")
+	//namedConfig.OsqueryConfig.Options.AwsAccessKeyID = os.Getenv("FIREHOSE_AWS_ACCESS_KEY_ID")
+	//namedConfig.OsqueryConfig.Options.AwsSecretAccessKey = os.Getenv("FIREHOSE_AWS_SECRET_ACCESS_KEY")
+	//namedConfig.OsqueryConfig.Options.AwsFirehoseStream = os.Getenv("AWS_FIREHOSE_STREAM")
 	logger.Debug(config)
-	named_config.Osquery_config.Options.Aws_access_key_id = config.FirehoseAWSAccessKeyID
-	named_config.Osquery_config.Options.Aws_secret_access_key = config.FirehoseAWSSecretAccessKey
-	if named_config.Osquery_config.Options.Aws_firehose_stream == "" {
-		named_config.Osquery_config.Options.Aws_firehose_stream = config.FirehoseStreamName
+	namedConfig.OsqueryConfig.Options.AwsAccessKeyID = config.FirehoseAWSAccessKeyID
+	namedConfig.OsqueryConfig.Options.AwsSecretAccessKey = config.FirehoseAWSSecretAccessKey
+	if namedConfig.OsqueryConfig.Options.AwsFirehoseStream == "" {
+		namedConfig.OsqueryConfig.Options.AwsFirehoseStream = config.FirehoseStreamName
 	}
-	raw_pack_json := dyndb.BuildOsqueryPacksAsJSON(named_config)
-	named_config.Osquery_config.Packs = &raw_pack_json
-	js, err := json.Marshal(named_config.Osquery_config)
+	rawPackJSON := dyndb.BuildOsqueryPacksAsJSON(namedConfig)
+	namedConfig.OsqueryConfig.Packs = &rawPackJSON
+	js, err := json.Marshal(namedConfig.OsqueryConfig)
 	if err != nil {
 		logger.Error(err)
 	}
 
-	respwritter.Header().Set("Content-Type", "application/json")
-	respwritter.Write(js)
+	respWriter.Header().Set("Content-Type", "application/json")
+	respWriter.Write(js)
 }

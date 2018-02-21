@@ -4,6 +4,7 @@ provider "aws" {
 }
 
 resource "aws_elasticsearch_domain" "sgt-osquery_results" {
+  count = "${var.create_elasticsearch}"
   domain_name = "${var.elasticsearch_domain_name}"
   elasticsearch_version = "5.5"
   cluster_config {
@@ -21,6 +22,7 @@ resource "aws_elasticsearch_domain" "sgt-osquery_results" {
 }
 
 data "aws_iam_policy_document" "es_domain_policy" {
+  count = "${var.create_elasticsearch}"
   statement {
     effect = "Allow"
     principals {
@@ -45,6 +47,7 @@ data "aws_iam_policy_document" "es_domain_policy" {
 }
 
 resource "aws_elasticsearch_domain_policy" "elasticsearch_domain_policy" {
+  count = "${var.create_elasticsearch}"
   domain_name = "${aws_elasticsearch_domain.sgt-osquery_results.domain_name}"
   access_policies = "${data.aws_iam_policy_document.es_domain_policy.json}"
   depends_on = ["aws_elasticsearch_domain.sgt-osquery_results"]
