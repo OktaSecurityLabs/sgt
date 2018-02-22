@@ -67,7 +67,7 @@ func DistributedQueryRead(respwritter http.ResponseWriter, request *http.Request
 			}
 		}
 	default:
-		logger.Warn("returning NULLLLL")
+		logger.Debug("No distributed queries, returning nul")
 		respwritter.Write([]byte(`{}`))
 		return
 

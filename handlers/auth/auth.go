@@ -222,7 +222,7 @@ type NodeConfigurePost struct {
 
 //ValidNodeKey validates posted node key
 func ValidNodeKey(respwritter http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
-	logger.Info("validating node...")
+	logger.Debug("validating node...")
 
 	//req_copy := req
 	dynDB := dyndb.DbInstance()
