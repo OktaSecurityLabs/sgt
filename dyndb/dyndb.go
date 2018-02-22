@@ -137,9 +137,9 @@ func GetNamedConfig(dynamoDB *dynamodb.DynamoDB, configName string) (osq_types.O
 
 //UpsertClient upsers an osqueryClient
 func UpsertClient(oc osq_types.OsqueryClient, d *dynamodb.DynamoDB, mu *sync.Mutex) error {
-	logger.Warn("Upserting Client: %v", oc)
+	logger.Debug("Upserting Client: %v", oc)
 	mu.Lock()
-	defer mu.Unlock()
+	mu.Unlock()
 	//fmt.Println(oc)
 	av, err := dynamodbattribute.MarshalMap(oc)
 	if err != nil {
@@ -147,12 +147,10 @@ func UpsertClient(oc osq_types.OsqueryClient, d *dynamodb.DynamoDB, mu *sync.Mut
 		logger.Warn(err)
 		return err
 	}
-	res, err := d.PutItem(&dynamodb.PutItemInput{
+	_, err = d.PutItem(&dynamodb.PutItemInput{
 		TableName: aws.String("osquery_clients"),
 		Item:      av,
 	})
-	fmt.Println("upsert res")
-	fmt.Println(res)
 	if err != nil {
 		logger.Error(err)
 		return err
