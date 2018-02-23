@@ -139,7 +139,7 @@ func ConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 	dynDBInstance := dyndb.DbInstance()
 	mu := sync.Mutex{}
 	vars := mux.Vars(request)
-	nodeKey := vars["nodeKey"]
+	nodeKey := vars["node_key"]
 	client := osquery_types.OsqueryClient{}
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
@@ -147,9 +147,9 @@ func ConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 	}
 	//set posted osquery client = client
 	err = json.Unmarshal(body, &client)
-	logger.Warn("%v", client)
+	logger.Infof("%+v", client)
 	if request.Method == "GET" {
-		if vars["nodeKey"] != "" {
+		if vars["node_key"] != "" {
 			result, err := dyndb.SearchByNodeKey(client.NodeKey, dynDBInstance)
 			if err != nil {
 				logger.Error(err)
@@ -165,7 +165,7 @@ func ConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 		}
 	}
 	if request.Method == "POST" {
-		if vars["nodeKey"] != "" {
+		if vars["node_key"] != "" {
 			//verify that node exists
 			//get existing client config
 			//rewrite this crappy shit
@@ -173,7 +173,7 @@ func ConfigureNode(respwritter http.ResponseWriter, request *http.Request) {
 			if err != nil {
 				logger.Error(err)
 			}
-			logger.Warn("%v", existingClient)
+			logger.Infof("%+v", existingClient)
 			if err != nil {
 				logger.Error(err)
 				respwritter.Write([]byte(`{"error": "node invalid"}`))
@@ -241,7 +241,8 @@ func ApproveNode(respwritter http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	if request.Method == "POST" {
 		logger.Warn("posting approval")
-		err := dyndb.ApprovePendingNode(vars["nodeKey"], dynDBInstance, &mu)
+		err := dyndb.ApprovePendingNode(vars["node_key"], dynDBInstance, &mu)
+		logger.Infof("[ApproveNode] vars: %+v", vars)
 		if err != nil {
 			logger.Error(err)
 			respwritter.Write([]byte(`{"result": "error"}`))
