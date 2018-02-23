@@ -2,9 +2,7 @@ package server
 
 import (
 	"net/http"
-	"os"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/oktasecuritylabs/sgt/handlers/api"
 	"github.com/oktasecuritylabs/sgt/handlers/auth"
@@ -65,6 +63,7 @@ func Serve() error {
 		negroni.Wrap(apiRouter),
 	))
 	err := http.ListenAndServeTLS(":443",
-		"fullchain.pem", "privkey.pem", handlers.LoggingHandler(os.Stdout, router))
+		"fullchain.pem", "privkey.pem",  router)
+		//"fullchain.pem", "privkey.pem", handlers.LoggingHandler(os.Stdout, router))
 	return err
 }

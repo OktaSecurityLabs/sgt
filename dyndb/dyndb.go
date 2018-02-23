@@ -212,7 +212,7 @@ func SearchByHostIdentifier(hid string, s *dynamodb.DynamoDB) ([]osq_types.Osque
 func ApprovePendingNode(nodeKey string, dyn *dynamodb.DynamoDB, mu *sync.Mutex) error {
 	//approve a pending node validation.  Returns true if successfull
 	osqNode, err := SearchByNodeKey(nodeKey, dyn)
-	logger.Warn("here's our node that we're approving: %+v", osqNode)
+	logger.Infof("here's our node that we're approving: %+v", osqNode)
 	if err != nil {
 		logger.Error(err)
 		return err

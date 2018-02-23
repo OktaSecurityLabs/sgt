@@ -1,8 +1,8 @@
 module "autoscaling" {
   source = "../../modules/autoscaling"
   instance_ssh_key_name = "${var.aws_keypair}"
-  asg_min_size = "2"
-  asg_max_size = "4"
+  asg_min_size = "${var.asg_min_size}"
+  asg_max_size = "${var.asg_max_size}"
   instance_type = "t2.micro"
   #make sure you set a subnet that will work in your VPC
   alb_private_subnet_cidr_us_east_1a = "10.0.10.0/24"
