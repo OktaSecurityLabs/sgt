@@ -3,7 +3,10 @@ package response
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+
+	"github.com/oktasecuritylabs/sgt/logger"
 )
 
 const (
@@ -22,32 +25,42 @@ type sgtBaseResponse struct {
 // storing custom endpoint response values
 type SGTCustomResponse map[string]interface{}
 
-func getResponseJSON(response interface{}) []byte {
+func writeResponseJSON(respWriter http.ResponseWriter, response interface{}) {
+
+	// Set the header type
+	respWriter.Header().Set("Content-Type", "application/json")
 
 	respJSON, err := json.Marshal(response)
 	if err != nil {
-		// If there is an error marshaling the interface, return a basic error
+		// If there is an error marshaling the interface, write a basic error
 		errString := fmt.Sprintf("response failed to marshal to json: %s", err)
-		newResp := sgtBaseResponse{Message: errString, Status: errString}
-		respJSON, _ = json.Marshal(newResp)
+		logger.Error(errString)
+		http.Error(respWriter, errString, http.StatusInternalServerError)
+		return
 	}
-	return respJSON
+
+	// Write the response to the http.ResponseWriter using io.WriteString
+	_, err = io.WriteString(respWriter, string(respJSON))
+
+	if err != nil {
+		// If there is an error writing the repsonse, write an error
+		errString := fmt.Sprintf("failed to write response: %s", err)
+		logger.Error(errString)
+		http.Error(respWriter, errString, http.StatusInternalServerError)
+	}
 }
 
 // WriteError will write the passed error to the http response writer
 func WriteError(respWriter http.ResponseWriter, errorString string) {
-	respWriter.Header().Set("Content-Type", "application/json")
-	respWriter.Write(getResponseJSON(sgtBaseResponse{Message: errorString, Status: statusError}))
+	writeResponseJSON(respWriter, sgtBaseResponse{Message: errorString, Status: statusError})
 }
 
 // WriteSuccess will write the a success status and optional message to the http response writer
 func WriteSuccess(respWriter http.ResponseWriter, optionalMessage string) {
-	respWriter.Header().Set("Content-Type", "application/json")
-	respWriter.Write(getResponseJSON(sgtBaseResponse{Message: optionalMessage, Status: statusSuccess}))
+	writeResponseJSON(respWriter, sgtBaseResponse{Message: optionalMessage, Status: statusSuccess})
 }
 
 // WriteCustomJSON will write the custom response to the http response writer as json
 func WriteCustomJSON(respWriter http.ResponseWriter, resp interface{}) {
-	respWriter.Header().Set("Content-Type", "application/json")
-	respWriter.Write(getResponseJSON(resp))
+	writeResponseJSON(respWriter, resp)
 }
