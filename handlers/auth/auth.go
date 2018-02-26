@@ -21,11 +21,19 @@ import (
 	"github.com/dgrijalva/jwt-go/request"
 	"github.com/howeyc/gopass"
 	"github.com/oktasecuritylabs/sgt/dyndb"
+	"github.com/oktasecuritylabs/sgt/handlers/response"
 	"github.com/oktasecuritylabs/sgt/logger"
 	"github.com/oktasecuritylabs/sgt/osquery_types"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/ssh/terminal"
 )
+
+// NodeConfigurePost type for handling post requests made by node
+type NodeConfigurePost struct {
+	EnrollSecret   string `json:"enroll_secret"`
+	NodeKey        string `json:"node_key"`
+	HostIdentifier string `json:"host_identifier"`
+}
 
 //SsmClient returns an instance of ssm client with credentials provided by ec2 assumed role
 func SsmClient() *ssm.SSM {
@@ -120,90 +128,105 @@ func NewUser(credentialsFile, profile, username, role string) error {
 	return dyndb.NewUser(user, dynDB, &mu)
 }
 
-//ValidateUser checks if user is valid
+// ValidateUser checks if user is valid
 func ValidateUser(request *http.Request) error {
 	type userPost struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
-	up := userPost{}
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		panic(err)
 	}
+
+	up := userPost{}
 	err = json.Unmarshal(body, &up)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
+
 	dynDB := dyndb.DbInstance()
 	user, err := dyndb.GetUser(up.Username, dynDB)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
+
 	err = user.Validate(up.Password)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
-//GetTokenHandler handles requests to get-token api endpoint
-func GetTokenHandler(respwritter http.ResponseWriter, request *http.Request) {
-	err := ValidateUser(request)
-	if err != nil {
-		logger.Error(err)
-		respwritter.Write([]byte(`{"Error": "Invalid Username or Password"`))
-		return
-	}
-	logger.Info("valid user!")
-	appSecret, err := GetSsmParam("sgt_app_secret")
-	secret := []byte(appSecret)
-	if err != nil {
-		logger.Error(err)
-		respwritter.Write([]byte(`{"Error": "Invalid Username or Password"`))
-		return
-	}
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := token.Claims.(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(time.Second * 14400).Unix()
-	claims["iat"] = time.Now().Unix()
-	tokenString, err := token.SignedString(secret)
+// GetTokenHandler handles requests to get-token api endpoint
+func GetTokenHandler(respWriter http.ResponseWriter, request *http.Request) {
 
+	handleRequest := func() (string, error) {
+
+		err := ValidateUser(request)
+		if err != nil {
+			return "", err
+		}
+
+		logger.Info("valid user!")
+
+		appSecret, err := GetSsmParam("sgt_app_secret")
+		if err != nil {
+			return "", err
+		}
+
+		token := jwt.New(jwt.SigningMethodHS256)
+		claims := token.Claims.(jwt.MapClaims)
+		claims["exp"] = time.Now().Add(time.Second * 14400).Unix()
+		claims["iat"] = time.Now().Unix()
+		tokenString, err := token.SignedString(appSecret)
+
+		if err != nil {
+			return "", err
+		}
+
+		return tokenString, nil
+	}
+
+	tokenValue, err := handleRequest()
 	if err != nil {
 		logger.Error(err)
-		respwritter.Write([]byte(`{"Error": "Invalid Username or Password"`))
-		return
+		errString := fmt.Sprintf("[GetTokenHandler] invalid username or password: %s", err)
+		response.WriteError(respWriter, errString)
+	} else {
+		response.WriteCustomJSON(respWriter, response.SGTCustomResponse{"Authorization": tokenValue})
 	}
-	respwritter.Write([]byte(fmt.Sprintf(`{"Authorization": %q}`, tokenString)))
 }
 
-//AnotherValidation validates authorization tokens.  Is poorly named and up for refactor as time permits
-func AnotherValidation(respwritter http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
-	appSecret, err := (GetSsmParam("sgt_app_secret"))
-	secret := []byte(appSecret)
-	if err != nil {
-		logger.Error(err)
-		logger.Info("Invalid User or Password")
-		respwritter.Write([]byte(`{"Error": "Invalid Username or Password"}`))
-		return
-	}
-	token, err := request.ParseFromRequest(req, request.AuthorizationHeaderExtractor,
-		func(token *jwt.Token) (interface{}, error) {
+// AnotherValidation validates authorization tokens.  Is poorly named and up for refactor as time permits
+func AnotherValidation(respWriter http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+
+	handleRequest := func() (*jwt.Token, error) {
+
+		appSecret, err := GetSsmParam("sgt_app_secret")
+		secret := []byte(appSecret)
+		if err != nil {
+			return nil, err
+		}
+
+		keyFunc := func(token *jwt.Token) (interface{}, error) {
 			return secret, nil
-		})
+		}
+		return request.ParseFromRequest(req, request.AuthorizationHeaderExtractor, keyFunc)
+	}
+
+	token, err := handleRequest()
 	if err != nil {
 		logger.Error(err)
-		respwritter.Write([]byte(`{"Error": "Invalid Username or Password"`))
-		return
-	}
-	if token.Valid {
-		next(respwritter, req)
+		errString := fmt.Sprintf("[AnotherValidation] invalid username or password: %s", err)
+		response.WriteError(respWriter, errString)
+	} else if token.Valid {
+		next(respWriter, req)
 	}
 }
 
-//GetNodeSecret gets current node secret from ssm parameter store
+// GetNodeSecret gets current node secret from ssm parameter store
 func GetNodeSecret() (string, error) {
 	secret, err := GetSsmParam("sgt_node_secret")
 	if err != nil {
@@ -213,45 +236,38 @@ func GetNodeSecret() (string, error) {
 	return secret, nil
 }
 
-//NodeConfigurePost type for handling post requests made by node
-type NodeConfigurePost struct {
-	EnrollSecret   string `json:"enroll_secret"`
-	Node_key       string `json:"node_key"`
-	HostIdentifier string `json:"host_identifier"`
-}
+// ValidNodeKey validates posted node key
+func ValidNodeKey(respWriter http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+	logger.Info("validating node...")
 
-//ValidNodeKey validates posted node key
-func ValidNodeKey(respwritter http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
-	logger.Debug("validating node...")
+	handleRequest := func() error {
 
-	//req_copy := req
-	dynDB := dyndb.DbInstance()
-	respwritter.Header().Set("Content-Type", "application/json")
-	body, err := ioutil.ReadAll(req.Body)
-	req.Body.Close()
-	//body := ioutil.NopCloser(bytes.NewReader(buf))
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		dynDB := dyndb.DbInstance()
+		respWriter.Header().Set("Content-Type", "application/json")
+		body, err := ioutil.ReadAll(req.Body)
+		req.Body.Close()
+
+		req.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		if err != nil {
+			return err
+		}
+
+		var data NodeConfigurePost
+		// unmarshal post data into data
+		err = json.Unmarshal(body, &data)
+		if err != nil {
+			return fmt.Errorf("unmarshal failed: %s", err)
+		}
+
+		return dyndb.ValidNode(data.NodeKey, dynDB)
+	}
+
+	err := handleRequest()
 	if err != nil {
 		logger.Error(err)
-		respwritter.Write([]byte(`{"Error": "Invalid Credentials"}`))
-		return
+		errString := fmt.Sprintf("[ValidNodeKey] invalid node key: %s", err)
+		response.WriteError(respWriter, errString)
+	} else {
+		next(respWriter, req)
 	}
-	//respwritter.Write(body)
-	var data NodeConfigurePost
-	// unmarshal post data into data
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		logger.Warn("unmarshal error")
-		respwritter.Write([]byte(`{"Error": "Invalid Credentials"}`))
-		return
-	}
-
-	err = dyndb.ValidNode(data.Node_key, dynDB)
-	if err != nil {
-		logger.Error(err)
-		respwritter.Write([]byte(`{"Error": "Invalid Credentials"}`))
-		return
-	}
-
-	next(respwritter, req)
 }

@@ -22,19 +22,19 @@ func Serve() error {
 	//Configuration (management) endpoint
 	apiRouter := mux.NewRouter().PathPrefix("/api/v1/configuration").Subrouter()
 
-	apiRouter.HandleFunc("/configs", api.GetNamedConfigs).Methods("GET", "POST")
-	apiRouter.HandleFunc("/configs/{config_name}", api.ConfigurationRequest).Methods("POST")
+	apiRouter.HandleFunc("/configs", api.GetNamedConfigs).Methods(http.MethodGet, http.MethodPost)
+	apiRouter.HandleFunc("/configs/{config_name}", api.ConfigurationRequest).Methods(http.MethodPost)
 	//Nodes
-	apiRouter.HandleFunc("/nodes", api.GetNodes).Methods("GET")
-	apiRouter.HandleFunc("/nodes/{node_key}", api.ConfigureNode).Methods("POST", "GET")
-	apiRouter.HandleFunc("/nodes/{node_key}/approve", api.ApproveNode).Methods("POST")
+	apiRouter.HandleFunc("/nodes", api.GetNodes).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/nodes/{node_key}", api.ConfigureNode).Methods(http.MethodPost, http.MethodGet)
+	apiRouter.HandleFunc("/nodes/{node_key}/approve", api.ApproveNode).Methods(http.MethodPost)
 	//apiRouter.HandleFunc("/nodes/approve/_bulk", api.Placeholder).Methods("POST)
 	//Packs
-	apiRouter.HandleFunc("/packs", api.GetQueryPacks).Methods("GET")
-	apiRouter.HandleFunc("/packs/search/{search_string}", api.SearchQueryPacks).Methods("GET")
-	apiRouter.HandleFunc("/packs/{pack_name}", api.ConfigurePack).Methods("POST")
+	apiRouter.HandleFunc("/packs", api.GetQueryPacks).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/packs/search/{search_string}", api.SearchQueryPacks).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/packs/{pack_name}", api.ConfigurePack).Methods(http.MethodPost)
 	//PackQueries
-	apiRouter.HandleFunc("/packqueries", api.GetPackQueries).Methods("GET")
+	apiRouter.HandleFunc("/packqueries", api.GetPackQueries).Methods(http.MethodGet)
 	apiRouter.HandleFunc("/packqueries/{query_name}", api.ConfigurePackQuery)
 	apiRouter.HandleFunc("/packqueries/search/{search_string}", api.SearchPackQueries)
 	apiRouter.HandleFunc("/distributed/add", distributed.DistributedQueryAdd)
