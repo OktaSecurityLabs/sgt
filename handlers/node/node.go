@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"strings"
-	"sync"
 
 	"github.com/oktasecuritylabs/sgt/dyndb"
 	"github.com/oktasecuritylabs/sgt/handlers/auth"
@@ -18,6 +17,16 @@ import (
 	"github.com/oktasecuritylabs/sgt/osquery_types"
 	log "github.com/sirupsen/logrus"
 )
+
+const (
+	nodeInvalid = true
+	nodeValid = false
+)
+
+type EnrollRequestResponse struct {
+	NodeKey     string `json:"node_key"`
+	NodeInvalid bool   `json:"node_invalid"`
+}
 
 // NodeConfigurePost type for handling post requests made by node
 type NodeConfigurePost struct {
@@ -64,10 +73,6 @@ func NodeEnrollRequest(respWriter http.ResponseWriter, request *http.Request) {
 			NodeConfigurePost
 			PlatformType string                       `json:"platform_type"`
 			HostDetails  map[string]map[string]string `json:"host_details"`
-		}
-		type EnrollRequestResponse struct {
-			NodeKey     string `json:"node_key"`
-			NodeInvalid bool   `json:"node_invalid"`
 		}
 
 		nodeEnrollRequestLogger := logger.WithFields(log.Fields{
@@ -133,9 +138,8 @@ func NodeEnrollRequest(respWriter http.ResponseWriter, request *http.Request) {
 			}
 
 			osc.SetTimestamp()
-			mu := sync.Mutex{}
 			// might be good to check for dupe hostnames here before ACTUALLY issuing new key
-			err := dyndb.UpsertClient(osc, dynSvc, &mu)
+			err := dyndb.UpsertClient(osc, dynSvc)
 			if err != nil {
 				nodeEnrollRequestLogger.WithFields(log.Fields{
 					"hostname": data.HostIdentifier,
@@ -143,21 +147,22 @@ func NodeEnrollRequest(respWriter http.ResponseWriter, request *http.Request) {
 				return fmt.Errorf("node upsert failed: %s", err)
 			}
 
-			response.WriteCustomJSON(respWriter, EnrollRequestResponse{NodeKey: nodeKey, NodeInvalid: false})
+			//return invalid node response to client
+			response.WriteCustomJSON(respWriter, EnrollRequestResponse{NodeKey: nodeKey, NodeInvalid: nodeInvalid})
 		default:
 			nodeEnrollRequestLogger.WithFields(log.Fields{
 				"hostname": data.HostIdentifier,
 			}).Info("host already exists, setting host to existing node_key")
 			osc := ans[0]
 			osc.SetTimestamp()
-			mu := sync.Mutex{}
-			err := dyndb.UpsertClient(osc, dynSvc, &mu)
+			err := dyndb.UpsertClient(osc, dynSvc)
 			if err != nil {
 				nodeEnrollRequestLogger.Error(err)
 				return fmt.Errorf("node upsert failed: %s", err)
 			}
 			// might be good to check for dupe hostnames here before ACTUALLY issuing new key
-			response.WriteCustomJSON(respWriter, EnrollRequestResponse{NodeKey: ans[0].NodeKey, NodeInvalid: false})
+			//return a valid node response to client
+			response.WriteCustomJSON(respWriter, EnrollRequestResponse{NodeKey: ans[0].NodeKey, NodeInvalid: nodeValid})
 		}
 
 		// TODO:
@@ -173,11 +178,13 @@ func NodeEnrollRequest(respWriter http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		logger.Error(err)
 		errString := fmt.Sprintf("[NodeEnrollRequest] node enrolling failed: %s", err)
-		response.WriteError(respWriter, errString)
+		logger.Error(errString)
+		//response.WriteError(respWriter, errString)
 	}
 }
 
-// NodeConfigureRequest configures a node
+// NodeConfigureRequest configures a node.  Returns a json body of either a full osquery config, or a node_invalide = True to
+// indicate need for re-enrollment
 func NodeConfigureRequest(respWriter http.ResponseWriter, request *http.Request) {
 
 	handlerLogger := logger.WithFields(log.Fields{
@@ -200,14 +207,19 @@ func NodeConfigureRequest(respWriter http.ResponseWriter, request *http.Request)
 
 		var data NodeConfigurePost
 		// unmarshal post data into data
+		// if invalid json, return invalid json error
 		err = json.Unmarshal(body, &data)
 		if err != nil {
-			return nil, fmt.Errorf("unmarshal failed: %s", err)
+			logger.Error(err)
+			err = errors.New("Invalid Json body")
+			return nil, err
 		}
 
 		dynSvc := dyndb.DbInstance()
+		// if node invalid, return invalid_node -> true
 		err = dyndb.ValidNode(data.NodeKey, dynSvc)
 		if err != nil {
+
 			return nil, fmt.Errorf("node validation failed for node with key '%s': %s", data.NodeKey, err)
 		}
 
@@ -224,8 +236,7 @@ func NodeConfigureRequest(respWriter http.ResponseWriter, request *http.Request)
 		}
 
 		osqNode.SetTimestamp()
-		mu := sync.Mutex{}
-		err = dyndb.UpsertClient(osqNode, dynSvc, &mu)
+		err = dyndb.UpsertClient(osqNode, dynSvc)
 		if err != nil {
 			return nil, fmt.Errorf("node upsert failed: %s", err)
 		}
@@ -267,7 +278,9 @@ func NodeConfigureRequest(respWriter http.ResponseWriter, request *http.Request)
 	if err != nil {
 		handlerLogger.Error(err)
 		errString := fmt.Sprintf("[NodeConfigureRequest] node configuration failed: %s", err)
-		response.WriteError(respWriter, errString)
+		logger.Error(errString)
+		result := EnrollRequestResponse{NodeInvalid:nodeInvalid}
+		response.WriteCustomJSON(respWriter, result)
 	} else {
 		response.WriteCustomJSON(respWriter, result)
 	}

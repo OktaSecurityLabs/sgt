@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/oktasecuritylabs/sgt/dyndb"
@@ -91,8 +90,7 @@ func ConfigurationRequest(respWriter http.ResponseWriter, request *http.Request)
 				return nil, errors.New("named config endpoint does not match posted data config_name")
 			}
 
-			mu := sync.Mutex{}
-			err = dyndb.UpsertNamedConfig(dynDBInstance, &existingNamedConfig, &mu)
+			err = dyndb.UpsertNamedConfig(dynDBInstance, &existingNamedConfig)
 			if err != nil {
 				return nil, fmt.Errorf("dynamo named config upsert failed: %s", err)
 			}
@@ -199,8 +197,7 @@ func ConfigureNode(respWriter http.ResponseWriter, request *http.Request) {
 				client.Tags = existingClient.Tags
 			}
 
-			mu := sync.Mutex{}
-			err = dyndb.UpsertClient(client, dynDBInstance, &mu)
+			err = dyndb.UpsertClient(client, dynDBInstance)
 			if err != nil {
 				return nil, fmt.Errorf("client update in dynamo failed: %s", err)
 			}
@@ -239,9 +236,8 @@ func ApproveNode(respWriter http.ResponseWriter, request *http.Request) {
 
 		logger.Warn("posting approval")
 
-		mu := sync.Mutex{}
 		dynDBInstance := dyndb.DbInstance()
-		err := dyndb.ApprovePendingNode(nodeKey, dynDBInstance, &mu)
+		err := dyndb.ApprovePendingNode(nodeKey, dynDBInstance)
 		if err != nil {
 			return fmt.Errorf("approval of pending node failed: %s", err)
 		}
@@ -460,8 +456,7 @@ func ConfigurePackQuery(respWriter http.ResponseWriter, request *http.Request) {
 				return fmt.Errorf("failed to unmarshal request body [%s]: %s", string(body), err)
 			}
 
-			mu := sync.Mutex{}
-			err = dyndb.UpsertPackQuery(postData, dynDBInstance, &mu)
+			err = dyndb.UpsertPackQuery(postData, dynDBInstance)
 			if err != nil {
 				return fmt.Errorf("dynamo pack query upsert failed: %s", err)
 			}

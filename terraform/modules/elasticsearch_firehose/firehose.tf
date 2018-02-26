@@ -195,7 +195,8 @@ data "aws_iam_policy_document" "elasticsearch_policy" {
       "es:DescribeElasticsearchDomains",
       "es:DescribeElasticsearchDomainConfig",
       "es:ESHttpPost",
-      "es:ESHttpPut"
+      "es:ESHttpPut",
+      "es:ESHttpGet"
     ]
     resources = [
       "${data.terraform_remote_state.elasticsearch.elasticsearch_domain_arn}",
