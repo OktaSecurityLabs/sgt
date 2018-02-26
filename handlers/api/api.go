@@ -76,6 +76,7 @@ func ConfigurationRequest(respWriter http.ResponseWriter, request *http.Request)
 
 			// finally...
 			body, err := ioutil.ReadAll(request.Body)
+			defer request.Body.Close()
 			if err != nil {
 				return nil, fmt.Errorf("failed to read request body: %s", err)
 			}

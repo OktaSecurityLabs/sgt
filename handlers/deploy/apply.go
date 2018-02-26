@@ -3,7 +3,6 @@ package deploy
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -66,7 +65,7 @@ func AllComponents(config DeploymentConfig, environ string) error {
 
 	if config.CreateElasticsearch == 1 {
 		//if err := destroyAWSComponent(firehose, environ); err != nil {
-			//return err
+		//return err
 		//}
 		DepOrder = ElasticDeployOrder
 
@@ -133,7 +132,6 @@ func deployAWSComponent(component, envName string) error {
 		logger.Info(string(combinedOutput))
 	}
 
-
 	logger.Infof("Building %s...\n", component)
 
 	spin.Start()
@@ -159,7 +157,7 @@ func deployAWSComponent(component, envName string) error {
 	}
 
 	cmd := exec.Command("terraform", "init")
-	stdoutStderr, err := cmd.CombinedOutput()
+	_, err = cmd.CombinedOutput()
 	if err != nil {
 		return err
 	}
@@ -168,7 +166,7 @@ func deployAWSComponent(component, envName string) error {
 	logger.Info(args)
 
 	cmd = exec.Command("bash", "-c", args)
-	stdoutStderr, err = cmd.CombinedOutput()
+	stdoutStderr, err := cmd.CombinedOutput()
 
 	logger.Info(string(stdoutStderr))
 
@@ -187,7 +185,7 @@ func createElasticSearchMappings() error {
 	fn := "terraform.tfstate"
 	file, err := os.Open(fn)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	decoder := json.NewDecoder(file)
@@ -234,15 +232,29 @@ func createElasticSearchMappings() error {
 	uri := fmt.Sprintf("https://%s/%s", esEndpoint, path)
 	logger.Info(uri)
 
-	req, _ := http.NewRequest(http.MethodPut, uri, bytes.NewBuffer(rawJSON))
+	req, err := http.NewRequest(http.MethodPut, uri, bytes.NewBuffer(rawJSON))
+	if err != nil {
+		return err
+	}
+
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-	response, _ := client.Do(req)
-	fmt.Println(response.Status)
-	body, _ := ioutil.ReadAll(response.Body)
-	fmt.Println(string(body))
+	response, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	logger.Info(response.Status)
+
+	body, err := ioutil.ReadAll(response.Body)
+	defer response.Body.Close()
+	if err != nil {
+		return err
+	}
+
+	logger.Info(string(body))
 	if response.Status != "200 OK" {
-		return errors.New(string(body))
+		return fmt.Errorf("Request failed: %s", string(body))
 	}
 
 	return nil

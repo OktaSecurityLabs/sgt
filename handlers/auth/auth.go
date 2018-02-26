@@ -136,7 +136,9 @@ func ValidateUser(request *http.Request) error {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
+
 	body, err := ioutil.ReadAll(request.Body)
+	defer request.Body.Close()
 	if err != nil {
 		panic(err)
 	}
@@ -250,13 +252,14 @@ func ValidNodeKey(respWriter http.ResponseWriter, req *http.Request, next http.H
 
 		dynDB := dyndb.DbInstance()
 		respWriter.Header().Set("Content-Type", "application/json")
+
 		body, err := ioutil.ReadAll(req.Body)
-		req.Body.Close()
+		defer req.Body.Close()
+		if err != nil {
+			return fmt.Errorf("failed to read request body: %s", err)
+		}
 
 		req.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-		if err != nil {
-			return err
-		}
 
 		var data NodeConfigurePost
 		// unmarshal post data into data
