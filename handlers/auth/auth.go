@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -93,7 +92,7 @@ func GetPass() ([]byte, error) {
 	return pass, nil
 }
 
-//NewUser creates new user
+// NewUser creates new user
 func NewUser(credentialsFile, profile, username, role string) error {
 	fmt.Print("Enter password: ")
 	pass1, err := gopass.GetPasswd()
@@ -122,10 +121,9 @@ func NewUser(credentialsFile, profile, username, role string) error {
 		Role:     role,
 	}
 
-	mu := sync.Mutex{}
 	dynDB := CrendentialedDbInstance(credentialsFile, profile)
 
-	return dyndb.NewUser(user, dynDB, &mu)
+	return dyndb.NewUser(user, dynDB)
 }
 
 // ValidateUser checks if user is valid

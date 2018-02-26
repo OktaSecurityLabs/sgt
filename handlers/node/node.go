@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"strings"
-	"sync"
 
 	"github.com/oktasecuritylabs/sgt/dyndb"
 	"github.com/oktasecuritylabs/sgt/handlers/auth"
@@ -133,9 +132,8 @@ func NodeEnrollRequest(respWriter http.ResponseWriter, request *http.Request) {
 			}
 
 			osc.SetTimestamp()
-			mu := sync.Mutex{}
 			// might be good to check for dupe hostnames here before ACTUALLY issuing new key
-			err := dyndb.UpsertClient(osc, dynSvc, &mu)
+			err := dyndb.UpsertClient(osc, dynSvc)
 			if err != nil {
 				nodeEnrollRequestLogger.WithFields(log.Fields{
 					"hostname": data.HostIdentifier,
@@ -150,8 +148,7 @@ func NodeEnrollRequest(respWriter http.ResponseWriter, request *http.Request) {
 			}).Info("host already exists, setting host to existing node_key")
 			osc := ans[0]
 			osc.SetTimestamp()
-			mu := sync.Mutex{}
-			err := dyndb.UpsertClient(osc, dynSvc, &mu)
+			err := dyndb.UpsertClient(osc, dynSvc)
 			if err != nil {
 				nodeEnrollRequestLogger.Error(err)
 				return fmt.Errorf("node upsert failed: %s", err)
@@ -224,8 +221,7 @@ func NodeConfigureRequest(respWriter http.ResponseWriter, request *http.Request)
 		}
 
 		osqNode.SetTimestamp()
-		mu := sync.Mutex{}
-		err = dyndb.UpsertClient(osqNode, dynSvc, &mu)
+		err = dyndb.UpsertClient(osqNode, dynSvc)
 		if err != nil {
 			return nil, fmt.Errorf("node upsert failed: %s", err)
 		}

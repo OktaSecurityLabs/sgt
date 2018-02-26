@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -64,8 +63,7 @@ func DistributedQueryRead(respWriter http.ResponseWriter, request *http.Request)
 		}
 
 		respWriter.Write([]byte(distributedQuery.ToJSON()))
-		mu := sync.Mutex{}
-		err = dyndb.DeleteDistributedQuery(distributedQuery, dynSvc, &mu)
+		err = dyndb.DeleteDistributedQuery(distributedQuery, dynSvc)
 		if err != nil {
 			return fmt.Errorf("could not delete query: %s", err)
 		}
@@ -250,7 +248,6 @@ func DistributedQueryAdd(respWriter http.ResponseWriter, request *http.Request) 
 		}
 
 		dynSVC := dyndb.DbInstance()
-		mu := sync.Mutex{}
 		success := map[string]bool{}
 		for _, j := range nodes.Nodes {
 			err = dyndb.ValidNode(j.NodeKey, dynSVC)
@@ -260,7 +257,7 @@ func DistributedQueryAdd(respWriter http.ResponseWriter, request *http.Request) 
 				continue
 			}
 
-			err = dyndb.UpsertDistributedQuery(j, dynSVC, &mu)
+			err = dyndb.UpsertDistributedQuery(j, dynSVC)
 			if err != nil {
 				logger.Error(err)
 				success[j.NodeKey] = false

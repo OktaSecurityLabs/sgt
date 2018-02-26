@@ -11,7 +11,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -225,7 +224,6 @@ func osqueryDefaultPacks(config DeploymentConfig, environ string) error {
 				return err
 			}
 			dynDBInstance := auth.CrendentialedDbInstance(credfile, config.AWSProfile)
-			mu := sync.Mutex{}
 			//logger.Infof("%+v", pack)
 			//logger.Infof("%+v", helperPack)
 			for k, v := range helperPack.Queries {
@@ -236,7 +234,7 @@ func osqueryDefaultPacks(config DeploymentConfig, environ string) error {
 				pq.Description = v.Description
 				pq.Interval = v.Interval
 				pq.Version = v.Version
-				dyndb.UpsertPackQuery(pq, dynDBInstance, &mu)
+				dyndb.UpsertPackQuery(pq, dynDBInstance)
 			}
 			//logger.Info("queries done\n")
 			pack.Queries = helperPack.ListQueries()
@@ -327,8 +325,7 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 		//blank out config packs since the options config doesn't have a packs kv
 		config.Packs = nil
 		namedConfig.OsqueryConfig = config
-		mu := sync.Mutex{}
-		err = dyndb.UpsertNamedConfig(dynDB, &namedConfig, &mu)
+		err = dyndb.UpsertNamedConfig(dynDB, &namedConfig)
 		if err != nil {
 			logger.Infof("%s: failed\n", namedConfig.ConfigName)
 			return err
