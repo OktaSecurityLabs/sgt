@@ -27,6 +27,10 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+const (
+	invalidUsernameOrPassword = "Invalid username or password"
+)
+
 // NodeConfigurePost type for handling post requests made by node
 type NodeConfigurePost struct {
 	EnrollSecret   string `json:"enroll_secret"`
@@ -171,6 +175,7 @@ func GetTokenHandler(respWriter http.ResponseWriter, request *http.Request) {
 
 		appSecret, err := GetSsmParam("sgt_app_secret")
 		if err != nil {
+			logger.Error(err)
 			return "", err
 		}
 
@@ -178,9 +183,10 @@ func GetTokenHandler(respWriter http.ResponseWriter, request *http.Request) {
 		claims := token.Claims.(jwt.MapClaims)
 		claims["exp"] = time.Now().Add(time.Second * 14400).Unix()
 		claims["iat"] = time.Now().Unix()
-		tokenString, err := token.SignedString(appSecret)
+		tokenString, err := token.SignedString([]byte(appSecret))
 
 		if err != nil {
+			logger.Error(err)
 			return "", err
 		}
 
@@ -191,7 +197,8 @@ func GetTokenHandler(respWriter http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		logger.Error(err)
 		errString := fmt.Sprintf("[GetTokenHandler] invalid username or password: %s", err)
-		response.WriteError(respWriter, errString)
+		logger.Error(errString)
+		response.WriteError(respWriter, invalidUsernameOrPassword)
 	} else {
 		response.WriteCustomJSON(respWriter, response.SGTCustomResponse{"Authorization": tokenValue})
 	}
@@ -218,7 +225,8 @@ func AnotherValidation(respWriter http.ResponseWriter, req *http.Request, next h
 	if err != nil {
 		logger.Error(err)
 		errString := fmt.Sprintf("[AnotherValidation] invalid username or password: %s", err)
-		response.WriteError(respWriter, errString)
+		logger.Error(errString)
+		response.WriteError(respWriter, invalidUsernameOrPassword)
 	} else if token.Valid {
 		next(respWriter, req)
 	}
