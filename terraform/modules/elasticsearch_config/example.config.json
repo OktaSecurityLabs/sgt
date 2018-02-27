@@ -1,0 +1,12 @@
+{
+  "firehose_aws_access_key_id": "${firehose_aws_access_key_id}",
+  "firehose_aws_secret_access_key": "${firehose_aws_secret_access_key}",
+  "firehose_stream_name": "${firehose_stream_name}",
+  "distributed_query_logger": [
+    ""
+  ],
+  "distributed_query_logger_s3_bucket_name": "",
+  "distributed_query_logger_firehose_stream_name": "${distributed_query_logger_firehose_stream_name}",
+  "distributed_query_logger_filesystem_path": "",
+  "api_token_lifetime": 14400
+}

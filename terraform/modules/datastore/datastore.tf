@@ -3,6 +3,11 @@ provider "aws" {
   region = "us-east-1"
 }
 
+resource "aws_s3_bucket" "osquery_s3_bucket" {
+  bucket = "${var.osquery_s3_bucket_name}"
+  acl = "private"
+}
+
 resource "aws_dynamodb_table" "clients" {
   name = "osquery_clients"
   read_capacity = 20

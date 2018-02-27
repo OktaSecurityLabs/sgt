@@ -21,3 +21,11 @@ output "dynamo_table_osquery_querypacks_arn" {
 output "dynamo_table_osquery_users_arn" {
   value = "${aws_dynamodb_table.osquery_users.arn}"
 }
+
+output "s3_bucket_arn" {
+  value = "${aws_s3_bucket.osquery_s3_bucket.arn}"
+}
+
+output "s3_bucket_name" {
+  value = "${aws_s3_bucket.osquery_s3_bucket.bucket}"
+}
