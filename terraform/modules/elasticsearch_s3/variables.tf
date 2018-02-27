@@ -1,4 +1,6 @@
+variable "osquery_s3_bucket_name" {
 
+}
 
 variable "aws_profile" {}
 

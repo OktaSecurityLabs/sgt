@@ -25,9 +25,11 @@ const (
 	vpc                   = "vpc"
 	datastore             = "datastore"
 	elasticsearch         = "elasticsearch"
-	firehose              = "firehose"
 	elasticsearchFirehose = "elasticsearch_firehose"
-	s3                    = "s3"
+	elasticsearchConfig   = "elasticsearch_config"
+	elasticsearchAutoscaling = "elasticsearch_autoscaling"
+	firehose              = "firehose"
+	config                = "config"
 	secrets               = "secrets"
 	autoscaling           = "autoscaling"
 	packs                 = "packs"
@@ -43,7 +45,7 @@ var (
 		vpc,
 		datastore,
 		firehose,
-		s3,
+		config,
 		secrets,
 		autoscaling,
 	}
@@ -53,9 +55,9 @@ var (
 		datastore,
 		elasticsearch,
 		elasticsearchFirehose,
-		s3,
+		elasticsearchConfig,
 		secrets,
-		autoscaling,
+		elasticsearchAutoscaling,
 	}
 
 	// OsqueryOpts holds all deploy options for osquery
@@ -154,7 +156,8 @@ func CreateDeployDirectory(environ string) error {
 		logger.Info(environ)
 		os.Exit(0)
 	}
-	dirs := []string{"vpc", "datastore", "firehose", "elasticsearch_firehose", "elasticsearch", "s3", "autoscaling", "secrets"}
+	dirs := []string{"vpc", "datastore", "firehose", "elasticsearch_firehose", "elasticsearch",
+	"elasticsearch_config", "config", "autoscaling", "secrets"}
 	for _, p := range dirs {
 		dir := filepath.Join(path, p)
 		//logger.Info(dir)

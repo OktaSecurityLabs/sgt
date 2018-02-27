@@ -26,7 +26,7 @@ data "terraform_remote_state" "datastore" {
 data "terraform_remote_state" "s3" {
   backend = "local"
   config {
-    path = "../config/terraform.tfstate"
+    path = "../elasticsearch_config/terraform.tfstate"
   }
 }
 
@@ -40,7 +40,7 @@ data "terraform_remote_state" "ssm" {
 data "terraform_remote_state" "firehose" {
   backend = "local"
   config {
-    path = "../firehose/terraform.tfstate"
+    path = "../elasticsearch_firehose/terraform.tfstate"
   }
 }
 

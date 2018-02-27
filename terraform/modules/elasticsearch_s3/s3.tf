@@ -1,7 +1,7 @@
 data "terraform_remote_state" "firehose" {
   backend = "local"
   config {
-    path = "../firehose/terraform.tfstate"
+    path = "../elasticsearch_firehose/terraform.tfstate"
   }
 }
 
