@@ -158,11 +158,6 @@ func deployAWSComponent(component, envName string) error {
 		logger.Info(string(combinedOutput))
 	}
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	logger.Infof("current dir: %s", cwd)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
