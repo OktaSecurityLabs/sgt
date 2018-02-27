@@ -157,7 +157,7 @@ func CreateDeployDirectory(environ string) error {
 		os.Exit(0)
 	}
 	dirs := []string{"vpc", "datastore", "firehose", "elasticsearch_firehose", "elasticsearch",
-	"elasticsearch_config", "config", "autoscaling", "secrets"}
+	"elasticsearch_config", "config", "autoscaling", "elasticsearch_autoscaling", "secrets"}
 	for _, p := range dirs {
 		dir := filepath.Join(path, p)
 		//logger.Info(dir)
