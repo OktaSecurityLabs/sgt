@@ -82,14 +82,18 @@ func AllComponents(config DeploymentConfig, environ string) error {
 		DepOrder = DeployOrder
 	}
 
+	logger.Info("Deploying: %s", DepOrder)
+
 	for _, name := range DepOrder {
 		if err := deployAWSComponent(name, environ); err != nil {
+			logger.Error(err)
 			return err
 		}
 	}
 
 	for _, fn := range osqueryDeployCommands {
 		if err := fn(config, environ); err != nil {
+			logger.Error(err)
 			return err
 		}
 	}
@@ -154,6 +158,11 @@ func deployAWSComponent(component, envName string) error {
 		logger.Info(string(combinedOutput))
 	}
 
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	logger.Infof("current dir: %s", cwd)
 	cmd := exec.Command("terraform", "init")
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {

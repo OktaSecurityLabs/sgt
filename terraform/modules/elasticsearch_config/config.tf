@@ -1,3 +1,9 @@
+provider "aws" {
+  profile = "${var.aws_profile}"
+  region = "${var.aws_region}"
+}
+
+
 data "terraform_remote_state" "firehose" {
   backend = "local"
   config {
@@ -11,12 +17,6 @@ data "terraform_remote_state" "datastore" {
     path = "../datastore/terraform.tfstate"
   }
 }
-
-provider "aws" {
-  profile = "${var.aws_profile}"
-  region = "${var.aws_region}"
-}
-
 
 resource "aws_s3_bucket_object" "osquery-sgt-binary" {
   bucket = "${data.terraform_remote_state.datastore.s3_bucket_name}"

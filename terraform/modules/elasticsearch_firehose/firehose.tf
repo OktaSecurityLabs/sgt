@@ -143,7 +143,7 @@ resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-osquery_results" {
     role_arn = "${aws_iam_role.sgt-firehose-assume-role.arn}"
     bucket_arn = "${aws_s3_bucket.sgt-osquery_results-s3.arn}"
     buffer_size = 5
-    buffer_interval = 300
+    buffer_interval = 60
     prefix = "osquery_results"
   }
 
