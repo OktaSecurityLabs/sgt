@@ -82,7 +82,7 @@ func AllComponents(config DeploymentConfig, environ string) error {
 		DepOrder = DeployOrder
 	}
 
-	logger.Info("Deploying: %s", DepOrder)
+	logger.Infof("Deploying: %s", DepOrder)
 
 	for _, name := range DepOrder {
 		if err := deployAWSComponent(name, environ); err != nil {
