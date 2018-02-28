@@ -20,7 +20,7 @@ import (
 
 const (
 	nodeInvalid = true
-	nodeValid = false
+	nodeValid   = false
 )
 
 type EnrollRequestResponse struct {
@@ -81,8 +81,8 @@ func NodeEnrollRequest(respWriter http.ResponseWriter, request *http.Request) {
 		})
 
 		body, err := ioutil.ReadAll(request.Body)
-		logger.Info(string(body))
 		defer request.Body.Close()
+		logger.Info(string(body))
 		if err != nil {
 			nodeEnrollRequestLogger.Error(err)
 			return fmt.Errorf("failed to read request body: %s", err)
@@ -279,7 +279,7 @@ func NodeConfigureRequest(respWriter http.ResponseWriter, request *http.Request)
 		handlerLogger.Error(err)
 		errString := fmt.Sprintf("[NodeConfigureRequest] node configuration failed: %s", err)
 		logger.Error(errString)
-		result := EnrollRequestResponse{NodeInvalid:nodeInvalid}
+		result := EnrollRequestResponse{NodeInvalid: nodeInvalid}
 		response.WriteCustomJSON(respWriter, result)
 	} else {
 		response.WriteCustomJSON(respWriter, result)

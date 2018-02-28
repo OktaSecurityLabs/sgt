@@ -81,8 +81,7 @@ func DistributedQueryRead(respWriter http.ResponseWriter, request *http.Request)
 func ParseDistributedResults(request *http.Request) ([]osquery_types.DistributedQueryResult, error) {
 	results := []osquery_types.DistributedQueryResult{}
 	body, err := ioutil.ReadAll(request.Body)
-	//logger.Info(string(body))
-	//err = json.Unmarshal(body, &dw)
+	defer request.Body.Close()
 	if err != nil {
 		logger.Error(err)
 		return results, err
