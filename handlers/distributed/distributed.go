@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -62,7 +63,7 @@ func DistributedQueryRead(respWriter http.ResponseWriter, request *http.Request)
 			return errors.New("no queries in list: %s")
 		}
 
-		respWriter.Write([]byte(distributedQuery.ToJSON()))
+		io.WriteString(respWriter, distributedQuery.ToJSON())
 		err = dyndb.DeleteDistributedQuery(distributedQuery, dynSvc)
 		if err != nil {
 			return fmt.Errorf("could not delete query: %s", err)
