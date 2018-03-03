@@ -315,7 +315,7 @@ resource "aws_autoscaling_group" "osquery-sgt_asg" {
   wait_for_elb_capacity = 2
   health_check_grace_period = 300
   health_check_type = "ELB"
-  desired_capacity = 2
+  desired_capacity = "${var.asg_desired_size}"
   #placement_group = "${aws_placement_group.osquery-sgt_placement_group.id}"
   launch_configuration = "${aws_launch_configuration.osquery_sgt_LaunchConfig.name}"
   tag {

@@ -1,6 +1,5 @@
-module "s3" {
-  source = "../../modules/s3"
-  osquery_s3_bucket_name = "${var.sgt_config_bucket_name}"
+module "config" {
+  source = "../../modules/config"
   aws_profile = "${var.aws_profile}"
   full_cert_chain = "${var.full_ssl_certchain}"
   priv_key = "${var.ssl_private_key}"

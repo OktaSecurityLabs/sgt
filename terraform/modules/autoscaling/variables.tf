@@ -16,6 +16,10 @@ variable "asg_max_size" {
   description = "maximum number of autoscaling group instances to have at a given time"
 }
 
+variable "asg_desired_size" {
+  default = 2
+}
+
 variable "alb_private_subnet_cidr_us_east_1a" {
   description = "subnet for use by alb and ec2 instance"
   default = "10.11.12.0/24"
