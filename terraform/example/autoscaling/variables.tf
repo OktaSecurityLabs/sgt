@@ -14,3 +14,5 @@ variable "asg_min_size"  {
 variable "asg_max_size" {
   default = 4
 }
+
+variable "asg_desired_size" {}
