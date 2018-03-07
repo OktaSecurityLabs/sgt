@@ -6,9 +6,6 @@ go:
   - master
 
 
-before_script:
-  - go get -u github.com/OktaSecurityLabs/sgt
-
 script:
   - go vet
   - go build
