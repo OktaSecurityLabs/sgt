@@ -3,6 +3,9 @@ language: go
 go:
   - master
 
+before_script:
+  - cd ../../
+  - cd oktasecuritylabs/sgt
 
 script:
   - go vet
