@@ -1,4 +1,5 @@
 ## SGT: OSQuery Management Server Built Entirely on AWS!
+[![Build Status](https://travis-ci.org/OktaSecurityLabs/sgt.svg?branch=master)](https://travis-ci.org/OktaSecurityLabs/sgt)
 
 SGT is an osquery management server written in Golang and built in aws.  Sgt (Simple Go TLS)
 is backed entirely by AWS services, making its infrastructure requirements extremely
