@@ -4,11 +4,14 @@ go:
   - 1.9
   - master
 
+before_install:
+  - mv ../../OktaSecurityLabs ../../oktasecuritylabs
+
 install:
   - export GOPATH="${TRAVIS_BUILD_DIR}/Godeps/_workspace:$GOPATH"
   - export PATH="${TRAVIS_BUILD_DIR}/Godeps/_workspace/bin:$PATH"
-  - go get github.com/OktaSecurityLabs/sgt
- 
+
 script:
   - go vet
+  - go test -v ./...
   - go build
