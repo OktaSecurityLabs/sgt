@@ -14,12 +14,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/oktasecuritylabs/sgt/logger"
 	osq_types "github.com/oktasecuritylabs/sgt/osquery_types"
 )
 
+const (
+	osqueryClients            = "osquery_clients"
+	osqueryConfigurations     = "osquery_configurations"
+	osqueryDistributedQueries = "osquery_distributed_queries"
+	osqueryPackQueries        = "osquery_packqueries"
+	osqueryPacks              = "osquery_packs"
+	osqueryQueryPacks         = "osquery_querypacks"
+	osqueryUsers              = "osquery_users"
+)
+
 // DbInstance creates a new pointer to dynamodb from assumed role by ec2 instance
-func DbInstance() *dynamodb.DynamoDB {
+func DbInstance() dynamodbiface.DynamoDBAPI {
 	sess := session.Must(session.NewSession(
 		&aws.Config{
 			Region: aws.String("us-east-1"),
@@ -31,21 +42,21 @@ func DbInstance() *dynamodb.DynamoDB {
 				Client: ec2metadata.New(sess),
 			},
 		})
-	dynamoDB := dynamodb.New(session.Must(session.NewSession(&aws.Config{
+	db := dynamodb.New(session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String("us-east-1"),
 		Credentials: creds,
 	})))
-	return dynamoDB
+	return db
 }
 
 // BuildOsqueryPacksAsJSON returns raw json of a named config
 func BuildOsqueryPacksAsJSON(nc osq_types.OsqueryNamedConfig) json.RawMessage {
-	dynamoDB := DbInstance()
+	db := DbInstance()
 	packJSON := "{"
 	var packList []string
 	for i, pack := range nc.PackList {
 		logger.Debug(pack, i)
-		p, err := GetNewPackByName(pack, dynamoDB)
+		p, err := GetNewPackByName(pack, db)
 		if err != nil {
 			logger.Error(err)
 		}
@@ -57,7 +68,7 @@ func BuildOsqueryPacksAsJSON(nc osq_types.OsqueryNamedConfig) json.RawMessage {
 }
 
 // UpsertNamedConfig upserts named config to dynamo db.  Returns true if successful, else false
-func UpsertNamedConfig(dynamoDB *dynamodb.DynamoDB, onc *osq_types.OsqueryNamedConfig) error {
+func UpsertNamedConfig(db dynamodbiface.DynamoDBAPI, onc *osq_types.OsqueryNamedConfig) error {
 
 	av, err := dynamodbattribute.MarshalMap(onc)
 	if err != nil {
@@ -65,8 +76,8 @@ func UpsertNamedConfig(dynamoDB *dynamodb.DynamoDB, onc *osq_types.OsqueryNamedC
 		return err
 	}
 
-	_, err = dynamoDB.PutItem(&dynamodb.PutItemInput{
-		TableName: aws.String("osquery_configurations"),
+	_, err = db.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(osqueryConfigurations),
 		Item:      av,
 	})
 
@@ -74,10 +85,10 @@ func UpsertNamedConfig(dynamoDB *dynamodb.DynamoDB, onc *osq_types.OsqueryNamedC
 }
 
 // GetNamedConfigs returns all named configs
-func GetNamedConfigs(dynamoDB *dynamodb.DynamoDB) ([]osq_types.OsqueryNamedConfig, error) {
+func GetNamedConfigs(db dynamodbiface.DynamoDBAPI) ([]osq_types.OsqueryNamedConfig, error) {
 	results := []osq_types.OsqueryNamedConfig{}
-	scanItems, err := dynamoDB.Scan(&dynamodb.ScanInput{
-		TableName: aws.String("osquery_configurations"),
+	scanItems, err := db.Scan(&dynamodb.ScanInput{
+		TableName: aws.String(osqueryConfigurations),
 	})
 	if err != nil {
 		logger.Error(err)
@@ -96,7 +107,7 @@ func GetNamedConfigs(dynamoDB *dynamodb.DynamoDB) ([]osq_types.OsqueryNamedConfi
 }
 
 // GetNamedConfig returns named config specified by string configName
-func GetNamedConfig(dynamoDB *dynamodb.DynamoDB, configName string) (osq_types.OsqueryNamedConfig, error) {
+func GetNamedConfig(db dynamodbiface.DynamoDBAPI, configName string) (osq_types.OsqueryNamedConfig, error) {
 	namedConfig := osq_types.OsqueryNamedConfig{}
 	if configName == "" {
 		return namedConfig, errors.New("no config name specified")
@@ -114,8 +125,8 @@ func GetNamedConfig(dynamoDB *dynamodb.DynamoDB, configName string) (osq_types.O
 		return namedConfig, err
 	}
 	//fmt.Println(js)
-	resp, err := dynamoDB.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String("osquery_configurations"),
+	resp, err := db.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(osqueryConfigurations),
 		Key:       js,
 	})
 	if err != nil {
@@ -134,7 +145,7 @@ func GetNamedConfig(dynamoDB *dynamodb.DynamoDB, configName string) (osq_types.O
 }
 
 // UpsertClient upsers an osqueryClient
-func UpsertClient(oc osq_types.OsqueryClient, d *dynamodb.DynamoDB) error {
+func UpsertClient(oc osq_types.OsqueryClient, db dynamodbiface.DynamoDBAPI) error {
 	logger.Debug("Upserting Client: %v", oc)
 
 	av, err := dynamodbattribute.MarshalMap(oc)
@@ -143,8 +154,8 @@ func UpsertClient(oc osq_types.OsqueryClient, d *dynamodb.DynamoDB) error {
 		logger.Warn(err)
 		return err
 	}
-	_, err = d.PutItem(&dynamodb.PutItemInput{
-		TableName: aws.String("osquery_clients"),
+	_, err = db.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(osqueryClients),
 		Item:      av,
 	})
 	if err != nil {
@@ -155,7 +166,7 @@ func UpsertClient(oc osq_types.OsqueryClient, d *dynamodb.DynamoDB) error {
 }
 
 // SearchByHostIdentifier search for a substring of a hostid
-func SearchByHostIdentifier(hid string, s *dynamodb.DynamoDB) ([]osq_types.OsqueryClient, error) {
+func SearchByHostIdentifier(hid string, db dynamodbiface.DynamoDBAPI) ([]osq_types.OsqueryClient, error) {
 	Results := []osq_types.OsqueryClient{}
 	type BS struct {
 		HostIdentifier string `json:"host_identifier"`
@@ -163,9 +174,9 @@ func SearchByHostIdentifier(hid string, s *dynamodb.DynamoDB) ([]osq_types.Osque
 	var bs BS
 	bs.HostIdentifier = hid
 	scanItem := dynamodb.ScanInput{
-		TableName: aws.String("osquery_clients"),
+		TableName: aws.String(osqueryClients),
 	}
-	a, err := s.Scan(&scanItem)
+	a, err := db.Scan(&scanItem)
 	if err != nil {
 		logger.Error(err)
 		return Results, err
@@ -205,9 +216,9 @@ func SearchByHostIdentifier(hid string, s *dynamodb.DynamoDB) ([]osq_types.Osque
 }
 
 // ApprovePendingNode Approves pending node via nodeKey
-func ApprovePendingNode(nodeKey string, dyn *dynamodb.DynamoDB) error {
+func ApprovePendingNode(nodeKey string, db dynamodbiface.DynamoDBAPI) error {
 	//approve a pending node validation.  Returns true if successfull
-	osqNode, err := SearchByNodeKey(nodeKey, dyn)
+	osqNode, err := SearchByNodeKey(nodeKey, db)
 	logger.Infof("here's our node that we're approving: %+v", osqNode)
 	if err != nil {
 		logger.Error(err)
@@ -224,7 +235,7 @@ func ApprovePendingNode(nodeKey string, dyn *dynamodb.DynamoDB) error {
 		newClient.HostDetails = osqNode.HostDetails
 		newClient.ConfigurationGroup = osqNode.ConfigurationGroup
 		newClient.Tags = osqNode.Tags
-		err := UpsertClient(newClient, dyn)
+		err := UpsertClient(newClient, db)
 		if err != nil {
 			logger.Error(err)
 			return err
@@ -234,8 +245,8 @@ func ApprovePendingNode(nodeKey string, dyn *dynamodb.DynamoDB) error {
 }
 
 // ValidNode returns if a node is valid or note, specified by nodeKey
-func ValidNode(nodeKey string, dyn *dynamodb.DynamoDB) error {
-	osqNode, err := SearchByNodeKey(nodeKey, dyn)
+func ValidNode(nodeKey string, db dynamodbiface.DynamoDBAPI) error {
+	osqNode, err := SearchByNodeKey(nodeKey, db)
 	if err != nil {
 		return err
 	}
@@ -252,7 +263,7 @@ func ValidNode(nodeKey string, dyn *dynamodb.DynamoDB) error {
 }
 
 // SearchByNodeKey return osqueryClient by nodeKey
-func SearchByNodeKey(nk string, s *dynamodb.DynamoDB) (osq_types.OsqueryClient, error) {
+func SearchByNodeKey(nk string, db dynamodbiface.DynamoDBAPI) (osq_types.OsqueryClient, error) {
 
 	type QS struct {
 		NodeKey string `json:"node_key"`
@@ -269,10 +280,10 @@ func SearchByNodeKey(nk string, s *dynamodb.DynamoDB) (osq_types.OsqueryClient, 
 		return osqNode, err
 	}
 	item := dynamodb.GetItemInput{
-		TableName: aws.String("osquery_clients"),
+		TableName: aws.String(osqueryClients),
 		Key:       js,
 	}
-	resp, err := s.GetItem(&item)
+	resp, err := db.GetItem(&item)
 	if err != nil {
 		//panic(fmt.Sprintln(err, os.Stdout))
 		log.Panic(err)
@@ -290,10 +301,10 @@ func SearchByNodeKey(nk string, s *dynamodb.DynamoDB) (osq_types.OsqueryClient, 
 }
 
 // APIGetPackQueries returns slice of packQueries
-func APIGetPackQueries(dynamoDB *dynamodb.DynamoDB) ([]osq_types.PackQuery, error) {
+func APIGetPackQueries(db dynamodbiface.DynamoDBAPI) ([]osq_types.PackQuery, error) {
 	results := []osq_types.PackQuery{}
-	scanItems, err := dynamoDB.Scan(&dynamodb.ScanInput{
-		TableName: aws.String("osquery_packqueries"),
+	scanItems, err := db.Scan(&dynamodb.ScanInput{
+		TableName: aws.String(osqueryPackQueries),
 	})
 	if err != nil {
 		logger.Error(err)
@@ -313,10 +324,10 @@ func APIGetPackQueries(dynamoDB *dynamodb.DynamoDB) ([]osq_types.PackQuery, erro
 }
 
 // APISearchPackQueries returns slice of packQueries which match the searchString substring
-func APISearchPackQueries(searchString string, dynamoDB *dynamodb.DynamoDB) ([]osq_types.PackQuery, error) {
+func APISearchPackQueries(searchString string, db dynamodbiface.DynamoDBAPI) ([]osq_types.PackQuery, error) {
 	results := []osq_types.PackQuery{}
-	scanItems, err := dynamoDB.Scan(&dynamodb.ScanInput{
-		TableName: aws.String("osquery_packqueries"),
+	scanItems, err := db.Scan(&dynamodb.ScanInput{
+		TableName: aws.String(osqueryPackQueries),
 	})
 	if err != nil {
 		logger.Error(err)
@@ -338,7 +349,7 @@ func APISearchPackQueries(searchString string, dynamoDB *dynamodb.DynamoDB) ([]o
 }
 
 // GetPackQuery returns PackQuery by queryName
-func GetPackQuery(queryName string, db *dynamodb.DynamoDB) (osq_types.PackQuery, error) {
+func GetPackQuery(queryName string, db dynamodbiface.DynamoDBAPI) (osq_types.PackQuery, error) {
 	type QS struct {
 		QueryName string `json:"query_name"`
 	}
@@ -350,7 +361,7 @@ func GetPackQuery(queryName string, db *dynamodb.DynamoDB) (osq_types.PackQuery,
 		logger.Error(err)
 	}
 	item := dynamodb.GetItemInput{
-		TableName: aws.String("osquery_packqueries"),
+		TableName: aws.String(osqueryPackQueries),
 		Key:       js,
 	}
 	resp, err := db.GetItem(&item)
@@ -371,7 +382,7 @@ func GetPackQuery(queryName string, db *dynamodb.DynamoDB) (osq_types.PackQuery,
 }
 
 // UpsertPackQuery upsert pack query
-func UpsertPackQuery(pq osq_types.PackQuery, db *dynamodb.DynamoDB) error {
+func UpsertPackQuery(pq osq_types.PackQuery, db dynamodbiface.DynamoDBAPI) error {
 
 	av, err := dynamodbattribute.MarshalMap(pq)
 	if err != nil {
@@ -381,7 +392,7 @@ func UpsertPackQuery(pq osq_types.PackQuery, db *dynamodb.DynamoDB) error {
 	}
 
 	_, err = db.PutItem(&dynamodb.PutItemInput{
-		TableName: aws.String("osquery_packqueries"),
+		TableName: aws.String(osqueryPackQueries),
 		Item:      av,
 	})
 	if err != nil {
@@ -393,7 +404,7 @@ func UpsertPackQuery(pq osq_types.PackQuery, db *dynamodb.DynamoDB) error {
 }
 
 // GetPackByName returns pack specified by name
-func GetPackByName(s string, db *dynamodb.DynamoDB) (string, error) {
+func GetPackByName(s string, db dynamodbiface.DynamoDBAPI) (string, error) {
 	type qs struct {
 		PackName string `json:"packName"`
 		PackOS   string `json:"pack_os"`
@@ -408,8 +419,12 @@ func GetPackByName(s string, db *dynamodb.DynamoDB) (string, error) {
 	query.PackName = s
 	query.PackOS = "Linux"
 	js, err := dynamodbattribute.MarshalMap(query)
+	if err != nil {
+		return "", err
+	}
+
 	item := dynamodb.GetItemInput{
-		TableName: aws.String("osquery_packs"),
+		TableName: aws.String(osqueryPacks),
 		Key:       js,
 	}
 	resp, err := db.GetItem(&item)
@@ -427,7 +442,7 @@ func GetPackByName(s string, db *dynamodb.DynamoDB) (string, error) {
 }
 
 // GetNewPackByName returns a packs specified by packName
-func GetNewPackByName(packName string, dynamoDB *dynamodb.DynamoDB) (osq_types.Pack, error) {
+func GetNewPackByName(packName string, dynamoDB dynamodbiface.DynamoDBAPI) (osq_types.Pack, error) {
 	pack := osq_types.Pack{}
 	//create query string from pack name
 	type QS struct {
@@ -444,7 +459,7 @@ func GetNewPackByName(packName string, dynamoDB *dynamodb.DynamoDB) (osq_types.P
 	}
 	//get pack map from dynamo
 	resp, err := dynamoDB.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String("osquery_querypacks"),
+		TableName: aws.String(osqueryQueryPacks),
 		Key:       js,
 	})
 	if err != nil {
@@ -481,10 +496,10 @@ func GetNewPackByName(packName string, dynamoDB *dynamodb.DynamoDB) (osq_types.P
 }
 
 // SearchQueryPacks returns a slice of QueryPacks
-func SearchQueryPacks(searchString string, dynamoDB *dynamodb.DynamoDB) ([]osq_types.QueryPack, error) {
+func SearchQueryPacks(searchString string, db dynamodbiface.DynamoDBAPI) ([]osq_types.QueryPack, error) {
 	results := []osq_types.QueryPack{}
-	scanItems, err := dynamoDB.Scan(&dynamodb.ScanInput{
-		TableName: aws.String("osquery_querypacks"),
+	scanItems, err := db.Scan(&dynamodb.ScanInput{
+		TableName: aws.String(osqueryQueryPacks),
 	})
 	if err != nil {
 		logger.Error(err)
@@ -505,15 +520,15 @@ func SearchQueryPacks(searchString string, dynamoDB *dynamodb.DynamoDB) ([]osq_t
 }
 
 // NewQueryPack creates a new query pack
-func NewQueryPack(qp osq_types.QueryPack, dynamoDB *dynamodb.DynamoDB) error {
+func NewQueryPack(qp osq_types.QueryPack, db dynamodbiface.DynamoDBAPI) error {
 	av, err := dynamodbattribute.MarshalMap(qp)
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
 
-	_, err = dynamoDB.PutItem(&dynamodb.PutItemInput{
-		TableName: aws.String("osquery_querypacks"),
+	_, err = db.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(osqueryQueryPacks),
 		Item:      av,
 	})
 	if err != nil {
@@ -524,7 +539,7 @@ func NewQueryPack(qp osq_types.QueryPack, dynamoDB *dynamodb.DynamoDB) error {
 }
 
 // DeleteQueryPack deletes specified query pack
-func DeleteQueryPack(queryPackName string, dynamoDB *dynamodb.DynamoDB) error {
+func DeleteQueryPack(queryPackName string, db dynamodbiface.DynamoDBAPI) error {
 	type qs struct {
 		PackName string `json:"pack_name"`
 	}
@@ -535,8 +550,8 @@ func DeleteQueryPack(queryPackName string, dynamoDB *dynamodb.DynamoDB) error {
 		return err
 	}
 
-	_, err = dynamoDB.DeleteItem(&dynamodb.DeleteItemInput{
-		TableName: aws.String("osquery_querypacks"),
+	_, err = db.DeleteItem(&dynamodb.DeleteItemInput{
+		TableName: aws.String(osqueryQueryPacks),
 		Key:       av,
 	})
 	if err != nil {
@@ -547,15 +562,15 @@ func DeleteQueryPack(queryPackName string, dynamoDB *dynamodb.DynamoDB) error {
 }
 
 // UpsertPack upserts pack
-func UpsertPack(qp osq_types.QueryPack, dynamoDB *dynamodb.DynamoDB) error {
+func UpsertPack(qp osq_types.QueryPack, db dynamodbiface.DynamoDBAPI) error {
 	//Additive upsert.
-	existing, err := GetNewPackByName(qp.PackName, dynamoDB)
+	existing, err := GetNewPackByName(qp.PackName, db)
 	if err != nil {
 		return err
 	}
 
 	if existing.PackName == "" {
-		return NewQueryPack(qp, dynamoDB)
+		return NewQueryPack(qp, db)
 	}
 
 	existingQueries := map[string]bool{}
@@ -579,16 +594,16 @@ func UpsertPack(qp osq_types.QueryPack, dynamoDB *dynamodb.DynamoDB) error {
 		newQueryPack.Queries = append(newQueryPack.Queries, query)
 	}
 
-	err = DeleteQueryPack(qp.PackName, dynamoDB)
+	err = DeleteQueryPack(qp.PackName, db)
 	if err != nil {
 		return err
 	}
 
-	return NewQueryPack(newQueryPack, dynamoDB)
+	return NewQueryPack(newQueryPack, db)
 }
 
 // SearchDistributedNodeKey returns a distributed query for node specified by nodeKey
-func SearchDistributedNodeKey(nk string, dynamoDB *dynamodb.DynamoDB) (osq_types.DistributedQuery, error) {
+func SearchDistributedNodeKey(nk string, db dynamodbiface.DynamoDBAPI) (osq_types.DistributedQuery, error) {
 	type nodequery struct {
 		NodeKey string `json:"node_key"`
 	}
@@ -600,10 +615,10 @@ func SearchDistributedNodeKey(nk string, dynamoDB *dynamodb.DynamoDB) (osq_types
 		return dq, err
 	}
 	item := dynamodb.GetItemInput{
-		TableName: aws.String("osquery_distributed_queries"),
+		TableName: aws.String(osqueryDistributedQueries),
 		Key:       marshalmap,
 	}
-	resp, err := dynamoDB.GetItem(&item)
+	resp, err := db.GetItem(&item)
 	if err != nil {
 		logger.Error(err)
 		return dq, err
@@ -620,26 +635,22 @@ func SearchDistributedNodeKey(nk string, dynamoDB *dynamodb.DynamoDB) (osq_types
 }
 
 // NewDistributedQuery creates new distirbuted query
-func NewDistributedQuery(dq osq_types.DistributedQuery, dynamoDB *dynamodb.DynamoDB) error {
+func NewDistributedQuery(dq osq_types.DistributedQuery, db dynamodbiface.DynamoDBAPI) error {
 	mm, err := dynamodbattribute.MarshalMap(dq)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
 
-	_, err = dynamoDB.PutItem(&dynamodb.PutItemInput{
-		TableName: aws.String("osquery_distributed_queries"),
+	_, err = db.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(osqueryDistributedQueries),
 		Item:      mm,
 	})
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-	return nil
+
+	return err
 }
 
 // DeleteDistributedQuery deletes specified distributed query
-func DeleteDistributedQuery(dq osq_types.DistributedQuery, dynamoDB *dynamodb.DynamoDB) error {
+func DeleteDistributedQuery(dq osq_types.DistributedQuery, db dynamodbiface.DynamoDBAPI) error {
 	type querykey struct {
 		NodeKey string `json:"node_key"`
 	}
@@ -650,8 +661,8 @@ func DeleteDistributedQuery(dq osq_types.DistributedQuery, dynamoDB *dynamodb.Dy
 		logger.Error(err)
 	}
 
-	_, err = dynamoDB.DeleteItem(&dynamodb.DeleteItemInput{
-		TableName: aws.String("osquery_distributed_queries"),
+	_, err = db.DeleteItem(&dynamodb.DeleteItemInput{
+		TableName: aws.String(osqueryDistributedQueries),
 		Key:       key,
 	})
 	if err != nil {
@@ -662,22 +673,24 @@ func DeleteDistributedQuery(dq osq_types.DistributedQuery, dynamoDB *dynamodb.Dy
 }
 
 // AppendDistributedQuery appends a new distributed query to a nodes list of distributed queries
-func AppendDistributedQuery(dq osq_types.DistributedQuery, dynamoDB *dynamodb.DynamoDB) error {
+func AppendDistributedQuery(dq osq_types.DistributedQuery, db dynamodbiface.DynamoDBAPI) error {
 	//
 	//NOTE:  This could be optimized to take in teh results of the already made call to check if the key exists
 	// This is probably worth doing at some point when its beyond POC
 	//should only be called if a check has been run to verify that the node_key for the
 	//distributed query already exists (EG call distributed.SearchNodeKey())
-	existingDQ, err := SearchDistributedNodeKey(dq.NodeKey, dynamoDB)
+	existingDQ, err := SearchDistributedNodeKey(dq.NodeKey, db)
+	if err != nil {
+		return err
+	}
 	//create copy of queries in existing distributed query
 	existingQueries := map[string]bool{}
 	for _, j := range existingDQ.Queries {
 		existingQueries[j] = true
 	}
 	//delete existing distributed query
-	err = DeleteDistributedQuery(existingDQ, dynamoDB)
+	err = DeleteDistributedQuery(existingDQ, db)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
 	//append new queries to existing queries
@@ -687,46 +700,40 @@ func AppendDistributedQuery(dq osq_types.DistributedQuery, dynamoDB *dynamodb.Dy
 		}
 	}
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
 	//recreate distributed query with new + old queries
-	err = NewDistributedQuery(existingDQ, dynamoDB)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-	return nil
+	return NewDistributedQuery(existingDQ, db)
 }
 
 // UpsertDistributedQuery upserts a new distrubted query
-func UpsertDistributedQuery(dq osq_types.DistributedQuery, dynamoDB *dynamodb.DynamoDB) error {
+func UpsertDistributedQuery(dq osq_types.DistributedQuery, db dynamodbiface.DynamoDBAPI) error {
 	//queries for node_key in dynamodb.  if found, appends queries to existing list
 	//if not found, creates item and adds queries
 	//Search for key
 	//dynamoDB := dyndb.DbInstance()
-	existing, err := SearchDistributedNodeKey(dq.NodeKey, dynamoDB)
+	existing, err := SearchDistributedNodeKey(dq.NodeKey, db)
 	if err != nil {
 		return err
 	}
 
 	if existing.NodeKey != "" {
-		return AppendDistributedQuery(dq, dynamoDB)
+		return AppendDistributedQuery(dq, db)
 	}
 
-	return NewDistributedQuery(dq, dynamoDB)
+	return NewDistributedQuery(dq, db)
 }
 
 // NewUser creates new user in DB
-func NewUser(u osq_types.User, dynamoDB *dynamodb.DynamoDB) error {
+func NewUser(u osq_types.User, db dynamodbiface.DynamoDBAPI) error {
 	mm, err := dynamodbattribute.MarshalMap(u)
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
 
-	_, err = dynamoDB.PutItem(&dynamodb.PutItemInput{
-		TableName: aws.String("osquery_users"),
+	_, err = db.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(osqueryUsers),
 		Item:      mm,
 	})
 	if err != nil {
@@ -738,7 +745,7 @@ func NewUser(u osq_types.User, dynamoDB *dynamodb.DynamoDB) error {
 }
 
 // GetUser returns user from DB
-func GetUser(username string, dynamoDB *dynamodb.DynamoDB) (osq_types.User, error) {
+func GetUser(username string, db dynamodbiface.DynamoDBAPI) (osq_types.User, error) {
 	user := osq_types.User{}
 	type userquery struct {
 		Username string `json:"username"`
@@ -750,8 +757,8 @@ func GetUser(username string, dynamoDB *dynamodb.DynamoDB) (osq_types.User, erro
 		return user, err
 	}
 
-	resp, err := dynamoDB.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String("osquery_users"),
+	resp, err := db.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(osqueryUsers),
 		Key:       marshalmap,
 	})
 	if err != nil {
