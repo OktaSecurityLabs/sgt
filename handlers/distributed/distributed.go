@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/firehose"
-	"github.com/oktasecuritylabs/sgt/dyndb"
 	"github.com/oktasecuritylabs/sgt/handlers/response"
 	"github.com/oktasecuritylabs/sgt/logger"
 	"github.com/oktasecuritylabs/sgt/osquery_types"
@@ -32,52 +31,67 @@ func init() {
 var config osquery_types.ServerConfig
 */
 
+type DistributedDB interface {
+	SearchDistributedNodeKey(nk string) (osquery_types.DistributedQuery, error)
+	DeleteDistributedQuery(dq osquery_types.DistributedQuery) (error)
+	ValidNode(nodeKey string) (error)
+	UpsertDistributedQuery(dq osquery_types.DistributedQuery) (error)
+}
+
+
+func DistributedQueryRead(dyn DistributedDB) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handleRequest := func() error {
+
+			w.Header().Set("Content-Type", "application/json")
+			body, err := ioutil.ReadAll(r.Body)
+			defer r.Body.Close()
+			if err != nil {
+				return fmt.Errorf("failed to read request body: %s", err)
+			}
+
+			type node struct {
+				NodeKey string `json:"node_key"`
+			}
+
+			n := node{}
+			err = json.Unmarshal(body, &n)
+			if err != nil {
+				return fmt.Errorf("unmarshal failed: %s", err)
+			}
+
+			distributedQuery, err := dyn.SearchDistributedNodeKey(n.NodeKey)
+			if err != nil {
+				return fmt.Errorf("could not find node with key '%s': %s", n.NodeKey, err)
+			}
+
+			if len(distributedQuery.Queries) == 0 {
+				return errors.New("no queries in list: %s")
+			}
+
+			io.WriteString(w, distributedQuery.ToJSON())
+			err = dyn.DeleteDistributedQuery(distributedQuery)
+			if err != nil {
+				return fmt.Errorf("could not delete query: %s", err)
+			}
+
+			return nil
+		}
+
+		err := handleRequest()
+		if err != nil {
+			logger.Error(err)
+			response.WriteError(w, fmt.Sprintf("[DistributedQueryRead] %s", err))
+		}
+
+	})
+}
+
+/*
 func DistributedQueryRead(respWriter http.ResponseWriter, request *http.Request) {
 
-	handleRequest := func() error {
-
-		respWriter.Header().Set("Content-Type", "application/json")
-		body, err := ioutil.ReadAll(request.Body)
-		defer request.Body.Close()
-		if err != nil {
-			return fmt.Errorf("failed to read request body: %s", err)
-		}
-
-		type node struct {
-			NodeKey string `json:"node_key"`
-		}
-
-		n := node{}
-		err = json.Unmarshal(body, &n)
-		if err != nil {
-			return fmt.Errorf("unmarshal failed: %s", err)
-		}
-
-		dynSvc := dyndb.DbInstance()
-		distributedQuery, err := dyndb.SearchDistributedNodeKey(n.NodeKey, dynSvc)
-		if err != nil {
-			return fmt.Errorf("could not find node with key '%s': %s", n.NodeKey, err)
-		}
-
-		if len(distributedQuery.Queries) == 0 {
-			return errors.New("no queries in list: %s")
-		}
-
-		io.WriteString(respWriter, distributedQuery.ToJSON())
-		err = dyndb.DeleteDistributedQuery(distributedQuery, dynSvc)
-		if err != nil {
-			return fmt.Errorf("could not delete query: %s", err)
-		}
-
-		return nil
-	}
-
-	err := handleRequest()
-	if err != nil {
-		logger.Error(err)
-		response.WriteError(respWriter, fmt.Sprintf("[DistributedQueryRead] %s", err))
-	}
 }
+*/
 
 func ParseDistributedResults(request *http.Request) ([]osquery_types.DistributedQueryResult, error) {
 	results := []osquery_types.DistributedQueryResult{}
@@ -117,6 +131,49 @@ func ParseDistributedResults(request *http.Request) ([]osquery_types.Distributed
 	return results, nil
 }
 
+func DistributedQueryWrite(dyn DistributedDB) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handleRequest := func() error {
+
+			fhSvc := FirehoseService()
+			config, err := osquery_types.GetServerConfig("config.json")
+			if err != nil {
+				return fmt.Errorf("could not get server config: %s", err)
+			}
+			results, err := ParseDistributedResults(r)
+			if err != nil {
+				return fmt.Errorf("could not parsed results: %s", err)
+			}
+			return PutFirehoseBatch(results, config.DistributedQueryLoggerFirehoseStreamName, fhSvc)
+		}
+
+		err := handleRequest()
+		if err != nil {
+			logger.Error(err)
+			response.WriteError(w, fmt.Sprintf("[DistributedQueryWrite] %s", err))
+		}
+
+		/*type distributed_write struct {
+			NodeKey  string `json:"node_key"`
+			Queries  map[string][]map[string]string `json:"queries"`
+			Statuses map[string]string `json:"statuses"`
+		}
+		dw := distributed_write{}
+		*/
+		//logger.Infof("Here's our dqa object %+v", dqa)
+		//logger.Info(dqa.Statuses)
+		//logger.Info(dqa.Queries)
+		//err = PutFirehoseBatch(body, config.DistributedQueryLoggerFirehoseStreamName, FirehoseService())
+		//if err != nil {
+		//logger.Error(err)
+		//return
+		//}
+		//return
+
+	})
+}
+
+/*
 func DistributedQueryWrite(respWriter http.ResponseWriter, request *http.Request) {
 
 	handleRequest := func() error {
@@ -155,7 +212,8 @@ func DistributedQueryWrite(respWriter http.ResponseWriter, request *http.Request
 	//return
 	//}
 	//return
-}
+//}
+
 
 func FirehoseService() *firehose.Firehose {
 	sess := session.Must(session.NewSession(
@@ -226,7 +284,59 @@ if len(records) == 450 || a == len(s) -1 {
 	}
 	records = records[:0]
 }*/
+func DistributedQueryAdd(dyn DistributedDB) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handleRequest := func() (interface{}, error) {
 
+			type distributedQueryAdd struct {
+				Nodes []osquery_types.DistributedQuery `json:"nodes"`
+			}
+
+			body, err := ioutil.ReadAll(r.Body)
+			defer r.Body.Close()
+			if err != nil {
+				return nil, fmt.Errorf("failed to read request body: %s", err)
+			}
+
+			nodes := distributedQueryAdd{}
+			err = json.Unmarshal(body, &nodes)
+			if err != nil {
+				return nil, fmt.Errorf("unmarshal failed: %s", err)
+			}
+
+			success := map[string]bool{}
+			for _, j := range nodes.Nodes {
+				err = dyn.ValidNode(j.NodeKey)
+				if err != nil {
+					logger.Error(err)
+					response.WriteError(w, fmt.Sprintf("node is not valid: %s", err))
+					continue
+				}
+
+				err = dyn.UpsertDistributedQuery(j)
+				if err != nil {
+					logger.Error(err)
+					success[j.NodeKey] = false
+				} else {
+					success[j.NodeKey] = true
+				}
+			}
+
+			return success, nil
+		}
+
+		result, err := handleRequest()
+		if err != nil {
+			logger.Error(err)
+			response.WriteError(w, fmt.Sprintf("[DistributedQueryAdd] %s", err))
+		} else {
+			response.WriteCustomJSON(w, result)
+		}
+
+	})
+}
+
+/*
 func DistributedQueryAdd(respWriter http.ResponseWriter, request *http.Request) {
 
 	handleRequest := func() (interface{}, error) {
@@ -276,4 +386,4 @@ func DistributedQueryAdd(respWriter http.ResponseWriter, request *http.Request) 
 	} else {
 		response.WriteCustomJSON(respWriter, result)
 	}
-}
+}*/

@@ -9,35 +9,42 @@ import (
 	"github.com/oktasecuritylabs/sgt/handlers/distributed"
 	"github.com/oktasecuritylabs/sgt/handlers/node"
 	"github.com/urfave/negroni"
+	"github.com/oktasecuritylabs/sgt/dyndb"
 )
 
 // Serve will create the server listen
 func Serve() error {
+	dynb := dyndb.NewDynamoDB()
+
 	router := mux.NewRouter()
 	//node endpoint
 	nodeAPI := router.PathPrefix("/node").Subrouter()
-	nodeAPI.Path("/configure").HandlerFunc(node.NodeConfigureRequest)
-	nodeAPI.Path("/enroll").HandlerFunc(node.NodeEnrollRequest)
+	nodeAPI.Path("/configure").Handler(node.NodeConfigureRequest(dynb))
+	nodeAPI.Path("/enroll").Handler(node.NodeEnrollRequest(dynb))
 	//protect with uiAuth
 	//Configuration (management) endpoint
 	apiRouter := mux.NewRouter().PathPrefix("/api/v1/configuration").Subrouter()
 
-	apiRouter.HandleFunc("/configs", api.GetNamedConfigs).Methods(http.MethodGet, http.MethodPost)
-	apiRouter.HandleFunc("/configs/{config_name}", api.ConfigurationRequest).Methods(http.MethodPost)
+	//apiRouter.HandleFunc("/configs", api.GetNamedConfigs).Methods(http.MethodGet, http.MethodPost)
+	apiRouter.Handle("/configs", api.GetNamedConfigsHandler(dynb)).Methods(http.MethodGet,  http.MethodPost)
+	apiRouter.Handle("/configs/{config_name}", api.ConfigurationRequestHandler(dynb))
+	//apiRouter.HandleFunc("/configs/{config_name}", api.ConfigurationRequest).Methods(http.MethodPost)
 	//Nodes
-	apiRouter.HandleFunc("/nodes", api.GetNodes).Methods(http.MethodGet)
-	apiRouter.HandleFunc("/nodes/{node_key}", api.ConfigureNode).Methods(http.MethodPost, http.MethodGet)
-	apiRouter.HandleFunc("/nodes/{node_key}/approve", api.ApproveNode).Methods(http.MethodPost)
+	//apiRouter.HandleFunc("/nodes", api.GetNodes).Methods(http.MethodGet)
+	apiRouter.Handle("/nodes", api.GetNodesHandler(dynb))
+	//apiRouter.HandleFunc("/nodes/{node_key}", api.ConfigureNode).Methods(http.MethodPost, http.MethodGet)
+	apiRouter.Handle("/nodes/{node_key}", api.ConfigureNodeHandler(dynb))
+	apiRouter.Handle("/nodes/{node_key}/approve", api.ApproveNode(dynb)).Methods(http.MethodPost)
 	//apiRouter.HandleFunc("/nodes/approve/_bulk", api.Placeholder).Methods("POST)
 	//Packs
-	apiRouter.HandleFunc("/packs", api.GetQueryPacks).Methods(http.MethodGet)
-	apiRouter.HandleFunc("/packs/search/{search_string}", api.SearchQueryPacks).Methods(http.MethodGet)
-	apiRouter.HandleFunc("/packs/{pack_name}", api.ConfigurePack).Methods(http.MethodPost)
+	apiRouter.Handle("/packs", api.GetQueryPacks(dynb)).Methods(http.MethodGet)
+	apiRouter.Handle("/packs/search/{search_string}", api.SearchQueryPacks(dynb)).Methods(http.MethodGet)
+	apiRouter.Handle("/packs/{pack_name}", api.ConfigurePack(dynb)).Methods(http.MethodPost)
 	//PackQueries
-	apiRouter.HandleFunc("/packqueries", api.GetPackQueries).Methods(http.MethodGet)
-	apiRouter.HandleFunc("/packqueries/{query_name}", api.ConfigurePackQuery)
-	apiRouter.HandleFunc("/packqueries/search/{search_string}", api.SearchPackQueries)
-	apiRouter.HandleFunc("/distributed/add", distributed.DistributedQueryAdd)
+	apiRouter.Handle("/packqueries", api.GetPackQueries(dynb)).Methods(http.MethodGet)
+	apiRouter.Handle("/packqueries/{query_name}", api.ConfigurePackQuery(dynb))
+	apiRouter.Handle("/packqueries/search/{search_string}", api.SearchPackQueries(dynb))
+	apiRouter.Handle("/distributed/add", distributed.DistributedQueryAdd(dynb))
 	//Enforce uiAuth for all our api configuration endpoints
 	router.PathPrefix("/api/v1/configuration").Handler(negroni.New(
 		negroni.NewRecovery(),
@@ -45,11 +52,11 @@ func Serve() error {
 		negroni.Wrap(apiRouter),
 	))
 	//token
-	router.HandleFunc("/api/v1/get-token", auth.GetTokenHandler)
+	router.Handle("/api/v1/get-token", auth.GetTokenHandler(dynb))
 	//Distributed endpoint
 	distributedRouter := mux.NewRouter().PathPrefix("/distributed").Subrouter()
-	distributedRouter.HandleFunc("/read", distributed.DistributedQueryRead)
-	distributedRouter.HandleFunc("/write", distributed.DistributedQueryWrite)
+	distributedRouter.Handle("/read", distributed.DistributedQueryRead(dynb))
+	distributedRouter.Handle("/write", distributed.DistributedQueryWrite(dynb))
 	//auth for distributed read/write
 	router.PathPrefix("/distributed").Handler(negroni.New(
 		negroni.NewRecovery(),

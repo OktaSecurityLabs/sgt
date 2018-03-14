@@ -31,6 +31,12 @@ const (
 	invalidUsernameOrPassword = "Invalid username or password"
 )
 
+type AuthDB interface {
+	NewUser(u osquery_types.User) (error)
+	GetUser(username string) (osquery_types.User, error)
+	ValidNode(nodeKey string) (error)
+}
+
 // NodeConfigurePost type for handling post requests made by node
 type NodeConfigurePost struct {
 	EnrollSecret   string `json:"enroll_secret"`
@@ -97,7 +103,7 @@ func GetPass() ([]byte, error) {
 }
 
 // NewUser creates new user
-func NewUser(credentialsFile, profile, username, role string) error {
+func NewUser(credentialsFile, profile, username, role string,  dyn AuthDB) error {
 	fmt.Print("Enter password: ")
 	pass1, err := gopass.GetPasswd()
 	if err != nil {
@@ -131,7 +137,7 @@ func NewUser(credentialsFile, profile, username, role string) error {
 }
 
 // ValidateUser checks if user is valid
-func ValidateUser(request *http.Request) error {
+func ValidateUser(request *http.Request, dyn AuthDB) error {
 	type userPost struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -149,8 +155,7 @@ func ValidateUser(request *http.Request) error {
 		return err
 	}
 
-	dynDB := dyndb.DbInstance()
-	user, err := dyndb.GetUser(up.Username, dynDB)
+	user, err := dyn.GetUser(up.Username)
 	if err != nil {
 		return err
 	}
@@ -164,6 +169,51 @@ func ValidateUser(request *http.Request) error {
 }
 
 // GetTokenHandler handles requests to get-token api endpoint
+func GetTokenHandler(dyn AuthDB) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handleRequest := func() (string, error) {
+
+			err := ValidateUser(r, dyn)
+			if err != nil {
+				return "", err
+			}
+
+			logger.Info("valid user!")
+
+			appSecret, err := GetSsmParam("sgt_app_secret")
+			if err != nil {
+				logger.Error(err)
+				return "", err
+			}
+
+			token := jwt.New(jwt.SigningMethodHS256)
+			claims := token.Claims.(jwt.MapClaims)
+			claims["exp"] = time.Now().Add(time.Second * 14400).Unix()
+			claims["iat"] = time.Now().Unix()
+			tokenString, err := token.SignedString([]byte(appSecret))
+
+			if err != nil {
+				logger.Error(err)
+				return "", err
+			}
+
+			return tokenString, nil
+		}
+
+		tokenValue, err := handleRequest()
+		if err != nil {
+			logger.Error(err)
+			errString := fmt.Sprintf("[GetTokenHandler] invalid username or password: %s", err)
+			logger.Error(errString)
+			response.WriteError(w, invalidUsernameOrPassword)
+		} else {
+			response.WriteCustomJSON(w, response.SGTCustomResponse{"Authorization": tokenValue})
+		}
+
+	})
+}
+
+/*
 func GetTokenHandler(respWriter http.ResponseWriter, request *http.Request) {
 
 	handleRequest := func() (string, error) {
@@ -205,6 +255,7 @@ func GetTokenHandler(respWriter http.ResponseWriter, request *http.Request) {
 		response.WriteCustomJSON(respWriter, response.SGTCustomResponse{"Authorization": tokenValue})
 	}
 }
+*/
 
 // AnotherValidation validates authorization tokens.  Is poorly named and up for refactor as time permits
 func AnotherValidation(respWriter http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
@@ -245,6 +296,46 @@ func GetNodeSecret() (string, error) {
 }
 
 // ValidNodeKey validates posted node key
+/*func ValidNodeKey(dyn AuthDB) http.Handler {
+	return http.Handler(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		logger.Info("validating node...")
+
+		handleRequest := func() error {
+
+			w.Header().Set("Content-Type", "application/json")
+
+			body, err := ioutil.ReadAll(r.Body)
+			defer r.Body.Close()
+			if err != nil {
+				return fmt.Errorf("failed to read request body: %s", err)
+			}
+
+			r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
+			var data NodeConfigurePost
+			// unmarshal post data into data
+			err = json.Unmarshal(body, &data)
+			if err != nil {
+				return fmt.Errorf("unmarshal failed: %s", err)
+			}
+
+			return dyn.ValidNode(data.NodeKey)
+		}
+
+		err := handleRequest()
+		if err != nil {
+			logger.Error(err)
+			errString := fmt.Sprintf("[ValidNodeKey] invalid node key: %s", err)
+			response.WriteError(w, errString)
+		} else {
+			next(w, r)
+		}
+
+	})
+}
+*/
+
+
 func ValidNodeKey(respWriter http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 	logger.Info("validating node...")
 
