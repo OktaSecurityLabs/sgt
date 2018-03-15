@@ -2,38 +2,10 @@ package api
 
 import (
 	"testing"
-	"github.com/oktasecuritylabs/sgt/osquery_types"
 	"net/http"
 	"github.com/oktasecuritylabs/sgt/handlers/helpers"
 	"net/url"
 )
-
-type MockDB struct {
-
-}
-
-func (m MockDB) GetNamedConfigs() ([]osquery_types.OsqueryNamedConfig, error) {
-	results := []osquery_types.OsqueryNamedConfig{}
-	nc := osquery_types.OsqueryNamedConfig{
-		ConfigName: "test-config",
-
-	}
-	results = append(results, nc)
-	return results, nil
-}
-
-func (m MockDB) GetNamedConfig(cn string) (osquery_types.OsqueryNamedConfig, error) {
-	nc := osquery_types.OsqueryNamedConfig{
-		ConfigName: "test-config",
-
-	}
-	return nc, nil
-}
-
-func (m MockDB) UpsertNamedConfig(nc *osquery_types.OsqueryNamedConfig) (error) {
-	return nil
-}
-
 
 func TestGetNamedConfigsHandler(t *testing.T) {
 	mockdb  := helpers.NewMockDB()
@@ -41,11 +13,6 @@ func TestGetNamedConfigsHandler(t *testing.T) {
 	handler := GetNamedConfigsHandler(mockdb)
 
 	test := helpers.GenerateHandleTester(t, handler)
-
-	//handler := GetNamedConfigsHandler(db)
-	//req, _ := http.NewRequest("GET", "/api/v1/configuration/configs", nil)
-
-	//w := httptest.NewRecorder()
 
 	w := test("GET", url.Values{})
 
@@ -55,15 +22,16 @@ func TestGetNamedConfigsHandler(t *testing.T) {
 
 }
 
-/*
+
 func TestConfigurationRequestHandler(t *testing.T) {
-	db := MockDB{}
-	handler := ConfigurationRequestHandler(db)
-	req, _ := http.NewRequest("POST", "/api/v1/configuration/configs/test-config", nil)
 
-	w := httptest.NewRecorder()
+	mockdb := helpers.NewMockDB()
+	handler := ConfigurationRequestHandler(mockdb)
+	test := helpers.GenerateHandleTester(t, handler)
 
-	handler.ServeHTTP(w, req)
+	v := url.Values{}
+	v.Add("config_name", "default")
+	w := test("POST", v)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Add records did not return %+v", http.StatusOK)
@@ -71,17 +39,15 @@ func TestConfigurationRequestHandler(t *testing.T) {
 }
 
 func TestGetNodesHandler(t *testing.T) {
-	db := MockDB{}
-	handler := GetNodesHandler(db)
-	req, _ := http.NewRequest("GET", "/api/v1/configuration/nodes", nil)
+	mockdb := helpers.NewMockDB()
+	handler := GetNodesHandler(mockdb)
+	test := helpers.GenerateHandleTester(t, handler)
 
-	w := httptest.NewRecorder()
-
-	handler.ServeHTTP(w, req)
+	w := test("GET", url.Values{})
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Add records did not return %+v", http.StatusOK)
 	}
 
 }
-*/
+

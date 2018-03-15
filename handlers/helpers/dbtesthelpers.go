@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"github.com/oktasecuritylabs/sgt/osquery_types"
+	"encoding/json"
 )
 
 
@@ -175,5 +176,7 @@ func (m MockDB) ValidNode(nodeKey string) (error) {
 	return nil
 }
 
-
+func (m MockDB) BuildOsqueryPackAsJSON(nc osquery_types.OsqueryNamedConfig) (json.RawMessage) {
+	return json.RawMessage{}
+}
 
