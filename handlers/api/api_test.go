@@ -4,7 +4,8 @@ import (
 	"testing"
 	"github.com/oktasecuritylabs/sgt/osquery_types"
 	"net/http"
-	"net/http/httptest"
+	"github.com/oktasecuritylabs/sgt/handlers/helpers"
+	"net/url"
 )
 
 type MockDB struct {
@@ -35,13 +36,18 @@ func (m MockDB) UpsertNamedConfig(nc *osquery_types.OsqueryNamedConfig) (error) 
 
 
 func TestGetNamedConfigsHandler(t *testing.T) {
-	db := MockDB{}
-	handler := GetNamedConfigsHandler(db)
-	req, _ := http.NewRequest("GET", "/api/v1/configuration/configs", nil)
+	mockdb  := helpers.NewMockDB()
 
-	w := httptest.NewRecorder()
+	handler := GetNamedConfigsHandler(mockdb)
 
-	handler.ServeHTTP(w, req)
+	test := helpers.GenerateHandleTester(t, handler)
+
+	//handler := GetNamedConfigsHandler(db)
+	//req, _ := http.NewRequest("GET", "/api/v1/configuration/configs", nil)
+
+	//w := httptest.NewRecorder()
+
+	w := test("GET", url.Values{})
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Add records did not return %+v", http.StatusOK)
@@ -49,7 +55,7 @@ func TestGetNamedConfigsHandler(t *testing.T) {
 
 }
 
-
+/*
 func TestConfigurationRequestHandler(t *testing.T) {
 	db := MockDB{}
 	handler := ConfigurationRequestHandler(db)
@@ -78,4 +84,4 @@ func TestGetNodesHandler(t *testing.T) {
 	}
 
 }
-
+*/
