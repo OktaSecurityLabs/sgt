@@ -292,7 +292,7 @@ func GetNamedConfig(dynamoDB *dynamodb.DynamoDB, configName string) (osq_types.O
 
 // UpsertClient upsers an osqueryClient
 func (db DynDB) UpsertClient(oc osq_types.OsqueryClient) (error) {
-	logger.Debug("Upserting Client: %v", oc)
+	logger.Debugf("Upserting Client: %v", oc)
 
 	av, err := dynamodbattribute.MarshalMap(oc)
 	if err != nil {
