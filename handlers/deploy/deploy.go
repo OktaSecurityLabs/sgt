@@ -322,10 +322,13 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 			namedConfig.OsType = "all"
 		}
 		var pl []string
-		err = json.Unmarshal(*config.Packs, &pl)
-		if err != nil {
-			return err
+		for i, _ := range config.Packs {
+			pl = append(pl, i)
 		}
+		//err = json.Unmarshal(*config.Packs, &pl)
+		//if err != nil {
+			//return err
+		//}
 
 		namedConfig.PackList = pl
 		//blank out config packs since the options config doesn't have a packs kv

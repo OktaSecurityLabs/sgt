@@ -2,7 +2,6 @@ package osquery_types
 
 import (
 	"testing"
-	"fmt"
 	"reflect"
 )
 
@@ -22,14 +21,15 @@ var (
 	}
 
 )
-
+//removing function
+/*
 func TestPackQuery_AsString(t *testing.T) {
 	expected := fmt.Sprintf(`%q: {"query": %q, "interval": %q, "version": %q, "description": %q, "value": %q, "snapshot": %q}`,
 		"testquery", "select * from test;", "60", "1.4.0", "test description", "a test", "true")
 	if q1.AsString() != expected {
 		t.Errorf("Got: \n\t%s, expected: \n\t%s", q1.AsString(), expected)
 	}
-}
+}*/
 
 func TestPack_AsMap(t *testing.T) {
 	packMap := p1.AsMap()

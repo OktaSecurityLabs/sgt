@@ -23,7 +23,7 @@ type NodeDB interface {
 	ValidNode(nodeKey string) (error)
 	SearchByNodeKey(nk string) (osquery_types.OsqueryClient, error)
 	GetNamedConfig(configName string) (osquery_types.OsqueryNamedConfig, error)
-	BuildOsqueryPackAsJSON(nc osquery_types.OsqueryNamedConfig) (json.RawMessage)
+	//BuildOsqueryPackAsJSON(nc osquery_types.OsqueryNamedConfig) (json.RawMessage)
 	BuildNamedConfig(nc osquery_types.OsqueryNamedConfig) (osquery_types.OsqueryConfig, error)
 }
 

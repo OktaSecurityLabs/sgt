@@ -30,6 +30,7 @@ var testPackQuery2 = osquery_types.PackQuery{
 	"1.1.1",
 	"test2 description",
 	"some value",
+	"true",
 	}
 	var testQueryPack1 = osquery_types.QueryPack{
 		"test-pack",
@@ -178,5 +179,9 @@ func (m MockDB) ValidNode(nodeKey string) (error) {
 
 func (m MockDB) BuildOsqueryPackAsJSON(nc osquery_types.OsqueryNamedConfig) (json.RawMessage) {
 	return json.RawMessage{}
+}
+
+func (m MockDB) BuildNamedConfig(nc osquery_types.OsqueryNamedConfig) (osquery_types.OsqueryConfig, error) {
+	return osquery_types.OsqueryConfig{}, nil
 }
 
