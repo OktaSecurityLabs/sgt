@@ -1,7 +1,6 @@
 package dyndb
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -47,9 +46,9 @@ func NewDynamoDB() DynDB {
 	dynDB.DB = DbInstance()
 	return dynDB
 }
-
+// deprecated
 // BuildOsqueryPacksAsJSON returns raw json of a named config
-func (dyn DynDB) BuildOsqueryPackAsJSON(nc osq_types.OsqueryNamedConfig) (json.RawMessage) {
+/*func (dyn DynDB) BuildOsqueryPackAsJSON(nc osq_types.OsqueryNamedConfig) (json.RawMessage) {
 	packJSON := "{"
 	var packList []string
 	for i, pack := range nc.PackList {
@@ -64,6 +63,18 @@ func (dyn DynDB) BuildOsqueryPackAsJSON(nc osq_types.OsqueryNamedConfig) (json.R
 	packJSON += "}"
 	return json.RawMessage(packJSON)
 
+}*/
+
+func (db DynDB) BuildNamedConfig(nc osq_types.OsqueryNamedConfig) (osq_types.OsqueryConfig, error) {
+	oc := osq_types.OsqueryConfig{}
+	for _, packName := range nc.PackList {
+		p, err := db.GetPackByName(packName)
+		if err != nil {
+			return oc, err
+		}
+		oc.Packs[packName] = p.AsMap()
+	}
+	return oc, nil
 }
 
 /*

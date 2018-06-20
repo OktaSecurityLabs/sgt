@@ -158,10 +158,6 @@ func NewOsqueryOptions() OsqueryOptions {
 	return options
 }
 
-type OsqueryPacks struct {
-	Fedramp string `json:"fedramp"`
-}
-
 type OsqueryDecorators struct {
 	Load   []string `json:"load,omitempty"`
 	Always []string `json:"always,omitempty"`
@@ -187,7 +183,7 @@ type OsqueryConfig struct {
 	Decorators  OsqueryDecorators `json:"decorators,omitemtpy"`
 	Schedule    OsquerySchedule   `json:"schedule,omitempty"`
 	//Packs OsqueryPacks `json:"packs"`
-	Packs *json.RawMessage `json:"packs,omitempty"`
+	Packs		map[string]map[string]map[string]map[string]string
 }
 
 type OsqueryNamedConfig struct {
@@ -203,16 +199,34 @@ type Pack struct {
 	Queries []PackQuery `json:"queries"`
 }
 
-func (p Pack) AsString() string {
-	s := fmt.Sprintf("%q: ", p.PackName)
-	s += `{"queries": `
-	s += BuildPackQueries(p.Queries)
-	s += "}}"
-	return s
-}
+// deprecated
+//func (p Pack) AsString() string {
+	//s := fmt.Sprintf("%q: ", p.PackName)
+	//s += `{"queries": `
+	//s += BuildPackQueries(p.Queries)
+	//s += "}}"
+	//return s
+//}
 
-func (p Pack) AsRawJson() json.RawMessage {
-	return json.RawMessage(p.AsString())
+// deprecated
+//func (p Pack) AsRawJson() json.RawMessage {
+	//return json.RawMessage(p.AsString())
+//}
+
+func (p Pack) AsMap() (map[string]map[string]map[string]string) {
+	m := map[string]map[string]map[string]string{}
+	m["queries"] = map[string]map[string]string{}
+	for _, packQuery := range p.Queries {
+		pq := map[string]string{}
+		pq["query"] = packQuery.Query
+		pq["interval"] = packQuery.Interval
+		pq["version"] = packQuery.Version
+		pq["description"] = packQuery.Description
+		pq["value"] = packQuery.Value
+		pq["snapshot"] = packQuery.Snapshot
+		m["queries"][packQuery.QueryName] = pq
+	}
+	return m
 }
 
 type QueryPack struct {
@@ -227,6 +241,7 @@ type PackQuery struct {
 	Version     string `json:"version"`
 	Description string `json:"description"`
 	Value       string `json:"value"`
+	Snapshot	string `json:"snapshot"`
 }
 
 func (pq PackQuery) AsString() string {

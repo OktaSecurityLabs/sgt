@@ -24,6 +24,7 @@ type NodeDB interface {
 	SearchByNodeKey(nk string) (osquery_types.OsqueryClient, error)
 	GetNamedConfig(configName string) (osquery_types.OsqueryNamedConfig, error)
 	BuildOsqueryPackAsJSON(nc osquery_types.OsqueryNamedConfig) (json.RawMessage)
+	BuildNamedConfig(nc osquery_types.OsqueryNamedConfig) (osquery_types.OsqueryConfig, error)
 }
 
 const (
@@ -419,8 +420,12 @@ func NodeConfigureRequest(dyn NodeDB) http.Handler {
 			if namedConfig.OsqueryConfig.Options.AwsFirehoseStream == "" {
 				namedConfig.OsqueryConfig.Options.AwsFirehoseStream = config.FirehoseStreamName
 			}
-			rawPackJSON := dyn.BuildOsqueryPackAsJSON(namedConfig)
-			namedConfig.OsqueryConfig.Packs = &rawPackJSON
+			//rawPackJSON := dyn.BuildOsqueryPackAsJSON(namedConfig)
+			oc, err := dyn.BuildNamedConfig(namedConfig)
+			if err != nil {
+				logger.Error(err)
+			}
+			namedConfig.OsqueryConfig = oc
 
 			return namedConfig.OsqueryConfig, nil
 		}
