@@ -50,6 +50,10 @@ func Debug(args ...interface{}) {
 	logger.Debug(args...)
 }
 
+func Debugf(format string, args ...interface{}) {
+	logger.Debugf(format, args...)
+}
+
 func Error(args ...interface{}) {
 	logger.Error(args...)
 }
