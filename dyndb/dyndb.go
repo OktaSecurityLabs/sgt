@@ -65,16 +65,28 @@ func NewDynamoDB() DynDB {
 
 }*/
 
-func (db DynDB) BuildNamedConfig(nc osq_types.OsqueryNamedConfig) (osq_types.OsqueryConfig, error) {
+
+// BuildNamedConfig returns the fully built Named config, minus the credentials which are supplied during node config
+func (db DynDB) BuildNamedConfig(configName string) (osq_types.OsqueryNamedConfig, error) {
+	storedNC := osq_types.OsqueryNamedConfig{}
 	oc := osq_types.OsqueryConfig{}
-	for _, packName := range nc.PackList {
+	storedNC, err := db.GetNamedConfig(configName)
+	if err != nil {
+		return storedNC, err
+	}
+	storedNC.OsqueryConfig.Packs = make(map[string]map[string]map[string]map[string]string)
+	//oc = storedNC.OsqueryConfig
+	for _, packName := range storedNC.PackList {
+		fmt.Printf("adding %s to config", packName)
+		fmt.Printf("config now: %+v", oc)
 		p, err := db.GetPackByName(packName)
 		if err != nil {
-			return oc, err
+			return storedNC, err
 		}
-		oc.Packs[packName] = p.AsMap()
+		storedNC.OsqueryConfig.Packs[packName] = p.AsMap()
 	}
-	return oc, nil
+
+	return storedNC, nil
 }
 
 /*

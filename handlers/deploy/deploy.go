@@ -240,6 +240,7 @@ func osqueryDefaultPacks(config DeploymentConfig, environ string) error {
 				pq.Description = v.Description
 				pq.Interval = v.Interval
 				pq.Version = v.Version
+				pq.Snapshot = v.Snapshot
 				dyn.UpsertPackQuery(pq)
 			}
 			//logger.Info("queries done\n")
@@ -288,7 +289,7 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 	dynDB := auth.CrendentialedDbInstance(credfile, config.AWSProfile)
 	for _, fn := range files {
 		_, filename := filepath.Split(fn)
-		logger.Infof("Updating %s pack", filename)
+		logger.Infof("Updating %s config", filename)
 		if strings.HasSuffix(filename, "json") {
 		}
 		var fp string
@@ -303,11 +304,14 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 		if err != nil {
 			return err
 		}
-		config := osq_types.OsqueryConfig{}
+		config := osq_types.OsqueryUploadConfig{}
 		decoder := json.NewDecoder(file)
 		err = decoder.Decode(&config)
 		if err != nil {
+			logger.Error("failed on decode!")
 			return err
+		} else {
+			logger.Infof("decoded config!")
 		}
 		//fmt.Printf("%s", config.Packs)
 		namedConfig.ConfigName = strings.Split(filename, ".")[0]
@@ -322,7 +326,7 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 			namedConfig.OsType = "all"
 		}
 		var pl []string
-		for i, _ := range config.Packs {
+		for _, i := range config.Packs {
 			pl = append(pl, i)
 		}
 		//err = json.Unmarshal(*config.Packs, &pl)
@@ -331,9 +335,13 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 		//}
 
 		namedConfig.PackList = pl
+		oc := osq_types.OsqueryConfig{}
+		oc.Options = config.Options
+		oc.Decorators = config.Decorators
+		oc.Schedule = config.Schedule
 		//blank out config packs since the options config doesn't have a packs kv
 		config.Packs = nil
-		namedConfig.OsqueryConfig = config
+		namedConfig.OsqueryConfig = oc
 		err = dyndb.UpsertNamedConfig(dynDB, &namedConfig)
 		if err != nil {
 			logger.Infof("%s: failed\n", namedConfig.ConfigName)

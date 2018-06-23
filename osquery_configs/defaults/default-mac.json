@@ -23,6 +23,6 @@
     "watchdog_level": -1,
     "watchdog_memory_limit": 300
   },
-  "packs": ["osx-attacks", "unwanted-chrome-extensions", "vuln-management", "ossec-rootkit"]
+  "packs": ["osx-attacks", "unwanted-chrome-extensions", "vuln-management", "ossec-rootkit", "osquery-monitoring", "osx-inventory"]
 
 }
