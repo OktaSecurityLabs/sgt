@@ -23,5 +23,5 @@
     "watchdog_level": -1,
     "watchdog_memory_limit": 300
   },
-  "packs": ["it-compliance", "unwanted-chrome-extensions", "vuln-management"]
+  "packs": ["it-compliance", "unwanted-chrome-extensions", "vuln-management", "osquery-monitoring"]
 }

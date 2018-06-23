@@ -24,7 +24,7 @@ type NodeDB interface {
 	SearchByNodeKey(nk string) (osquery_types.OsqueryClient, error)
 	GetNamedConfig(configName string) (osquery_types.OsqueryNamedConfig, error)
 	//BuildOsqueryPackAsJSON(nc osquery_types.OsqueryNamedConfig) (json.RawMessage)
-	BuildNamedConfig(nc osquery_types.OsqueryNamedConfig) (osquery_types.OsqueryConfig, error)
+	BuildNamedConfig(configName string) (osquery_types.OsqueryNamedConfig, error)
 }
 
 const (
@@ -395,13 +395,13 @@ func NodeConfigureRequest(dyn NodeDB) http.Handler {
 
 			namedConfig := osquery_types.OsqueryNamedConfig{}
 			if osqNode.ConfigName != "" {
-				namedConfig, err = dyn.GetNamedConfig(osqNode.ConfigName)
+				namedConfig, err = dyn.BuildNamedConfig(osqNode.ConfigName)
 				if err != nil {
 					return nil, fmt.Errorf("could not get config with name '%s': \n %s", osqNode.ConfigName, err)
 				}
 			} else {
 				handlerLogger.Info("No named config found, setting default config")
-				namedConfig, err = dyn.GetNamedConfig("default")
+				namedConfig, err = dyn.BuildNamedConfig("default")
 				if err != nil {
 					return nil, fmt.Errorf("could not get default config: %s", err)
 				}
@@ -411,22 +411,20 @@ func NodeConfigureRequest(dyn NodeDB) http.Handler {
 			if err != nil {
 				return nil, fmt.Errorf("could not get server config: %s", err)
 			}
-			//namedConfig.OsqueryConfig.Options.AwsAccessKeyID = os.Getenv("FIREHOSE_AWS_ACCESS_KEY_ID")
-			//namedConfig.OsqueryConfig.Options.AwsSecretAccessKey = os.Getenv("FIREHOSE_AWS_SECRET_ACCESS_KEY")
-			//namedConfig.OsqueryConfig.Options.AwsFirehoseStream = os.Getenv("AWS_FIREHOSE_STREAM")
+			//oc, err := dyn.BuildNamedConfig(osqNode.ConfigName)
+			//logger.Infof("OC: %+v", oc)
+			//if err != nil {
+				//logger.Error(err)
+			//}
+
 			handlerLogger.Debug(config)
 			namedConfig.OsqueryConfig.Options.AwsAccessKeyID = config.FirehoseAWSAccessKeyID
 			namedConfig.OsqueryConfig.Options.AwsSecretAccessKey = config.FirehoseAWSSecretAccessKey
 			if namedConfig.OsqueryConfig.Options.AwsFirehoseStream == "" {
 				namedConfig.OsqueryConfig.Options.AwsFirehoseStream = config.FirehoseStreamName
 			}
-			//rawPackJSON := dyn.BuildOsqueryPackAsJSON(namedConfig)
-			oc, err := dyn.BuildNamedConfig(namedConfig)
-			if err != nil {
-				logger.Error(err)
-			}
-			namedConfig.OsqueryConfig = oc
 
+			//namedConfig.OsqueryConfig = oc
 			return namedConfig.OsqueryConfig, nil
 		}
 

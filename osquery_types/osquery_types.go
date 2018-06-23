@@ -183,7 +183,17 @@ type OsqueryConfig struct {
 	Decorators  OsqueryDecorators `json:"decorators,omitemtpy"`
 	Schedule    OsquerySchedule   `json:"schedule,omitempty"`
 	//Packs OsqueryPacks `json:"packs"`
-	Packs		map[string]map[string]map[string]map[string]string
+	Packs		map[string]map[string]map[string]map[string]string `json:"packs"`
+}
+
+type OsqueryUploadConfig struct {
+	//Node_invalid string
+	NodeInvalid bool
+	Options     OsqueryOptions    `json:"options"`
+	Decorators  OsqueryDecorators `json:"decorators,omitemtpy"`
+	Schedule    OsquerySchedule   `json:"schedule,omitempty"`
+	Packs		[]string		  `json:"packs"`
+	//Packs OsqueryPacks `json:"packs"`
 }
 
 type OsqueryNamedConfig struct {
@@ -220,10 +230,18 @@ func (p Pack) AsMap() (map[string]map[string]map[string]string) {
 		pq := map[string]string{}
 		pq["query"] = packQuery.Query
 		pq["interval"] = packQuery.Interval
+		//if len(packQuery.Version) > 0 {
 		pq["version"] = packQuery.Version
+		//}
+		//if len(packQuery.Description) > 0 {
 		pq["description"] = packQuery.Description
+		//}
+		//if len(packQuery.Value) > 0 {
 		pq["value"] = packQuery.Value
+		//}
+		//if len(packQuery.Snapshot) > 0 {
 		pq["snapshot"] = packQuery.Snapshot
+		//}
 		m["queries"][packQuery.QueryName] = pq
 	}
 	return m

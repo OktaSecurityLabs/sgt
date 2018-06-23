@@ -181,7 +181,7 @@ func (m MockDB) BuildOsqueryPackAsJSON(nc osquery_types.OsqueryNamedConfig) (jso
 	return json.RawMessage{}
 }
 
-func (m MockDB) BuildNamedConfig(nc osquery_types.OsqueryNamedConfig) (osquery_types.OsqueryConfig, error) {
-	return osquery_types.OsqueryConfig{}, nil
+func (m MockDB) BuildNamedConfig(configName string) (osquery_types.OsqueryNamedConfig, error) {
+	return osquery_types.OsqueryNamedConfig{}, nil
 }
 
