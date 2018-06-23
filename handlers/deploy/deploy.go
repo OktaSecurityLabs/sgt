@@ -227,6 +227,9 @@ func osqueryDefaultPacks(config DeploymentConfig, environ string) error {
 				return err
 			}
 			dynDBInstance := auth.CrendentialedDbInstance(credfile, config.AWSProfile)
+			dyn := dyndb.DynDB{
+				DB: dynDBInstance,
+			}
 			//logger.Infof("%+v", pack)
 			//logger.Infof("%+v", helperPack)
 			for k, v := range helperPack.Queries {
@@ -237,12 +240,12 @@ func osqueryDefaultPacks(config DeploymentConfig, environ string) error {
 				pq.Description = v.Description
 				pq.Interval = v.Interval
 				pq.Version = v.Version
-				dyndb.UpsertPackQuery(pq, dynDBInstance)
+				dyn.UpsertPackQuery(pq)
 			}
 			//logger.Info("queries done\n")
 			pack.Queries = helperPack.ListQueries()
 			pack.PackName = strings.Split(filename, ".")[0]
-			err = dyndb.UpsertPack(pack, dynDBInstance)
+			err = dyn.UpsertPack(pack)
 			if err != nil {
 				return err
 			}
@@ -319,10 +322,13 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 			namedConfig.OsType = "all"
 		}
 		var pl []string
-		err = json.Unmarshal(*config.Packs, &pl)
-		if err != nil {
-			return err
+		for i, _ := range config.Packs {
+			pl = append(pl, i)
 		}
+		//err = json.Unmarshal(*config.Packs, &pl)
+		//if err != nil {
+			//return err
+		//}
 
 		namedConfig.PackList = pl
 		//blank out config packs since the options config doesn't have a packs kv

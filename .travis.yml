@@ -13,5 +13,5 @@ install:
 
 script:
   - go vet
-  - go test -v ./...
+  - go test ./...
   - go build
