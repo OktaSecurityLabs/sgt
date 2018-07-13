@@ -1,0 +1,55 @@
+{
+  "queries": {
+    "installed_applications_snapshot": {
+      "query": "select * from apps",
+      "interval": "43200",
+      "description": "retrieve all installed apps",
+      "value": "used for comparing installed software vs missing software",
+      "snapshot": "true"
+    },
+    "drive_encryption_snapshot": {
+      "query": "select * from disk_encryption",
+      "interval": "43200",
+      "description": "snapshot encrypted disks",
+      "value": "contant disk encryption checks",
+      "snapshot": "true"
+    },
+    "resolvers_snapshot": {
+      "query": "select * from dns_resolvers",
+      "interval": "43200",
+      "description": "check for non-opendns resolvers (non localhost)",
+      "snapshot": "true"
+    },
+    "hosts_file_snapshot": {
+      "query": "select * from etc_hosts",
+      "interval": "43200",
+      "description": "snapshot of static hosts",
+      "snapshot": "true"
+    },
+    "launch_items_snapshot": {
+      "query": "select * from launchd",
+      "interval": "43200",
+      "decription": "snapshot of launch agents + daemons",
+      "snapshot": "true"
+    },
+    "listening_ports_snapshot": {
+      "query": "select * from listening_ports",
+      "interval": "43200",
+      "removed": false,
+      "description": "searching for listening ports on laptops (should not be a thing)",
+      "snapshot": "true"
+    },
+    "python_packages_snapshot": {
+      "query": "select * from python_packages",
+      "interval": "43200",
+      "description": "system python packages",
+      "snapshot": "true"
+    },
+      "os_version_snapshot": {
+      "query": "select * from os_version",
+      "interval": "43200",
+      "descrption": "os_version snapshot",
+      "snapshot": "true"
+    }
+  }
+}

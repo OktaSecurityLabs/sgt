@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/oktasecuritylabs/sgt/logger"
@@ -75,7 +74,7 @@ func ConfirmAction(prompt string) bool {
 }
 
 func CleanPack(filename string) (string, error) {
-	file, err := os.Open(filepath.Join("packs", filename))
+	file, err := os.Open(filename)
 	if err != nil {
 		return "", err
 	}
