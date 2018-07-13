@@ -10,8 +10,8 @@ resource "aws_s3_bucket" "osquery_s3_bucket" {
 
 resource "aws_dynamodb_table" "clients" {
   name = "osquery_clients"
-  read_capacity = 20
-  write_capacity = 20
+  read_capacity = "${var.client_table_read_capacity}"
+  write_capacity = "${var.client_table_write_capacity}"
   hash_key = "node_key"
 
   attribute {
@@ -25,8 +25,8 @@ resource "aws_dynamodb_table" "clients" {
 resource "aws_dynamodb_table" "osquery_configurations" {
   name = "osquery_configurations"
   hash_key = "config_name"
-  read_capacity = 20
-  write_capacity = 20
+  read_capacity = "${var.configurations_table_read_capacity}"
+  write_capacity = "${var.configurations_table_write_capacity}"
 
   attribute {
     name = "config_name"
@@ -38,8 +38,8 @@ resource "aws_dynamodb_table" "osquery_configurations" {
 resource "aws_dynamodb_table" "osquery_distributed_queries" {
   name = "osquery_distributed_queries"
   hash_key = "node_key"
-  read_capacity = 20
-  write_capacity = 20
+  read_capacity = "${var.distributed_table_read_capacity}"
+  write_capacity = "${var.distributed_table_write_capacity}"
 
   attribute {
     name = "node_key"
@@ -51,8 +51,8 @@ resource "aws_dynamodb_table" "osquery_distributed_queries" {
 resource "aws_dynamodb_table" "osquery_packqueries" {
   name = "osquery_packqueries"
   hash_key = "query_name"
-  write_capacity = 20
-  read_capacity = 20
+  write_capacity = "${var.packqueries_table_write_capacity}"
+  read_capacity = "${var.packqueries_table_read_capacity}"
 
   attribute {
     name = "query_name"
@@ -64,8 +64,8 @@ resource "aws_dynamodb_table" "osquery_packqueries" {
 resource "aws_dynamodb_table" "osquery_querypacks" {
   name = "osquery_querypacks"
   hash_key = "pack_name"
-  write_capacity = 20
-  read_capacity = 20
+  write_capacity = "${var.querypacks_table_write_capacity}"
+  read_capacity = "${var.querypacks_table_read_capacity}"
 
   attribute {
     name = "pack_name"
@@ -76,8 +76,8 @@ resource "aws_dynamodb_table" "osquery_querypacks" {
 resource "aws_dynamodb_table" "osquery_users" {
   name = "osquery_users"
   hash_key = "username"
-  write_capacity = 5
-  read_capacity = 5
+  write_capacity = "${var.users_table_write_capacity}"
+  read_capacity = "${var.users_table_read_capacity}"
 
   attribute {
     name = "username"

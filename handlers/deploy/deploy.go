@@ -206,10 +206,10 @@ func osqueryDefaultPacks(config DeploymentConfig, environ string) error {
 
 		_, filename := filepath.Split(fn)
 		if strings.HasSuffix(filename, "json") {
-			logger.Infof("Deploying %s", filename)
+			logger.Infof("Deploying %s", fn)
 			pack := osq_types.QueryPack{}
 			helperPack := helpers.OsqueryPack{}
-			s, err := helpers.CleanPack(filename)
+			s, err := helpers.CleanPack(fn)
 			if err != nil {
 				return err
 			}

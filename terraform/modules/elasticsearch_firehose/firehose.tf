@@ -1,6 +1,7 @@
 provider "aws" {
   profile = "${var.aws_profile}"
   region = "${var.aws_region}"
+  version = ">= 1.25"
 }
 
 data "terraform_remote_state" "elasticsearch" {
@@ -112,32 +113,6 @@ resource "aws_lambda_function" "sgt_osquery_results_date_transform" {
 resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-osquery_results" {
   name = "sgt-firehose-osquery_results"
   destination = "elasticsearch"
-  #commented out until terraform supports data transformation outside of extended s3.  For the time being, this needs to be enabled via console
-  /*extended_s3_configuration {
-    role_arn = "${aws_iam_role.sgt-firehose-assume-role.arn}"
-    bucket_arn = "${aws_s3_bucket.sgt-osquery_results-s3.arn}"
-    buffer_size = 5
-    buffer_interval = 300
-    prefix = "osquery_results"
-    processing_configuration {
-      enabled = true
-      processors {
-        type = "Lambda"
-        parameters {
-          parameter_name = "LambdaArn"
-          parameter_value = "${aws_lambda_function.sgt_osquery_results_date_transform.arn}:$LATEST"
-        }
-      }
-    }
-  }*/
-  elasticsearch_configuration {
-    domain_arn = "${data.terraform_remote_state.elasticsearch.elasticsearch_domain_arn}"
-    role_arn = "${aws_iam_role.sgt-firehose-assume-role.arn}"
-    index_name = "osquery_results"
-    type_name = "osquery_results"
-    index_rotation_period = "OneMonth"
-    s3_backup_mode = "AllDocuments"
-  }
 
   s3_configuration {
     role_arn = "${aws_iam_role.sgt-firehose-assume-role.arn}"
@@ -147,6 +122,33 @@ resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-osquery_results" {
     prefix = "osquery_results"
   }
 
+  elasticsearch_configuration {
+    domain_arn = "${data.terraform_remote_state.elasticsearch.elasticsearch_domain_arn}"
+    role_arn   = "${aws_iam_role.sgt-firehose-assume-role.arn}"
+    index_name = "osquery_results"
+    type_name  = "osquery_results"
+    index_rotation_period = "OneMonth"
+    s3_backup_mode = "AllDocuments"
+    buffering_interval = 60
+    buffering_size = 5
+
+    processing_configuration = [
+      {
+        enabled = "true"
+        processors = [
+          {
+            type = "Lambda"
+            parameters = [
+              {
+                parameter_name = "LambdaArn"
+                parameter_value = "${aws_lambda_function.sgt_osquery_results_date_transform.arn}:$LATEST"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-distributed-osquery_results" {

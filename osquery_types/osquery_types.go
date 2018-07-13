@@ -114,6 +114,7 @@ type OsqueryOptions struct {
 	LoggerPlugin    string `json:"logger_plugin"`
 
 	LoggerSecondaryStatusOnly bool `json:"logger_secondary_status_only,omitempty"`
+	LoggerSnapshotEventType		bool `json:"logger_snapshot_event_type,omitempty"`
 	LoggerStatusSync          bool `json:"logger_status_sync,omitempty"`
 
 	LoggerSyslogFacility   int  `json:"logger_syslog_facility,omitempty"`
@@ -154,6 +155,7 @@ func NewOsqueryOptions() OsqueryOptions {
 		EventsOptimize:            true,
 		HostIdentifier:            "hostname",
 		LoggerPlugin:              "firehose",
+		//LoggerSnapshotEventType:	true,
 	}
 	return options
 }
