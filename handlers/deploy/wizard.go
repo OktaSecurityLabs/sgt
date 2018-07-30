@@ -46,7 +46,7 @@ func Wizard() error {
         }       
         config.AWSRegion = region
 
-        fmt.Println("Enter the desired size of the autoscaling group: \n" )
+        fmt.Println("Enter the desired size of the autoscaling group: " )
         var asgsize int
         _, err = fmt.Scan(&asgsize)
         if err != nil {
@@ -54,7 +54,7 @@ func Wizard() error {
         }
         config.AsgDesiredSize = asgsize
 
-        fmt.Println("Enter the comma separated list of users to provision: \n" )
+        fmt.Println("Enter the comma separated list of users to provision: " )
         var cognitousersstring string
         _, err = fmt.Scan(&cognitousersstring)
         if err != nil {
