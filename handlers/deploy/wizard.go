@@ -38,7 +38,7 @@ func Wizard() error {
 	}
 	config.AWSProfile = profile
 
-        fmt.Println("Enter the name for the aws region where you want to deploy this environment: \n" )
+        fmt.Println("Enter the name for the aws region where you want to deploy this environment: )
         var region string
         _, err = fmt.Scan(&region)
         if err != nil {
