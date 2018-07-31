@@ -38,15 +38,17 @@ func Wizard() error {
 	}
 	config.AWSProfile = profile
 
-        fmt.Println("Enter the name for the aws region where you want to deploy this environment: ")
+        fmt.Println("Enter the name for the aws region where you want to deploy this environment \n" +
+                "us-east-1 is recommended: ")
         var region string
         _, err = fmt.Scan(&region)
         if err != nil {
                 return err
-        }       
+        }
         config.AWSRegion = region
 
-        fmt.Println("Enter the desired size of the autoscaling group: " )
+        fmt.Println("Enter the desired size of the autoscaling group: \n"+
+                "This will be the number of instances running in the autoscaling group: ")
         var asgsize int
         _, err = fmt.Scan(&asgsize)
         if err != nil {
@@ -54,7 +56,8 @@ func Wizard() error {
         }
         config.AsgDesiredSize = asgsize
 
-        fmt.Println("Enter the comma separated list of users to provision: " )
+        fmt.Println("Enter the comma separated list of users to provision: \n "+
+                "Example: john.richards,brian.keefer: ")
         var cognitousersstring string
         _, err = fmt.Scan(&cognitousersstring)
         if err != nil {

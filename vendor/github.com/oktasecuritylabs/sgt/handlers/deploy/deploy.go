@@ -89,6 +89,9 @@ type DeploymentConfig struct {
 	SgtNodeSecret               string `json:"sgt_node_secret"`
 	SgtAppSecret                string `json:"sgt_app_secret"`
 	CreateElasticsearch         int    `json:"create_elasticsearch"`
+        AsgDesiredSize              int `json:"asg_desired_size"`
+        AWSRegion                   string `json:"aws_region"`
+        Users                       []string `json:"users"`
 }
 
 // copyFile copies file from src to dst
