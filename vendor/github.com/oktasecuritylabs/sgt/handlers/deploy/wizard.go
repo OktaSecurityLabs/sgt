@@ -57,7 +57,7 @@ func Wizard() error {
         config.AsgDesiredSize = asgsize
 
         fmt.Println("Enter the comma separated list of users to provision: \n "+
-                "Example: john.richards,brian.keefer: ")
+                "Example: firstname.lastname,firstname2.lastname2: ")
         var cognitousersstring string
         _, err = fmt.Scan(&cognitousersstring)
         if err != nil {
