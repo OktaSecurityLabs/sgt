@@ -41,12 +41,12 @@ Getting started with sgt is designed to be very simple with minimal setup requir
     ```commandline
     go build
     ```
-4.  Copy your ssl certs to the proper directory. For this blog, I'm using a subdomain of securelyinsecure.com
-with a letsencrypt certificate, sgt-demo.securelyinsecure.com.  Lets encrypt certs live in `/etc/letsencrypt/live/<site>`
+4.  Copy your ssl certs to the proper directory. For this example, I'm using a subdomain of example.com
+with a letsencrypt certificate, sgt-demo.example.com.  Lets encrypt certs live in `/etc/letsencrypt/live/<site>`
 so I'm copying them from there into the cert directory for SGT.
     ```commandline
-    sudo cp /etc/letsencrypt/live/sgt-demo.securelyinsecure.com/fullchain.pem certs/fullchain.pem
-    sudo cp /etc/letsencrypt/live/sgt-demo.securelyinsecure.com/privkey.pem certs/privkey.pem
+    sudo cp /etc/letsencrypt/live/sgt-demo.example.com/fullchain.pem certs/fullchain.pem
+    sudo cp /etc/letsencrypt/live/sgt-demo.example.com/privkey.pem certs/privkey.pem
     ```
 
 5. Rename your certs to reflect which site they belong to.  I recommend following the example format of
@@ -56,8 +56,8 @@ so I'm copying them from there into the cert directory for SGT.
    moving...
    ```commandline
     cd certs
-    mv fullchain.pem sgt-demo.securelyinsecure.com.fullchain.pem
-    mv privkey.pem sgt-demo.securelyinsecure.com.privkey.pem
+    mv fullchain.pem sgt-demo.example.com.fullchain.pem
+    mv privkey.pem sgt-demo.example.com.privkey.pem
     cd ..
     ```
 
@@ -99,7 +99,7 @@ so I'm copying them from there into the cert directory for SGT.
     Enter the domain you will be using for your SGT server.
     Note:  This MUST be a domain which you have previously registered or are managing throughaws.
     This will be used to create a subdomain for the SGT TLS endpoint
-    securelyinsecure.com
+    example.com
     ```
     6g. Enter the subdomain (sgt-demo in my case)
     ```commandline
@@ -118,9 +118,9 @@ so I'm copying them from there into the cert directory for SGT.
     ```commandline
     Enter the name of the full ssl certificate chain bundle you will be using for
     your SGT server.  EG - full_chain.pem :
-    sgt-demo.securelyinsecure.com.fullchain.pem
+    sgt-demo.example.com.fullchain.pem
     Enter the name of the private key for your ssl certificate.  Eg - privkey.pem:
-    sgt-demo.securelyinsecure.com.privkey.pem
+    sgt-demo.example.com.privkey.pem
     ```
     6j. Enter the node secret
     ```commandline
@@ -171,7 +171,7 @@ The entire process should take about 5-10 minutes depending on your internet con
 an endpoint and start receiving logs!
 
 
--Note:  This getting started guide originally appeared on blog.securelyinsecure.com, but I'm appropriating it for the docs as well, due to it being better than the last readme I wrote.
+-Note:  This getting started guide originally appeared on blog.example.com, but I'm appropriating it for the docs as well, due to it being better than the last readme I wrote.
 
 
 
