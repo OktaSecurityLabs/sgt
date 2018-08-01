@@ -10,80 +10,170 @@ SGT is managed entirely through terraform
 
 ###### NOTE: SGT is under active development.  Please help us improve by submitting issues!
 
+
 ### Getting started.
 
 Getting started with sgt is designed to be very simple with minimal setup required.  To get started, however, you will need a FEW things first.
 
-1. An aws account with admin access to DynamoDB, EC2, ES (ElastisearchService), Kinesis/Firehose and IAM. (note, this must be
-programatic access, so you can have an access key and secret to use)
-2. [Golang 1.8.2+](https://golang.org/doc/install)
-3. [Terraform 10.4+](https://www.terraform.io/intro/getting-started/install.html)
-4. A domain with dns [managed via Route53](http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html)
-5. An SSL cert with public and private keypair.  This will be used to terminate TLS connections to our server
-see [Obtaining a free ssl cert for SGT with Letsencrypt](docs/letsencrypt_cert_instructions.md) for one method of aquiring a certificate
+
+##### prereqs:
+1. An [AWS account](https://aws.amazon.com/free/) with admin access to DynamoDB, EC2, ES (ElastisearchService), Kinesis/Firehose and IAM. (note, this must be programatic access, so you can have an access key and secret to use)
+2. [Golang 1.8.2+]((https://golang.org/doc/install))
+3. [Terraform 11.0+](https://www.terraform.io/intro/getting-started/install.html)
+4. A domain with DNS [managed via Route53](http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html) (Note: This does not mean you need to buy a domain, you can use an existing domain and just  manage DNS on Route53)
+5. An SSL cert with public and private keypair. This will be used to terminate TLS connections to our server see [Obtaining a free ssl cert for SGT with Letsencrypt for one method of aquiring a certificate](https://github.com/OktaSecurityLabs/sgt/blob/master/docs/letsencrypt_cert_instructions.md)
+6. An aws [profile configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html).
 
 
-Once you have these things installed and ready to go, it's time to get started with the real fun.
+## Installation
 
-Create a new aws profile in your ~/.aws/credentials file.  This can be done either manually or by [configuring the AWS CLI](http://docs.aws.amazon.com/cli/latest/userguide/cli-config-files.html)
+1.  Clone the repo
+    ```commandline
 
-The name of this profile can be whatever you want it to be, but we recommend choosing something that matches with
-the environment you're working with.  For example, if you're going to be spinning up SGT in a testing environment, naming your profile ['testing'] is
-quite appropriate.
+    go get github.com/OktaSecurityLabs/sgt
+    ```
+2. change into the downloaded directory
+    ```commandline
+    cd $GOPATH/src/github.com/OktaSecurityLabs/sgt
+    ```
 
-clone the this repo
+3.  Build the project
+    ```commandline
+    go build
+    ```
+4.  Copy your ssl certs to the proper directory. For this blog, I'm using a subdomain of securelyinsecure.com
+with a letsencrypt certificate, sgt-demo.securelyinsecure.com.  Lets encrypt certs live in `/etc/letsencrypt/live/<site>`
+so I'm copying them from there into the cert directory for SGT.
+    ```commandline
+    sudo cp /etc/letsencrypt/live/sgt-demo.securelyinsecure.com/fullchain.pem certs/fullchain.pem
+    sudo cp /etc/letsencrypt/live/sgt-demo.securelyinsecure.com/privkey.pem certs/privkey.pem
+    ```
+
+5. Rename your certs to reflect which site they belong to.  I recommend following the example format of
+    ```commandline
+    example.domain.com.fullchain.pem
+    ```
+   moving...
+   ```commandline
+    cd certs
+    mv fullchain.pem sgt-demo.securelyinsecure.com.fullchain.pem
+    mv privkey.pem sgt-demo.securelyinsecure.com.privkey.pem
+    cd ..
+    ```
+
+6. Create a new environment by following the prompts
+    ```commandline
+    ./sgt wizard
+    ```
+    6a. Enter a name for your environment (I'm calling my demo one sgt-demo)
+    ```commandline
+    Enter new environment name.  This is typically something like'Dev' or 'Prod' or 'Testing, but can be anything you want it to be: sgt-demo
+    ```
+    6b. Choose the AWS profile to use (Mine is again called sgt-demo)
+    ```commandline
+    Enter the name for the aws profile you'd like to use to deploy this environment
+    if you've never created a profile before, you can read more about how to do this here
+    http://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html
+    a 'default' profile is created if you've installed and configured the aws cli:
+    sgt-demo
+    ```
+    6c. Enter the IP address that you are currently deploying from.
+    ```commandline
+    Enter an ipaddress or cidr block for access to your elasticsearch cluster.
+    Note:  This should probably be your current IP address, as you will need to be able to access
+    elasticsearch via API to create the proper indices and mappings when deploying: xxx.xxx.xxx.xxx/24
+    ```
+    6d. Name your log bucket.  I recommend something easily identified for your domain.
+    ```commandline
+    Enter a name for the s3 bucket that will hold your osquery logs.
+    Remeber, S3 bucket names must be globally unique: sgt-demo.log.bucket
+    ```
+    6e. And your config bucket...
+    ```commandline
+    Enter a name for the s3 bucket that will hold your server configuration
+    Remember, S3 bucket names must be globally unique:
+    sgt-demo.configuration.bucket
+    ```
+    6f. Enter your root domain
+    ```commandline
+    Enter the domain you will be using for your SGT server.
+    Note:  This MUST be a domain which you have previously registered or are managing throughaws.
+    This will be used to create a subdomain for the SGT TLS endpoint
+    securelyinsecure.com
+    ```
+    6g. Enter the subdomain (sgt-demo in my case)
+    ```commandline
+    Enter a subdomain to use as the endpoint.  This will be prepended to the
+    domain you provided as a subdomain
+    sgt-demo
+    ```
+    6h. Enter your aws keypair name
+    ```commandline
+    Enter the name of your aws keypair.  This is used to access ec2 instances ifthe need
+    should ever arise (it shouldn't).
+    NOTE:  This is the name of the keypair EXCLUDING the .pem flie name and it must already exist in aws
+    my-secret-key-name
+    ```
+    6i. Enter the name of your keypair and priv key, as you named them above.
+    ```commandline
+    Enter the name of the full ssl certificate chain bundle you will be using for
+    your SGT server.  EG - full_chain.pem :
+    sgt-demo.securelyinsecure.com.fullchain.pem
+    Enter the name of the private key for your ssl certificate.  Eg - privkey.pem:
+    sgt-demo.securelyinsecure.com.privkey.pem
+    ```
+    6j. Enter the node secret
+    ```commandline
+    Enter the node secret you will use to enroll your endpoints with the SGT server
+    This secret will be used by each endpoint to authenticate to your server:
+    my-super-secret-node-secret
+    ```
+    6k. Enter the app secret
+    ```commandline
+    Enter the app secret key which will be used to generate session tokens when
+    interacting with the API as an authenticated end-user.  Make this long, random and complex:
+    diu3piqeujr302348u33rqwu934r1@#)(*@3
+    ```
+    Select __N__ when prompted to continue.  Because this is a demo environment, we're going to make a small change to our configuration.
+
+7. Edit the environment config file found in `/terraform/<environment/environment.json`
+with your favorite editor and change the value for create_elasticsearch to `0`.  This will disable the creation of elasticsearch,
+which we will not be using for this demo.  In a production environment, Elasticsearch would be a large part of your
+process, but it adds significant cost and it's not needed for this demo.
+    ```json
+    {
+      "environment": "example_environment",
+      "aws_profile": "default",
+      "user_ip_address": "127.0.0.1",
+      "sgt_osquery_results_bucket_name": "example_log_bucket_name",
+      "sgt_config_bucket_name": "example_config_bucket_name",
+      "domain": "somedomain.com",
+      "subdomain": "mysubdomain",
+      "aws_keypair": "my_aws_ec2_keypair_name",
+      "full_ssl_certchain": "full_cert_chain.pem",
+      "ssl_private_key": "privkey.pem",
+      "sgt_node_secret": "super_sekret_node_enrollment_key",
+      "sgt_app_secret": "ultra_mega_sekret_key_you'll_never_give_to_anyone_not_even_your_mother",
+      "create_elasticsearch": 0
+    }
+    ```
+
+### Deploy!!
+
+Its finally time to deploy, although hopefully that wasn't too painful.  Deployment is by far the easiest part.
+
 ```commandline
-git clone git@git.repo
+./sgt deploy -env <your environment name> -all
 ```
 
-##### Building SGT.
-cd into the sgt directory
+This will stand up the entire environment, including endpoint configuration scripts which we will use to set up some osquery nodes later.
+The entire process should take about 5-10 minutes depending on your internet connection, at which point you should be ready to install osquery on
+an endpoint and start receiving logs!
 
-```commandline
-cd sgt
-```
 
-get dependencies and build the binary
+-Note:  This getting started guide originally appeared on blog.securelyinsecure.com, but I'm appropriating it for the docs as well, due to it being better than the last readme I wrote.
 
-```commandline
-go build
-```
 
-### configuring certificates
-
-In order to terminate our TLS connection, we need the TLS certificate and associated private key.
-
-SGT expects both the certificate and private key in PEM format, so make sure both files are in the proper format.
-If you're using letencrypt or certbot, this is the default format.  (For instructions on getting a letsencrypt cert,
-see [this link](docs/letsencrypt_cert_instructions.md)
-
-Once you have both the cert and the private key files, place them in the `sgt/certs` directory and name them appropriately.
-While you can configure them to be named whatever you like, we highly recommend naming them in this format:
-```
-subdomain.domain.fullchain.pem
-```
-and
-```
-subdomain.domain.privkey.pem
-```
-
-This naming scheme will allow you to easily identify which certs belong to which environment if you ever end up with more than
-one (While the truly brave test in prod, usually we recommend at least a dev/prod setup :) )
-
-#### Deployment Wizard
-
-Once you've installed Go and Terraform, and built your SGT binary, its time to run your deployment!
-
-The wizard will walk you through everything you need to configure a new environment,
-create the proper directory structure and the environment specific configuration
-files and stand up the environment if you choose to do so
-
-```commandline
-./sgt wizard
-```
-
-When you are done with the wizard, you will be prompted to either continue to deploy
-the actual resources, or exit.  If you choose to exit, you you will need manually deploy later
 
 ### Manual deployment
 
@@ -132,7 +222,3 @@ If your credentials are valid, you will recieve a json response back
 Provide this token in any subsequent requests in the Authorization header
 
 
-
-## Documentation notes:
-Documentation is lacking right now due to a rather un-fun flu season.  However, updates to documentation should be expected in teh coming week or so.
-(This note marked: 1/17/18)
