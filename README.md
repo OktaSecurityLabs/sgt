@@ -171,7 +171,7 @@ The entire process should take about 5-10 minutes depending on your internet con
 an endpoint and start receiving logs!
 
 
--Note:  This getting started guide originally appeared on [](blog.securelyinsecure.com), but I'm appropriating it for the docs as well, due to it being better than the last readme I wrote.
+-Note:  This getting started guide originally appeared on [blog.securelyinsecure.com](blog.securelyinsecure.com), but I'm appropriating it for the docs as well, due to it being better than the last readme I wrote.
 
 
 
