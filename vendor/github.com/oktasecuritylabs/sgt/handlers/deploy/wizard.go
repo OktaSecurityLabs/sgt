@@ -47,6 +47,15 @@ func Wizard() error {
         }
         config.AWSRegion = region
 
+        fmt.Println("Enter the name for th mail domain for the users of your Kibana dashboard  \n" +
+                "cognito users will be created with email address username@MailDomain: ")
+        var mail_domain string
+        _, err = fmt.Scan(&mail_domain)
+        if err != nil {
+                return err
+        }
+        config.MailDomain = mail_domain
+
         fmt.Println("Enter the desired size of the autoscaling group: \n"+
                 "This will be the number of instances running in the autoscaling group: ")
         var asgsize int

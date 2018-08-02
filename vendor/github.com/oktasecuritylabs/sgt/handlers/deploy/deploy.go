@@ -92,6 +92,7 @@ type DeploymentConfig struct {
         AsgDesiredSize              int `json:"asg_desired_size"`
         AWSRegion                   string `json:"aws_region"`
         Users                       []string `json:"users"`
+        MailDomain                  string `json:"mail_domain"`
 }
 
 // copyFile copies file from src to dst
