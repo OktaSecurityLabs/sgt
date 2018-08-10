@@ -55,6 +55,45 @@ resource "aws_iam_role" "sgt-firehose-assume-role" {
   assume_role_policy = "${data.aws_iam_policy_document.sgt_firehose_assume_role_policy_doc.json}"
 }
 
+data "aws_iam_policy_document" "firehose_invoke_lambda_policy_doc" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "lambda:InvokeFunction",
+      "lambda:GetFunctionConfiguration",
+      "logs:PutLogEvents"
+    ]
+    resources = [
+      "${aws_lambda_function.sgt_osquery_results_date_transform.arn}:$LATEST"
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:PutLogEvents"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "kinesis:DescribeStream",
+      "kinesis:GetShardIterator",
+      "kinesis:GetRecords"
+    ]
+    resources = [
+      "${aws_kinesis_firehose_delivery_stream.sgt-firehose-osquery_results.arn}"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "firehose_invoke_lambda_policy" {
+  name = "sgt-firehose-lambda-policy"
+  policy = "${data.aws_iam_policy_document.firehose_invoke_lambda_policy_doc.json}"
+}
+
 resource "aws_iam_role_policy_attachment" "attach_s3_policy" {
   policy_arn = "${aws_iam_policy.sgt-firehose-s3-policy.arn}"
   role = "${aws_iam_role.sgt-firehose-assume-role.id}"
@@ -208,6 +247,7 @@ data "aws_iam_policy_document" "elasticsearch_policy" {
 }
 
 resource "aws_iam_policy" "elasticsearch_policy" {
+  name = "sgt-elasticsearch-policy"
   policy = "${data.aws_iam_policy_document.elasticsearch_policy.json}"
 }
 
@@ -216,7 +256,13 @@ resource "aws_iam_role_policy_attachment" "elasticsearch_policy_attachment" {
   role = "${aws_iam_role.sgt-firehose-assume-role.name}"
 }
 
+resource "aws_iam_role_policy_attachment" "firehose_invoke_lambda_policy_attachment" {
+  policy_arn = "${aws_iam_policy.firehose_invoke_lambda_policy.arn}"
+  role = "${aws_iam_role.sgt-firehose-assume-role.name}"
+}
+
 resource "aws_iam_policy" "sgt-node-user-policy" {
+  name = "sgt-node-user-policy"
   policy = "${data.aws_iam_policy_document.sgt-node-user.json}"
 }
 
