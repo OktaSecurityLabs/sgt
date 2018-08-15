@@ -173,7 +173,22 @@ an endpoint and start receiving logs!
 
 -Note:  This getting started guide originally appeared on [blog.securelyinsecure.com](https://blog.securelyinsecure.com), but I'm appropriating it for the docs as well, due to it being better than the last readme I wrote.
 
+Once you've installed Go and Terraform, and built your SGT binary, its time to run your deployment!
 
+The wizard will walk you through everything you need to configure a new environment,
+create the proper directory structure and the environment specific configuration
+files and stand up the environment if you choose to do so
+
+```commandline
+./sgt wizard
+```
+Among other things, the wizard will ask you to provide:
+The "mail domain for the users of your Kibana dashboard". This should be the domain name used for the email addresses of the people who will be using the Kibana dashboard (example: company.com)
+
+A comma delimited list of users for the Kibana dashboard. The users in the list must correspond to email addresses of the users. For example, if you wanted to initialize Kibana with 2 users (Some Guy, sguy@company.com; Someone Else, selse@company,com) your input at this prompt woukld be ```sguy,selse``` 
+
+When you are done with the wizard, you will be prompted to either continue to deploy
+the actual resources, or exit.  If you choose to exit, you you will need manually deploy later
 
 ### Manual deployment
 
@@ -221,4 +236,19 @@ If your credentials are valid, you will recieve a json response back
 
 Provide this token in any subsequent requests in the Authorization header
 
+# Creating Additional Kibana Users Post-Deployment
+1. Log into the AWS account where you deployed sgt, and go to the  [cognito service page](https://console.aws.amazon.com/cognito/home?region=us-east-1#)
+2. Click Manage User Pools
+3. Click the User Pool you created during the sgt deployment
+4. Click Users and Groups
+5. Click Create User
+6. In the Username text box, type the username portion of the user's email address
+7. Leave the box "Send an invitation to this new user?" checked
+8. Check the "Email" box
+9. Un-check the "Mark phone number as verified?" box
+10. In the Email text box, type the user's email address
+11. Click Create User
 
+## Documentation notes:
+Documentation is lacking right now due to a rather un-fun flu season.  However, updates to documentation should be expected in teh coming week or so.
+(This note marked: 1/17/18)
