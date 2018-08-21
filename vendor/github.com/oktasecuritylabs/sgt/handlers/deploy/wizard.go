@@ -72,8 +72,8 @@ func Wizard() error {
         if err != nil {
                 return err
         }
-        cognitousers := strings.Split(cognitousersstring, ",")
-        config.Users = cognitousers
+        cognitoUsers := strings.Split(cognitousersstring, ",")
+        config.Users = cognitoUsers
 
 	fmt.Println("Enter an ipaddress or cidr block for access to your elasticsearch cluster. \n" +
 		"Note:  This should probably be your current IP address, as you will need to be able to access \n" +
