@@ -269,8 +269,7 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
         })
 
         if err != nil {
-            fmt.Println("Error", err)
-            //return
+            return err
         }
 
         ESCognitoOptionsEnabledStatus := *result.DomainConfig.CognitoOptions.Options.Enabled
@@ -279,7 +278,7 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
 
  
         //If cognito options are not set for the domain, set them
-        if ESCognitoOptionsEnabledStatus == false {
+        if !ESCognitoOptionsEnabledStatus {
             svc.UpdateElasticsearchDomainConfig(&elasticsearchservice.UpdateElasticsearchDomainConfigInput{
                 DomainName: aws.String(ESCognitoDomainName),
                 CognitoOptions: &elasticsearchservice.CognitoOptions{
@@ -298,7 +297,7 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
         DesiredUsers := config.Users
         MailDomain := config.MailDomain        
 
-        ExistingUsers, err2 := cognito_svc.ListUsers(&cognitoidentityprovider.ListUsersInput{
+        ExistingUsers, err := cognito_svc.ListUsers(&cognitoidentityprovider.ListUsersInput{
                 UserPoolId: aws.String(CognitoUserPoolId),
         })
         //Determine if the user already exists
@@ -312,24 +311,23 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
             if UserExists == false {
                 logger.Info(DesiredUser)
                 //If not, create it
-                createuser, create_user_err := cognito_svc.AdminCreateUser(&cognitoidentityprovider.AdminCreateUserInput{
+                createuser, err := cognito_svc.AdminCreateUser(&cognitoidentityprovider.AdminCreateUserInput{
                     UserPoolId: aws.String(CognitoUserPoolId),
                     Username: aws.String(DesiredUser),
                     UserAttributes: []*cognitoidentityprovider.AttributeType{
                         {Name: aws.String("email"),Value : aws.String(DesiredUser+"@"+MailDomain)},
                     },
                 })
-                if create_user_err != nil {
-                    logger.Info(create_user_err)
+                if err != nil {
+                    logger.Info(err)
                 }
                 logger.Info(createuser)
             }
         }
         
 
-        if err2 != nil {
-            fmt.Println("Error", err2)
-            //return
+        if err != nil {
+            logger.Info(err)
         }
 
         return nil
@@ -344,7 +342,7 @@ func createElasticSearchMappings(config DeploymentConfig) error {
         }
 
         credfile := filepath.Join(usr.HomeDir, ".aws", "credentials")
-        creds := credentials.NewSharedCredentials(credfile, "default")
+        creds := credentials.NewSharedCredentials(credfile, config.AWSProfile)
         now := time.Now()
         signer := v4.NewSigner(creds)
 

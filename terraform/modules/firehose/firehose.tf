@@ -1,6 +1,7 @@
 provider "aws" {
   profile = "${var.aws_profile}"
   region = "${var.aws_region}"
+  version = ">= 1.21.0"
 }
 
 resource "aws_s3_bucket" "sgt-osquery_results-s3" {
