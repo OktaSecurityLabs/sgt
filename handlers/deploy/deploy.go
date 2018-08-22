@@ -33,7 +33,6 @@ const (
 	secrets               = "secrets"
 	autoscaling           = "autoscaling"
 	packs                 = "packs"
-	configs               = "configs"
 	scripts               = "scripts"
 )
 
