@@ -1,6 +1,7 @@
 provider "aws" {
   region = "${var.region}"
   profile = "${var.aws_profile}"
+  version = ">= 1.21.0"
 }
 
 resource "aws_ssm_parameter" "sgt_node_secret" {
