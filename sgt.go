@@ -189,7 +189,9 @@ func runSGT() error {
 	case runDeploy:
 
 		validComponents := map[string]bool{}
-		components := append(deploy.DeployOrder, deploy.OsqueryOpts...)
+		components := []string{}
+		components = append(components, deploy.DeployOrder...)
+		components = append(components, deploy.OsqueryOpts...)
 		components = append(components, deploy.ElasticDeployOrder...)
 		for _, component := range components {
 			validComponents[component] = true
@@ -198,6 +200,7 @@ func runSGT() error {
 		for k, _ := range validComponents {
 			validComponentOptions = append(validComponentOptions, k)
 		}
+		sort.Strings(validComponentOptions)
 		componentList := strings.Join(validComponentOptions, ", ")
 
 		// Create a FlagSet for the deploy command

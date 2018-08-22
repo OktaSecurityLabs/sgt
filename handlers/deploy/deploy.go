@@ -29,7 +29,7 @@ const (
 	elasticsearchConfig   = "elasticsearch_config"
 	elasticsearchAutoscaling = "elasticsearch_autoscaling"
 	firehose              = "firehose"
-	config                = "config"
+	configs                = "configs"
 	secrets               = "secrets"
 	autoscaling           = "autoscaling"
 	packs                 = "packs"
@@ -45,7 +45,7 @@ var (
 		vpc,
 		datastore,
 		firehose,
-		config,
+		configs,
 		secrets,
 		autoscaling,
 	}
