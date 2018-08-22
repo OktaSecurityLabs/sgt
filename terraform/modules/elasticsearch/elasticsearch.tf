@@ -165,7 +165,7 @@ data "aws_iam_policy_document" "authenticated_cognito_assume_role_policy"{
 }
 
 resource "aws_cognito_user_pool_domain" "main" {
-  domain = "jrichards-kibana-sgt"
+  domain = "${data.aws_caller_identity.current.account_id}-${var.elasticsearch_domain_name}"
   user_pool_id = "${aws_cognito_user_pool.pool.id}"
 }
 
