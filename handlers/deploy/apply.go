@@ -256,9 +256,12 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
         }
         logger.Info(CognitoIdentityPoolId)
 
-        sess, err := session.NewSession(&aws.Config{
-                Region: aws.String(currentRegion)},
-        )
+        sess := session.Must(session.NewSessionWithOptions(session.Options{
+            Config: aws.Config{
+            Region: aws.String(currentRegion),
+            },
+            Profile: *aws.String(config.AWSProfile),
+        }))
 
         // Create a Elasticsearch service client.
         svc := elasticsearchservice.New(sess)
@@ -300,6 +303,11 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
         ExistingUsers, err := cognito_svc.ListUsers(&cognitoidentityprovider.ListUsersInput{
                 UserPoolId: aws.String(CognitoUserPoolId),
         })
+
+        if err != nil {
+            logger.Info(err)
+        }        
+
         //Determine if the user already exists
         for _, DesiredUser := range DesiredUsers {
             for _, ExistingUser := range ExistingUsers.Users{
