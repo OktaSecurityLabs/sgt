@@ -14,7 +14,7 @@
   "create_elasticsearch": 1,
   "asg_min_size": 2,
   "asg_max_size": 10
-  "email_domain": "example.com",
+  "mail_domain": "example.com",
   "users": [
       "first.last",
       "first1.last1"
