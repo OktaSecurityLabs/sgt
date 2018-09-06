@@ -1,11 +1,11 @@
 package helpers
 
 import (
-	"net/url"
-	"net/http/httptest"
-	"testing"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"strings"
+	"testing"
 )
 
 type HandleTester func(

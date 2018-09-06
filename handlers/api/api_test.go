@@ -1,14 +1,14 @@
 package api
 
 import (
-	"testing"
-	"net/http"
 	"github.com/oktasecuritylabs/sgt/handlers/helpers"
+	"net/http"
 	"net/url"
+	"testing"
 )
 
 func TestGetNamedConfigsHandler(t *testing.T) {
-	mockdb  := helpers.NewMockDB()
+	mockdb := helpers.NewMockDB()
 
 	handler := GetNamedConfigsHandler(mockdb)
 
@@ -21,7 +21,6 @@ func TestGetNamedConfigsHandler(t *testing.T) {
 	}
 
 }
-
 
 func TestConfigurationRequestHandler(t *testing.T) {
 
@@ -50,4 +49,3 @@ func TestGetNodesHandler(t *testing.T) {
 	}
 
 }
-

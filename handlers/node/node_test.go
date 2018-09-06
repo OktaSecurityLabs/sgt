@@ -1,10 +1,10 @@
 package node
 
 import (
-	"testing"
-	"net/http"
 	"github.com/oktasecuritylabs/sgt/handlers/helpers"
+	"net/http"
 	"net/url"
+	"testing"
 )
 
 func TestNodeEnrollRequest(t *testing.T) {
