@@ -2,17 +2,20 @@
 
 
 [[projects]]
+  digest = "1:6c8d51660e50d38116fe8c29eefc00ce856300329993980f7ce7333a522a6a99"
   name = "github.com/aws/aws-lambda-go"
   packages = [
     "events",
     "lambda",
     "lambda/messages",
-    "lambdacontext"
+    "lambdacontext",
   ]
-  revision = "fafa7e49388b8991caf99308e80655ba91816b72"
-  version = "v1.1.0"
+  pruneopts = "UT"
+  revision = "4d30d0ff60440c2d0480a15747c96ee71c3c53d4"
+  version = "v1.2.0"
 
 [[projects]]
+  digest = "1:b876939d2bfcda903438d833e4f897c73b31e2d3a2f58577ad1b6008a776feed"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -25,13 +28,16 @@
     "aws/credentials/ec2rolecreds",
     "aws/credentials/endpointcreds",
     "aws/credentials/stscreds",
+    "aws/csm",
     "aws/defaults",
     "aws/ec2metadata",
     "aws/endpoints",
     "aws/request",
     "aws/session",
     "aws/signer/v4",
+    "internal/sdkio",
     "internal/sdkrand",
+    "internal/sdkuri",
     "internal/shareddefaults",
     "private/protocol",
     "private/protocol/json/jsonutil",
@@ -39,118 +45,199 @@
     "private/protocol/query",
     "private/protocol/query/queryutil",
     "private/protocol/rest",
+    "private/protocol/restjson",
     "private/protocol/xml/xmlutil",
+    "service/cognitoidentityprovider",
     "service/dynamodb",
     "service/dynamodb/dynamodbattribute",
+    "service/elasticsearchservice",
     "service/firehose",
     "service/ssm",
-    "service/sts"
+    "service/sts",
   ]
-  revision = "f7f1ee9550cc76ceea731d99c8dbe00a0c39f66d"
-  version = "v1.13.4"
+  pruneopts = "UT"
+  revision = "123c8c8326730972861f45fe2e6e7b1d64b4d487"
+  version = "v1.15.1"
 
 [[projects]]
+  digest = "1:3c2529252615b209e6cf92c89a77505016f192372d279d28f49513fe7b69367c"
   name = "github.com/briandowns/spinner"
   packages = ["."]
-  revision = "48dbb65d7bd5c74ab50d53d04c949f20e3d14944"
-  version = "1.0"
+  pruneopts = "UT"
+  revision = "5b875a9171af19dbde37e70a8fcbe2ebd7285e05"
+  version = "1.1"
 
 [[projects]]
+  digest = "1:bb2130e54ac8ea3ff78312ca365ce3b8a23423ed362530551bdceaccfa4d8e77"
   name = "github.com/dgrijalva/jwt-go"
   packages = [
     ".",
-    "request"
+    "request",
   ]
-  revision = "dbeaa9332f19a944acb5736b4456cfcc02140e29"
-  version = "v3.1.0"
+  pruneopts = "UT"
+  revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
+  version = "v3.2.0"
 
 [[projects]]
+  digest = "1:865079840386857c809b72ce300be7580cb50d3d3129ce11bf9aa6ca2bc1934a"
   name = "github.com/fatih/color"
   packages = ["."]
-  revision = "507f6050b8568533fb3f5504de8e5205fa62a114"
-  version = "v1.6.0"
+  pruneopts = "UT"
+  revision = "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
+  version = "v1.7.0"
 
 [[projects]]
+  digest = "1:fe8a03a8222d5b913f256972933d26d24ad7c8286692a42943bc01633cc8fce3"
   name = "github.com/go-ini/ini"
   packages = ["."]
-  revision = "32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a"
-  version = "v1.32.0"
+  pruneopts = "UT"
+  revision = "358ee7663966325963d4e8b2e1fbd570c5195153"
+  version = "v1.38.1"
 
 [[projects]]
+  digest = "1:c79fb010be38a59d657c48c6ba1d003a8aa651fa56b579d959d74573b7dff8e1"
   name = "github.com/gorilla/context"
   packages = ["."]
-  revision = "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
-  version = "v1.1"
+  pruneopts = "UT"
+  revision = "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
+  version = "v1.1.1"
 
 [[projects]]
-  name = "github.com/gorilla/handlers"
-  packages = ["."]
-  revision = "90663712d74cb411cbef281bc1e08c19d1a76145"
-  version = "v1.3.0"
-
-[[projects]]
+  digest = "1:e73f5b0152105f18bc131fba127d9949305c8693f8a762588a82a48f61756f5f"
   name = "github.com/gorilla/mux"
   packages = ["."]
-  revision = "53c1911da2b537f792e7cafcb446b05ffe33b996"
-  version = "v1.6.1"
+  pruneopts = "UT"
+  revision = "e3702bed27f0d39777b0b37b664b6280e8ef8fbf"
+  version = "v1.6.2"
 
 [[projects]]
   branch = "master"
+  digest = "1:0778dc7fce1b4669a8bfa7ae506ec1f595b6ab0f8989c1c0d22a8ca1144e9972"
   name = "github.com/howeyc/gopass"
   packages = ["."]
+  pruneopts = "UT"
   revision = "bf9dde6d0d2c004a008c27aaee91170c786f6db8"
 
 [[projects]]
+  digest = "1:e22af8c7518e1eab6f2eab2b7d7558927f816262586cd6ed9f349c97a6c285c4"
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
+  pruneopts = "UT"
   revision = "0b12d6b5"
 
 [[projects]]
+  digest = "1:c658e84ad3916da105a761660dcaeb01e63416c8ec7bc62256a9b411a05fcd67"
   name = "github.com/mattn/go-colorable"
   packages = ["."]
+  pruneopts = "UT"
   revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
   version = "v0.0.9"
 
 [[projects]]
+  digest = "1:d4d17353dbd05cb52a2a52b7fe1771883b682806f68db442b436294926bbfafb"
   name = "github.com/mattn/go-isatty"
   packages = ["."]
+  pruneopts = "UT"
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
   version = "v0.0.3"
 
 [[projects]]
-  name = "github.com/sirupsen/logrus"
-  packages = ["."]
-  revision = "d682213848ed68c0a260ca37d6dd5ace8423f5ba"
-  version = "v1.0.4"
+  digest = "1:a605cc8d9e7879a1985e7d813b0df2c4fb9e0c1251301c1e8866a817b65112e4"
+  name = "github.com/oktasecuritylabs/sgt"
+  packages = [
+    "dyndb",
+    "handlers/api",
+    "handlers/auth",
+    "handlers/deploy",
+    "handlers/distributed",
+    "handlers/helpers",
+    "handlers/node",
+    "handlers/response",
+    "logger",
+    "osquery_types",
+    "server",
+  ]
+  pruneopts = "UT"
+  revision = "5c794c209c582c17a2a05b8c135d87f83d370000"
+  version = "0.1.5"
 
 [[projects]]
+  digest = "1:d867dfa6751c8d7a435821ad3b736310c2ed68945d05b50fb9d23aee0540c8cc"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
+  version = "v1.0.6"
+
+[[projects]]
+  digest = "1:606d068450c82b9ddaa21de992f73563754077f0f411235cdfe71d0903a268c3"
   name = "github.com/urfave/negroni"
   packages = ["."]
+  pruneopts = "UT"
   revision = "5dbbc83f748fc3ad38585842b0aedab546d0ea1e"
   version = "v0.3.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:001a4e7a40e50ff2ef32e2556bca50c4f77daa457db3ac6afc8bea9bb2122cfb"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
     "blowfish",
-    "ssh/terminal"
+    "ssh/terminal",
   ]
-  revision = "650f4a345ab4e5b245a3034b110ebc7299e68186"
+  pruneopts = "UT"
+  revision = "c126467f60eb25f8f27e5a981f32a87e3965053f"
 
 [[projects]]
   branch = "master"
+  digest = "1:8742e6e73627b2877c3f723bc1823d5667ec59011242480309dc90fa862512aa"
   name = "golang.org/x/sys"
   packages = [
     "unix",
-    "windows"
+    "windows",
   ]
-  revision = "37707fdb30a5b38865cfb95e5aab41707daec7fd"
+  pruneopts = "UT"
+  revision = "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "752f268e6bdfee58286f05c2f857086cc5e3ea24e5553eea347fe8e6c5c5aea9"
+  input-imports = [
+    "github.com/aws/aws-lambda-go/events",
+    "github.com/aws/aws-lambda-go/lambda",
+    "github.com/aws/aws-sdk-go/aws",
+    "github.com/aws/aws-sdk-go/aws/credentials",
+    "github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds",
+    "github.com/aws/aws-sdk-go/aws/ec2metadata",
+    "github.com/aws/aws-sdk-go/aws/session",
+    "github.com/aws/aws-sdk-go/aws/signer/v4",
+    "github.com/aws/aws-sdk-go/service/cognitoidentityprovider",
+    "github.com/aws/aws-sdk-go/service/dynamodb",
+    "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute",
+    "github.com/aws/aws-sdk-go/service/elasticsearchservice",
+    "github.com/aws/aws-sdk-go/service/firehose",
+    "github.com/aws/aws-sdk-go/service/ssm",
+    "github.com/briandowns/spinner",
+    "github.com/dgrijalva/jwt-go",
+    "github.com/dgrijalva/jwt-go/request",
+    "github.com/gorilla/mux",
+    "github.com/howeyc/gopass",
+    "github.com/oktasecuritylabs/sgt/dyndb",
+    "github.com/oktasecuritylabs/sgt/handlers/api",
+    "github.com/oktasecuritylabs/sgt/handlers/auth",
+    "github.com/oktasecuritylabs/sgt/handlers/deploy",
+    "github.com/oktasecuritylabs/sgt/handlers/distributed",
+    "github.com/oktasecuritylabs/sgt/handlers/helpers",
+    "github.com/oktasecuritylabs/sgt/handlers/node",
+    "github.com/oktasecuritylabs/sgt/handlers/response",
+    "github.com/oktasecuritylabs/sgt/logger",
+    "github.com/oktasecuritylabs/sgt/osquery_types",
+    "github.com/oktasecuritylabs/sgt/server",
+    "github.com/sirupsen/logrus",
+    "github.com/urfave/negroni",
+    "golang.org/x/crypto/bcrypt",
+    "golang.org/x/crypto/ssh/terminal",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

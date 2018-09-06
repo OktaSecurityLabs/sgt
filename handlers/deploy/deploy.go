@@ -76,19 +76,23 @@ var (
 
 // DeploymentConfig configuration file used by all environment deployments
 type DeploymentConfig struct {
-	Environment                 string `json:"environment"`
-	AWSProfile                  string `json:"aws_profile"`
-	UserIPAddress               string `json:"user_ip_address"`
-	SgtOsqueryResultsBucketName string `json:"sgt_osquery_results_bucket_name"`
-	SgtConfigBucketName         string `json:"sgt_config_bucket_name"`
-	Domain                      string `json:"domain"`
-	Subdomain                   string `json:"subdomain"`
-	AwsKeypair                  string `json:"aws_keypair"`
-	FullSslCertchain            string `json:"full_ssl_certchain"`
-	SslPrivateKey               string `json:"ssl_private_key"`
-	SgtNodeSecret               string `json:"sgt_node_secret"`
-	SgtAppSecret                string `json:"sgt_app_secret"`
-	CreateElasticsearch         int    `json:"create_elasticsearch"`
+	Environment                 string	`json:"environment"`
+	AWSProfile                  string	`json:"aws_profile"`
+	UserIPAddress               string	`json:"user_ip_address"`
+	SgtOsqueryResultsBucketName string	`json:"sgt_osquery_results_bucket_name"`
+	SgtConfigBucketName         string	`json:"sgt_config_bucket_name"`
+	Domain                      string	`json:"domain"`
+	Subdomain                   string	`json:"subdomain"`
+	AwsKeypair                  string	`json:"aws_keypair"`
+	FullSslCertchain            string	`json:"full_ssl_certchain"`
+	SslPrivateKey               string	`json:"ssl_private_key"`
+	SgtNodeSecret               string	`json:"sgt_node_secret"`
+	SgtAppSecret                string	`json:"sgt_app_secret"`
+	CreateElasticsearch         int		`json:"create_elasticsearch"`
+        AsgDesiredSize              int		`json:"asg_desired_size"`
+        AWSRegion                   string	`json:"aws_region"`
+        Users                       []string	`json:"users"`
+        MailDomain                  string	`json:"mail_domain"`
 }
 
 // copyFile copies file from src to dst
