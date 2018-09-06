@@ -19,8 +19,8 @@ import (
 
 type NodeDB interface {
 	SearchByHostIdentifier(hid string) ([]osquery_types.OsqueryClient, error)
-	UpsertClient(oc osquery_types.OsqueryClient) (error)
-	ValidNode(nodeKey string) (error)
+	UpsertClient(oc osquery_types.OsqueryClient) error
+	ValidNode(nodeKey string) error
 	SearchByNodeKey(nk string) (osquery_types.OsqueryClient, error)
 	GetNamedConfig(configName string) (osquery_types.OsqueryNamedConfig, error)
 	//BuildOsqueryPackAsJSON(nc osquery_types.OsqueryNamedConfig) (json.RawMessage)
@@ -52,7 +52,6 @@ func RandomString(strlen int) string {
 	}
 	return strings.Join(result, "")
 }
-
 
 // NodeEnrollRequest enrolls a node given the host identifier
 func NodeEnrollRequest(dyn NodeDB) http.Handler {
@@ -112,7 +111,6 @@ func NodeEnrollRequest(dyn NodeDB) http.Handler {
 			nodeEnrollRequestLogger.WithFields(log.Fields{
 				"hostname": data.HostIdentifier,
 			}).Info("Correct sekret received")
-
 
 			if data.NodeKey != "" {
 				return fmt.Errorf("node key '%s' already exists in data", data.NodeKey)
@@ -193,7 +191,6 @@ func NodeEnrollRequest(dyn NodeDB) http.Handler {
 
 	})
 }
-
 
 /*
 func NodeEnrollRequest(respWriter http.ResponseWriter, request *http.Request) {
@@ -414,7 +411,7 @@ func NodeConfigureRequest(dyn NodeDB) http.Handler {
 			//oc, err := dyn.BuildNamedConfig(osqNode.ConfigName)
 			//logger.Infof("OC: %+v", oc)
 			//if err != nil {
-				//logger.Error(err)
+			//logger.Error(err)
 			//}
 
 			handlerLogger.Debug(config)
@@ -441,7 +438,6 @@ func NodeConfigureRequest(dyn NodeDB) http.Handler {
 
 	})
 }
-
 
 /*
 func NodeConfigureRequest(respWriter http.ResponseWriter, request *http.Request) {

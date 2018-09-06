@@ -22,19 +22,19 @@ import (
 )
 
 const (
-	vpc                   = "vpc"
-	datastore             = "datastore"
-	elasticsearch         = "elasticsearch"
-	elasticsearchFirehose = "elasticsearch_firehose"
-	elasticsearchConfig   = "elasticsearch_config"
+	vpc                      = "vpc"
+	datastore                = "datastore"
+	elasticsearch            = "elasticsearch"
+	elasticsearchFirehose    = "elasticsearch_firehose"
+	elasticsearchConfig      = "elasticsearch_config"
 	elasticsearchAutoscaling = "elasticsearch_autoscaling"
-	firehose              = "firehose"
-	config                = "config"
-	secrets               = "secrets"
-	autoscaling           = "autoscaling"
-	packs                 = "packs"
-	configs               = "configs"
-	scripts               = "scripts"
+	firehose                 = "firehose"
+	config                   = "config"
+	secrets                  = "secrets"
+	autoscaling              = "autoscaling"
+	packs                    = "packs"
+	configs                  = "configs"
+	scripts                  = "scripts"
 )
 
 var (
@@ -76,23 +76,23 @@ var (
 
 // DeploymentConfig configuration file used by all environment deployments
 type DeploymentConfig struct {
-	Environment                 string	`json:"environment"`
-	AWSProfile                  string	`json:"aws_profile"`
-	UserIPAddress               string	`json:"user_ip_address"`
-	SgtOsqueryResultsBucketName string	`json:"sgt_osquery_results_bucket_name"`
-	SgtConfigBucketName         string	`json:"sgt_config_bucket_name"`
-	Domain                      string	`json:"domain"`
-	Subdomain                   string	`json:"subdomain"`
-	AwsKeypair                  string	`json:"aws_keypair"`
-	FullSslCertchain            string	`json:"full_ssl_certchain"`
-	SslPrivateKey               string	`json:"ssl_private_key"`
-	SgtNodeSecret               string	`json:"sgt_node_secret"`
-	SgtAppSecret                string	`json:"sgt_app_secret"`
-	CreateElasticsearch         int		`json:"create_elasticsearch"`
-        AsgDesiredSize              int		`json:"asg_desired_size"`
-        AWSRegion                   string	`json:"aws_region"`
-        Users                       []string	`json:"users"`
-        MailDomain                  string	`json:"mail_domain"`
+	Environment                 string   `json:"environment"`
+	AWSProfile                  string   `json:"aws_profile"`
+	UserIPAddress               string   `json:"user_ip_address"`
+	SgtOsqueryResultsBucketName string   `json:"sgt_osquery_results_bucket_name"`
+	SgtConfigBucketName         string   `json:"sgt_config_bucket_name"`
+	Domain                      string   `json:"domain"`
+	Subdomain                   string   `json:"subdomain"`
+	AwsKeypair                  string   `json:"aws_keypair"`
+	FullSslCertchain            string   `json:"full_ssl_certchain"`
+	SslPrivateKey               string   `json:"ssl_private_key"`
+	SgtNodeSecret               string   `json:"sgt_node_secret"`
+	SgtAppSecret                string   `json:"sgt_app_secret"`
+	CreateElasticsearch         int      `json:"create_elasticsearch"`
+	AsgDesiredSize              int      `json:"asg_desired_size"`
+	AWSRegion                   string   `json:"aws_region"`
+	Users                       []string `json:"users"`
+	MailDomain                  string   `json:"mail_domain"`
 }
 
 // copyFile copies file from src to dst
@@ -161,7 +161,7 @@ func CreateDeployDirectory(environ string) error {
 		os.Exit(0)
 	}
 	dirs := []string{"vpc", "datastore", "firehose", "elasticsearch_firehose", "elasticsearch",
-	"elasticsearch_config", "config", "autoscaling", "elasticsearch_autoscaling", "secrets"}
+		"elasticsearch_config", "config", "autoscaling", "elasticsearch_autoscaling", "secrets"}
 	for _, p := range dirs {
 		dir := filepath.Join(path, p)
 		//logger.Info(dir)
@@ -335,7 +335,7 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 		}
 		//err = json.Unmarshal(*config.Packs, &pl)
 		//if err != nil {
-			//return err
+		//return err
 		//}
 
 		namedConfig.PackList = pl

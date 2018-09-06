@@ -1,26 +1,26 @@
 package osquery_types
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
 
 var (
 	q1 = PackQuery{
-		QueryName: "testquery",
-		Query: "select * from test;",
-		Interval: "60",
-		Version: "1.4.0",
+		QueryName:   "testquery",
+		Query:       "select * from test;",
+		Interval:    "60",
+		Version:     "1.4.0",
 		Description: "test description",
-		Value: "a test",
-		Snapshot: "true",
+		Value:       "a test",
+		Snapshot:    "true",
 	}
 	p1 = Pack{
 		PackName: "test pack",
-		Queries: []PackQuery{q1,},
+		Queries:  []PackQuery{q1},
 	}
-
 )
+
 //removing function
 /*
 func TestPackQuery_AsString(t *testing.T) {
@@ -36,12 +36,12 @@ func TestPack_AsMap(t *testing.T) {
 	expectedMap := map[string]map[string]map[string]string{
 		"queries": {
 			"testquery": {
-				"query": "select * from test;",
-				"interval": "60",
-				"version": "1.4.0",
+				"query":       "select * from test;",
+				"interval":    "60",
+				"version":     "1.4.0",
 				"description": "test description",
-				"value": "a test",
-				"snapshot": "true",
+				"value":       "a test",
+				"snapshot":    "true",
 			},
 		},
 	}
@@ -50,6 +50,3 @@ func TestPack_AsMap(t *testing.T) {
 		t.Errorf("maps not equal")
 	}
 }
-
-
-

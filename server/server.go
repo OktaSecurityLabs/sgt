@@ -4,12 +4,12 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/oktasecuritylabs/sgt/dyndb"
 	"github.com/oktasecuritylabs/sgt/handlers/api"
 	"github.com/oktasecuritylabs/sgt/handlers/auth"
 	"github.com/oktasecuritylabs/sgt/handlers/distributed"
 	"github.com/oktasecuritylabs/sgt/handlers/node"
 	"github.com/urfave/negroni"
-	"github.com/oktasecuritylabs/sgt/dyndb"
 )
 
 // Serve will create the server listen
@@ -26,7 +26,7 @@ func Serve() error {
 	apiRouter := mux.NewRouter().PathPrefix("/api/v1/configuration").Subrouter()
 
 	//apiRouter.HandleFunc("/configs", api.GetNamedConfigs).Methods(http.MethodGet, http.MethodPost)
-	apiRouter.Handle("/configs", api.GetNamedConfigsHandler(dynb)).Methods(http.MethodGet,  http.MethodPost)
+	apiRouter.Handle("/configs", api.GetNamedConfigsHandler(dynb)).Methods(http.MethodGet, http.MethodPost)
 	apiRouter.Handle("/configs/{config_name}", api.ConfigurationRequestHandler(dynb))
 	//apiRouter.HandleFunc("/configs/{config_name}", api.ConfigurationRequest).Methods(http.MethodPost)
 	//Nodes
@@ -70,7 +70,7 @@ func Serve() error {
 		negroni.Wrap(apiRouter),
 	))
 	err := http.ListenAndServeTLS(":443",
-		"fullchain.pem", "privkey.pem",  router)
-		//"fullchain.pem", "privkey.pem", handlers.LoggingHandler(os.Stdout, router))
+		"fullchain.pem", "privkey.pem", router)
+	//"fullchain.pem", "privkey.pem", handlers.LoggingHandler(os.Stdout, router))
 	return err
 }

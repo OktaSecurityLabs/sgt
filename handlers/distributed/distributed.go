@@ -33,11 +33,10 @@ var config osquery_types.ServerConfig
 
 type DistributedDB interface {
 	SearchDistributedNodeKey(nk string) (osquery_types.DistributedQuery, error)
-	DeleteDistributedQuery(dq osquery_types.DistributedQuery) (error)
-	ValidNode(nodeKey string) (error)
-	UpsertDistributedQuery(dq osquery_types.DistributedQuery) (error)
+	DeleteDistributedQuery(dq osquery_types.DistributedQuery) error
+	ValidNode(nodeKey string) error
+	UpsertDistributedQuery(dq osquery_types.DistributedQuery) error
 }
-
 
 func DistributedQueryRead(dyn DistributedDB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -202,18 +201,17 @@ func DistributedQueryWrite(respWriter http.ResponseWriter, request *http.Request
 		Statuses map[string]string `json:"statuses"`
 	}
 	dw := distributed_write{}
-	*/
-	//logger.Infof("Here's our dqa object %+v", dqa)
-	//logger.Info(dqa.Statuses)
-	//logger.Info(dqa.Queries)
-	//err = PutFirehoseBatch(body, config.DistributedQueryLoggerFirehoseStreamName, FirehoseService())
-	//if err != nil {
-	//logger.Error(err)
-	//return
-	//}
-	//return
+*/
+//logger.Infof("Here's our dqa object %+v", dqa)
+//logger.Info(dqa.Statuses)
+//logger.Info(dqa.Queries)
+//err = PutFirehoseBatch(body, config.DistributedQueryLoggerFirehoseStreamName, FirehoseService())
+//if err != nil {
+//logger.Error(err)
+//return
 //}
-
+//return
+//}
 
 func FirehoseService() *firehose.Firehose {
 	sess := session.Must(session.NewSession(
