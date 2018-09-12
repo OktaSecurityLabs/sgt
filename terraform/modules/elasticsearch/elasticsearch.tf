@@ -37,7 +37,7 @@ resource "aws_elasticsearch_domain" "sgt-osquery_results" {
   }
   ebs_options {
     ebs_enabled = true
-    volume_size = 200
+    volume_size = 300
     volume_type = "gp2"
   }
 }
