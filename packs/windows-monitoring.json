@@ -19,11 +19,6 @@
       "interval": "300",
       "snapshot": "true"
     },
-    "processes": {
-      "query": "select * from processes;",
-      "interval": "300",
-      "snapshot": "true"
-    },
     "scheduled_tasks": {
       "query": "select * from scheduled_tasks;",
       "interval": "3600"
