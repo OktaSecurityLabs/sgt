@@ -1,4 +1,0 @@
-*.tfstate
-*.secret
-*.terraform
-*.idea
