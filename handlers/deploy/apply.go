@@ -324,6 +324,7 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
                     Username: aws.String(DesiredUser),
                     UserAttributes: []*cognitoidentityprovider.AttributeType{
                         {Name: aws.String("email"),Value : aws.String(DesiredUser+"@"+MailDomain)},
+                        {Name: aws.String("email_verified"),Value : aws.String("true")},
                     },
                 })
                 if err != nil {
