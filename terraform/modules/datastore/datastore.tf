@@ -106,8 +106,8 @@ resource "aws_dynamodb_table" "carve_data" {
 
   hash_key = "session_block_id"
   name = "carve_data"
-  read_capacity = 500
-  write_capacity = 500
+  read_capacity = 25
+  write_capacity = 25
 
   ttl {
     attribute_name = "time_to_live"

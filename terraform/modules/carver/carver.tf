@@ -3,6 +3,7 @@ resource "aws_s3_bucket" "filecarve_bucket" {
   acl = "private"
 }
 
+
 data "terraform_remote_state" "datastore" {
   backend = "local"
   config {
@@ -40,7 +41,7 @@ data "aws_iam_policy_document" "carve_builder_lambda_policy" {
       "s3:ListBucket"
     ]
     resources = [
-      "${aws_s3_bucket.filecarve_bucket.arn}/*"
+      "${data.terraform_remote_state.datastore.s3_bucket_arn}/*"
     ]
   }
   statement {
@@ -91,7 +92,7 @@ resource "aws_lambda_function" "carve_builder_lambda_function" {
   source_code_hash = "${data.archive_file.carve_builder_lambda_zip.output_base64sha256}"
   environment {
     variables {
-      CARVE_BUCKET = "${aws_s3_bucket.filecarve_bucket.bucket}"
+      CARVE_BUCKET = "${data.terraform_remote_state.datastore.s3_bucket_name}"
     }
   }
   timeout = 300

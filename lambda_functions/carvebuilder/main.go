@@ -75,7 +75,7 @@ func Handler(event ev) {
 
 		_, err = s3uploader.Upload(&s3manager.UploadInput{
 			Bucket: aws.String(carveBucket),
-			Key: aws.String(path),
+			Key: aws.String(fmt.Sprintf("filecarves/%s", fc.SessionID)),
 			Body: bytes.NewReader(body),
 		})
 		// copy to s3 here, if successfull, delete
