@@ -194,7 +194,7 @@ func deployAWSComponent(component, envName string, config DeploymentConfig) erro
 	}
 
 	args := fmt.Sprintf("terraform apply -auto-approve -var-file=../%s.json", envName)
-	logger.Info(args)
+  logger.Info(args)
 
 	cmd = exec.Command("bash", "-c", args)
 	stdoutStderr, err := cmd.CombinedOutput()
@@ -316,46 +316,47 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
 			},
 		})
 	}
+       cognito_svc := cognitoidentityprovider.New(sess)
 
-	cognito_svc := cognitoidentityprovider.New(sess)
+        UserExists := false
+        //List of desired users for Kibana, from the config file, should be the first part of Okta email address to work correctly
+        DesiredUsers := config.Users
+        MailDomain := config.MailDomain        
 
-	UserExists := false
-	//List of desired users for Kibana, from the config file, should be the first part of Okta email address to work correctly
-	DesiredUsers := config.Users
-	MailDomain := config.MailDomain
+        ExistingUsers, err := cognito_svc.ListUsers(&cognitoidentityprovider.ListUsersInput{
+                UserPoolId: aws.String(CognitoUserPoolId),
+        })
 
-	ExistingUsers, err := cognito_svc.ListUsers(&cognitoidentityprovider.ListUsersInput{
-		UserPoolId: aws.String(CognitoUserPoolId),
-	})
+        if err != nil {
+            logger.Info(err)
+        }        
 
-	if err != nil {
-		logger.Info(err)
-	}
-
-	//Determine if the user already exists
-	for _, DesiredUser := range DesiredUsers {
-		for _, ExistingUser := range ExistingUsers.Users {
-			UserExists = false
-			if DesiredUser == *ExistingUser.Username {
-				UserExists = true
-			}
-		}
-		if UserExists == false {
-			logger.Info(DesiredUser)
-			//If not, create it
-			createuser, err := cognito_svc.AdminCreateUser(&cognitoidentityprovider.AdminCreateUserInput{
-				UserPoolId: aws.String(CognitoUserPoolId),
-				Username:   aws.String(DesiredUser),
-				UserAttributes: []*cognitoidentityprovider.AttributeType{
-					{Name: aws.String("email"), Value: aws.String(DesiredUser + "@" + MailDomain)},
-				},
-			})
-			if err != nil {
-				logger.Info(err)
-			}
-			logger.Info(createuser)
-		}
-	}
+        //Determine if the user already exists
+        for _, DesiredUser := range DesiredUsers {
+            for _, ExistingUser := range ExistingUsers.Users{
+                UserExists = false
+                if DesiredUser == *ExistingUser.Username {
+                    UserExists = true
+                }               
+            }
+            if UserExists == false {
+                logger.Info(DesiredUser)
+                //If not, create it
+                createuser, err := cognito_svc.AdminCreateUser(&cognitoidentityprovider.AdminCreateUserInput{
+                    UserPoolId: aws.String(CognitoUserPoolId),
+                    Username: aws.String(DesiredUser),
+                    UserAttributes: []*cognitoidentityprovider.AttributeType{
+                        {Name: aws.String("email"),Value : aws.String(DesiredUser+"@"+MailDomain)},
+                        {Name: aws.String("email_verified"),Value : aws.String("true")},
+                    },
+                })
+                if err != nil {
+                    logger.Info(err)
+                }
+                logger.Info(createuser)
+            }
+        }
+       
 
 	if err != nil {
 		logger.Info(err)
