@@ -22,6 +22,14 @@ output "dynamo_table_osquery_users_arn" {
   value = "${module.datastore.dynamo_table_osquery_users_arn}"
 }
 
+output "dynamo_table_filecarves_arn" {
+  value = "${module.datastore.dynamo_table_filecarves_arn}"
+}
+
+output "dynamo_table_carve_data_arn" {
+  value = "${module.datastore.dynamo_table_carve_data_arn}"
+}
+
 output "s3_bucket_arn" {
   value = "${module.datastore.s3_bucket_arn}"
 }

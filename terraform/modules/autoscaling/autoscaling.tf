@@ -68,7 +68,9 @@ data "aws_iam_policy_document" "server_dynamo_access_policy_doc" {
       "${data.terraform_remote_state.datastore.dynamo_table_osquery_distributed_queries_arn}",
       "${data.terraform_remote_state.datastore.dynamo_table_osquery_packqueries_arn}",
       "${data.terraform_remote_state.datastore.dynamo_table_osquery_querypacks_arn}",
-      "${data.terraform_remote_state.datastore.dynamo_table_osquery_users_arn}"
+      "${data.terraform_remote_state.datastore.dynamo_table_osquery_users_arn}",
+      "${data.terraform_remote_state.datastore.dynamo_table_filecarves_arn}",
+      "${data.terraform_remote_state.datastore.dynamo_table_carve_data_arn}"
     ]
   }
 }

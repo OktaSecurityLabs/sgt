@@ -40,7 +40,7 @@ resource "aws_s3_bucket_object" "osquery-sgt-config" {
   bucket = "${data.terraform_remote_state.datastore.s3_bucket_name}"
   content = "${data.template_file.sgt-config-file.rendered}"
   key = "sgt/config.json"
-  etag = "${md5(base64encode("{data.template_file.sgt-config-file.rendered}"))}"
+  etag = "${md5("{data.template_file.sgt-config-file.rendered}")}"
 }
 
 resource "aws_s3_bucket_object" "osquery-sgt-fullchain_pem" {

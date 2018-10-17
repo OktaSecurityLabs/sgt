@@ -50,6 +50,7 @@ type OsqueryOptions struct {
 	CarverBlockSize        int    `json:"carver_block_size,omitempty"`
 	CarverContinueEndpoint string `json:"carver_continue_endpoint,omitempty"`
 	CarverStartEndpoint    string `json:"carver_start_endpoint,omitempty"`
+	CarverDisableFunction  bool	`json:"carver_disable_function"`
 	//config_settings
 	ConfigRefresh int  `json:"config_refresh"`
 	CSV           bool `json:"csv,omitempty"`

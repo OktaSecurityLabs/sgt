@@ -10,6 +10,7 @@ import (
 	"github.com/oktasecuritylabs/sgt/handlers/node"
 	"github.com/urfave/negroni"
 	"github.com/oktasecuritylabs/sgt/dyndb"
+	"github.com/oktasecuritylabs/sgt/internal/pkg/filecarver"
 )
 
 // Serve will create the server listen
@@ -63,6 +64,16 @@ func Serve() error {
 		negroni.HandlerFunc(auth.ValidNodeKey),
 		negroni.Wrap(distributedRouter),
 	))
+
+	carveRouter := mux.NewRouter().PathPrefix("/carve").Subrouter()
+	carveRouter.Handle("/start", filecarver.StartCarve(dynb))
+	carveRouter.Handle("/continue", filecarver.ContinueCarve(dynb))
+	router.PathPrefix("/carve").Handler(negroni.New(
+		negroni.NewRecovery(),
+		//negroni.HandlerFunc(auth.ValidNodeKey),
+		negroni.Wrap(carveRouter),
+	))
+
 	//Enforce auth for all our api configuration endpoints
 	router.PathPrefix("/api/v1/configuration").Handler(negroni.New(
 		negroni.NewRecovery(),

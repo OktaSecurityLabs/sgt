@@ -138,6 +138,32 @@ func deployAWSComponent(component, envName string, config DeploymentConfig) erro
 		logger.Info(string(combinedOutput))
 	}
 
+	if component == "carver" {
+		logger.Infof("CWD: %s", cachedCurDir)
+		//build carvebuilder lambda
+		logger.Infof("Building Carver lambdas")
+		carveBuilderGo := filepath.Join(cachedCurDir, "lambda_functions", "carvebuilder", "main.go")
+		carveBuilderOut := filepath.Join(cachedCurDir, "lambda_functions", "carvebuilder", "main")
+		args := fmt.Sprintf("GOOS=linux go build -o %s %s", carveBuilderOut, carveBuilderGo)
+		cmd := exec.Command("bash", "-c", args)
+		combinedOutput, buildErr := cmd.CombinedOutput()
+		if buildErr != nil {
+			return buildErr
+		}
+		logger.Info(string(combinedOutput))
+
+
+		carveManagerGo := filepath.Join(cachedCurDir, "lambda_functions", "carvemanager", "main.go")
+		carveManagerOut := filepath.Join(cachedCurDir, "lambda_functions", "carvemanager", "main")
+		args = fmt.Sprintf("GOOS=linux go build -o %s %s", carveManagerOut, carveManagerGo)
+		cmd = exec.Command("bash", "-c", args)
+		combinedOutput, buildErr = cmd.CombinedOutput()
+		if buildErr != nil {
+			return buildErr
+		}
+		logger.Info(string(combinedOutput))
+	}
+
 	logger.Infof("Building %s...\n", component)
 
 	spin.Start()

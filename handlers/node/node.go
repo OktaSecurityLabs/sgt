@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"net/http/httputil"
 	"strings"
 
 	"github.com/oktasecuritylabs/sgt/handlers/auth"
@@ -60,11 +59,6 @@ func NodeEnrollRequest(dyn NodeDB) http.Handler {
 		handleRequest := func() error {
 
 			//test if enrol secret is correct
-			dump, err := httputil.DumpRequest(r, true)
-			logger.Info(string(dump))
-			if err != nil {
-				return fmt.Errorf("could not dump request: %s", err)
-			}
 
 			sekret, err := auth.GetNodeSecret()
 			if err != nil {
@@ -92,7 +86,6 @@ func NodeEnrollRequest(dyn NodeDB) http.Handler {
 
 			body, err := ioutil.ReadAll(r.Body)
 			defer r.Body.Close()
-			logger.Info(string(body))
 			if err != nil {
 				nodeEnrollRequestLogger.Error(err)
 				return fmt.Errorf("failed to read request body: %s", err)
@@ -345,10 +338,6 @@ func NodeConfigureRequest(dyn NodeDB) http.Handler {
 		})
 
 		handleRequest := func() (interface{}, error) {
-
-			dump, _ := httputil.DumpRequest(r, true)
-			logger.Debug(string(dump))
-
 			//to recieve a valid config, node must have both a valid sekret and
 			//a node_key that is valid
 			body, err := ioutil.ReadAll(r.Body)
@@ -417,7 +406,6 @@ func NodeConfigureRequest(dyn NodeDB) http.Handler {
 				//logger.Error(err)
 			//}
 
-			handlerLogger.Debug(config)
 			namedConfig.OsqueryConfig.Options.AwsAccessKeyID = config.FirehoseAWSAccessKeyID
 			namedConfig.OsqueryConfig.Options.AwsSecretAccessKey = config.FirehoseAWSSecretAccessKey
 			if namedConfig.OsqueryConfig.Options.AwsFirehoseStream == "" {

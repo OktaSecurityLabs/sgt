@@ -35,6 +35,7 @@ const (
 	packs                 = "packs"
 	configs               = "configs"
 	scripts               = "scripts"
+	carver				  = "carver"
 )
 
 var (
@@ -48,6 +49,7 @@ var (
 		config,
 		secrets,
 		autoscaling,
+		carver,
 	}
 
 	ElasticDeployOrder = []string{
@@ -58,6 +60,7 @@ var (
 		elasticsearchConfig,
 		secrets,
 		elasticsearchAutoscaling,
+		carver,
 	}
 
 	// OsqueryOpts holds all deploy options for osquery
@@ -161,7 +164,7 @@ func CreateDeployDirectory(environ string) error {
 		os.Exit(0)
 	}
 	dirs := []string{"vpc", "datastore", "firehose", "elasticsearch_firehose", "elasticsearch",
-	"elasticsearch_config", "config", "autoscaling", "elasticsearch_autoscaling", "secrets"}
+	"elasticsearch_config", "config", "autoscaling", "elasticsearch_autoscaling", "secrets", "carver"}
 	for _, p := range dirs {
 		dir := filepath.Join(path, p)
 		//logger.Info(dir)

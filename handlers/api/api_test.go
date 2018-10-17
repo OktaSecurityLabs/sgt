@@ -14,7 +14,7 @@ func TestGetNamedConfigsHandler(t *testing.T) {
 
 	test := helpers.GenerateHandleTester(t, handler)
 
-	w := test("GET", url.Values{})
+	w := test("GET", "/", url.Values{}, nil)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Add records did not return %+v", http.StatusOK)
@@ -31,7 +31,7 @@ func TestConfigurationRequestHandler(t *testing.T) {
 
 	v := url.Values{}
 	v.Add("config_name", "default")
-	w := test("POST", v)
+	w := test("POST", "", v, nil)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Add records did not return %+v", http.StatusOK)
@@ -43,7 +43,7 @@ func TestGetNodesHandler(t *testing.T) {
 	handler := GetNodesHandler(mockdb)
 	test := helpers.GenerateHandleTester(t, handler)
 
-	w := test("GET", url.Values{})
+	w := test("GET", "", url.Values{}, nil)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Add records did not return %+v", http.StatusOK)

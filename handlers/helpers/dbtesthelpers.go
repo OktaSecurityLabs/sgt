@@ -3,7 +3,7 @@ package helpers
 import (
 	"github.com/oktasecuritylabs/sgt/osquery_types"
 	"encoding/json"
-)
+	)
 
 
 type MockDB struct {
@@ -185,3 +185,15 @@ func (m MockDB) BuildNamedConfig(configName string) (osquery_types.OsqueryNamedC
 	return osquery_types.OsqueryNamedConfig{}, nil
 }
 
+
+func (m MockDB) CreateCarve(carveMap *osquery_types.Carve) error {
+	return nil
+}
+
+func (m MockDB) AddCarveData(data *osquery_types.CarveData) error {
+	return nil
+}
+
+func (m MockDB) CarveDataExists(data *osquery_types.CarveData) (bool, error) {
+	return false, nil
+}

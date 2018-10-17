@@ -3,7 +3,6 @@ package dyndb
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -69,7 +68,6 @@ func NewDynamoDB() DynDB {
 // BuildNamedConfig returns the fully built Named config, minus the credentials which are supplied during node config
 func (db DynDB) BuildNamedConfig(configName string) (osq_types.OsqueryNamedConfig, error) {
 	storedNC := osq_types.OsqueryNamedConfig{}
-	oc := osq_types.OsqueryConfig{}
 	storedNC, err := db.GetNamedConfig(configName)
 	if err != nil {
 		return storedNC, err
@@ -77,8 +75,6 @@ func (db DynDB) BuildNamedConfig(configName string) (osq_types.OsqueryNamedConfi
 	storedNC.OsqueryConfig.Packs = make(map[string]map[string]map[string]map[string]string)
 	//oc = storedNC.OsqueryConfig
 	for _, packName := range storedNC.PackList {
-		fmt.Printf("adding %s to config", packName)
-		fmt.Printf("config now: %+v", oc)
 		p, err := db.GetPackByName(packName)
 		if err != nil {
 			return storedNC, err
@@ -304,8 +300,6 @@ func GetNamedConfig(dynamoDB *dynamodb.DynamoDB, configName string) (osq_types.O
 
 // UpsertClient upsers an osqueryClient
 func (db DynDB) UpsertClient(oc osq_types.OsqueryClient) (error) {
-	logger.Debugf("Upserting Client: %v", oc)
-
 	av, err := dynamodbattribute.MarshalMap(oc)
 	if err != nil {
 		logger.Warn("Marshal failed")
@@ -373,7 +367,6 @@ func (db DynDB) SearchByHostIdentifier(hid string) ([]osq_types.OsqueryClient, e
 			}
 			if hid == string(o.HostIdentifier) {
 				Results = append(Results, o)
-				fmt.Println(o)
 			}
 
 		}
