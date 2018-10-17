@@ -23,7 +23,7 @@ func GenerateHandleTester(t *testing.T, handleFunc http.Handler) HandleTester {
 
 	return func(method, url string, params url.Values, body io.Reader) *httptest.ResponseRecorder {
 
-		u := fmt.Sprintf("%s?%s", params.Encode())
+		u := fmt.Sprintf("%s?%s", url, params.Encode())
 
 		req, err := http.NewRequest(
 			method,
