@@ -22,6 +22,14 @@ output "dynamo_table_osquery_users_arn" {
   value = "${aws_dynamodb_table.osquery_users.arn}"
 }
 
+output "dynamo_table_filecarves_arn" {
+  value = "${aws_dynamodb_table.filecarves.arn}"
+}
+
+output "dynamo_table_carve_data_arn" {
+  value = "${aws_dynamodb_table.carve_data.arn}"
+}
+
 output "s3_bucket_arn" {
   value = "${aws_s3_bucket.osquery_s3_bucket.arn}"
 }
@@ -29,3 +37,4 @@ output "s3_bucket_arn" {
 output "s3_bucket_name" {
   value = "${aws_s3_bucket.osquery_s3_bucket.bucket}"
 }
+

@@ -1,24 +1,24 @@
 package deploy
 
 import (
-        "os/user"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/oktasecuritylabs/sgt/logger"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strings"
 	"time"
-        "github.com/aws/aws-sdk-go/aws/credentials"
-        "github.com/aws/aws-sdk-go/aws/signer/v4"
-	"github.com/oktasecuritylabs/sgt/logger"
-        "github.com/aws/aws-sdk-go/aws"
-        "github.com/aws/aws-sdk-go/aws/session"
-        "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-        "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
 // tfState struct for terraform state
@@ -138,6 +138,31 @@ func deployAWSComponent(component, envName string, config DeploymentConfig) erro
 		logger.Info(string(combinedOutput))
 	}
 
+	if component == "carver" {
+		logger.Infof("CWD: %s", cachedCurDir)
+		//build carvebuilder lambda
+		logger.Infof("Building Carver lambdas")
+		carveBuilderGo := filepath.Join(cachedCurDir, "lambda_functions", "carvebuilder", "main.go")
+		carveBuilderOut := filepath.Join(cachedCurDir, "lambda_functions", "carvebuilder", "main")
+		args := fmt.Sprintf("GOOS=linux go build -o %s %s", carveBuilderOut, carveBuilderGo)
+		cmd := exec.Command("bash", "-c", args)
+		combinedOutput, buildErr := cmd.CombinedOutput()
+		if buildErr != nil {
+			return buildErr
+		}
+		logger.Info(string(combinedOutput))
+
+		carveManagerGo := filepath.Join(cachedCurDir, "lambda_functions", "carvemanager", "main.go")
+		carveManagerOut := filepath.Join(cachedCurDir, "lambda_functions", "carvemanager", "main")
+		args = fmt.Sprintf("GOOS=linux go build -o %s %s", carveManagerOut, carveManagerGo)
+		cmd = exec.Command("bash", "-c", args)
+		combinedOutput, buildErr = cmd.CombinedOutput()
+		if buildErr != nil {
+			return buildErr
+		}
+		logger.Info(string(combinedOutput))
+	}
+
 	logger.Infof("Building %s...\n", component)
 
 	spin.Start()
@@ -169,7 +194,7 @@ func deployAWSComponent(component, envName string, config DeploymentConfig) erro
 	}
 
 	args := fmt.Sprintf("terraform apply -auto-approve -var-file=../%s.json", envName)
-	logger.Info(args)
+  logger.Info(args)
 
 	cmd = exec.Command("bash", "-c", args)
 	stdoutStderr, err := cmd.CombinedOutput()
@@ -188,112 +213,110 @@ func deployAWSComponent(component, envName string, config DeploymentConfig) erro
 // createElasticSearchCognitoOptions creates CognitoOption settings for the Elasticsearch domain
 func createElasticSearchCognitoOptions(currentRegion string, config DeploymentConfig) error {
 
-        //Get input variables from terraform state
-        var ESCognitoRoleArn string
-        var CognitoUserPoolId string
-        var CognitoIdentityPoolId string
-        var ESCognitoDomainName string
+	//Get input variables from terraform state
+	var ESCognitoRoleArn string
+	var CognitoUserPoolId string
+	var CognitoIdentityPoolId string
+	var ESCognitoDomainName string
 
-        fn := "terraform.tfstate"
-        file, err := os.Open(fn)
-        if err != nil {
-                return err
-        }
+	fn := "terraform.tfstate"
+	file, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
 
-        decoder := json.NewDecoder(file)
+	decoder := json.NewDecoder(file)
 
-        tfstate := tfState{}
+	tfstate := tfState{}
 
-        if err = decoder.Decode(&tfstate); err != nil {
-                return err
-        }
+	if err = decoder.Decode(&tfstate); err != nil {
+		return err
+	}
 
-        for _, i := range tfstate.Modules {
-                for k, v := range i.Outputs {
-                        if k == "elasticsearch_domain_id" {
-                                if !strings.Contains(v.Value, "amazon.com") {
-                                        ESCognitoDomainName = v.Value
-                                        break
-                                }
-                        }
-                }
-        }
-        logger.Info(ESCognitoDomainName)
+	for _, i := range tfstate.Modules {
+		for k, v := range i.Outputs {
+			if k == "elasticsearch_domain_id" {
+				if !strings.Contains(v.Value, "amazon.com") {
+					ESCognitoDomainName = v.Value
+					break
+				}
+			}
+		}
+	}
+	logger.Info(ESCognitoDomainName)
 
-        for _, i := range tfstate.Modules {
-                for k, v := range i.Outputs {
-                        if k == "elasticsearch_cognito_role_arn" {
-                                if !strings.Contains(v.Value, "amazon.com") {
-                                        ESCognitoRoleArn = v.Value
-                                        break
-                                }
-                        }
-                }
-        }
-        logger.Info(ESCognitoRoleArn)
+	for _, i := range tfstate.Modules {
+		for k, v := range i.Outputs {
+			if k == "elasticsearch_cognito_role_arn" {
+				if !strings.Contains(v.Value, "amazon.com") {
+					ESCognitoRoleArn = v.Value
+					break
+				}
+			}
+		}
+	}
+	logger.Info(ESCognitoRoleArn)
 
-        for _, i := range tfstate.Modules {
-                for k, v := range i.Outputs {
-                        if k == "cognito_user_pool_id" {
-                                if !strings.Contains(v.Value, "amazon.com") {
-                                        CognitoUserPoolId = v.Value
-                                        break
-                                }
-                        }
-                }
-        }
-        logger.Info(CognitoUserPoolId)
+	for _, i := range tfstate.Modules {
+		for k, v := range i.Outputs {
+			if k == "cognito_user_pool_id" {
+				if !strings.Contains(v.Value, "amazon.com") {
+					CognitoUserPoolId = v.Value
+					break
+				}
+			}
+		}
+	}
+	logger.Info(CognitoUserPoolId)
 
-        for _, i := range tfstate.Modules {
-                for k, v := range i.Outputs {
-                        if k == "cognito_identity_pool_id" {
-                                if !strings.Contains(v.Value, "amazon.com") {
-                                        CognitoIdentityPoolId = v.Value
-                                        break
-                                }
-                        }
-                }
-        }
-        logger.Info(CognitoIdentityPoolId)
+	for _, i := range tfstate.Modules {
+		for k, v := range i.Outputs {
+			if k == "cognito_identity_pool_id" {
+				if !strings.Contains(v.Value, "amazon.com") {
+					CognitoIdentityPoolId = v.Value
+					break
+				}
+			}
+		}
+	}
+	logger.Info(CognitoIdentityPoolId)
 
-        sess := session.Must(session.NewSessionWithOptions(session.Options{
-            Config: aws.Config{
-            Region: aws.String(currentRegion),
-            },
-            Profile: *aws.String(config.AWSProfile),
-        }))
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		Config: aws.Config{
+			Region: aws.String(currentRegion),
+		},
+		Profile: *aws.String(config.AWSProfile),
+	}))
 
-        // Create a Elasticsearch service client.
-        svc := elasticsearchservice.New(sess)
+	// Create a Elasticsearch service client.
+	svc := elasticsearchservice.New(sess)
 
-        //Get the elasticsearch domain config
-        result, err := svc.DescribeElasticsearchDomainConfig(&elasticsearchservice.DescribeElasticsearchDomainConfigInput{
-                DomainName: aws.String(ESCognitoDomainName),
-        })
+	//Get the elasticsearch domain config
+	result, err := svc.DescribeElasticsearchDomainConfig(&elasticsearchservice.DescribeElasticsearchDomainConfigInput{
+		DomainName: aws.String(ESCognitoDomainName),
+	})
 
-        if err != nil {
-            return err
-        }
+	if err != nil {
+		return err
+	}
 
-        ESCognitoOptionsEnabledStatus := *result.DomainConfig.CognitoOptions.Options.Enabled
+	ESCognitoOptionsEnabledStatus := *result.DomainConfig.CognitoOptions.Options.Enabled
 
-        logger.Info(ESCognitoOptionsEnabledStatus)
+	logger.Info(ESCognitoOptionsEnabledStatus)
 
- 
-        //If cognito options are not set for the domain, set them
-        if !ESCognitoOptionsEnabledStatus {
-            svc.UpdateElasticsearchDomainConfig(&elasticsearchservice.UpdateElasticsearchDomainConfigInput{
-                DomainName: aws.String(ESCognitoDomainName),
-                CognitoOptions: &elasticsearchservice.CognitoOptions{
-                    Enabled: aws.Bool(true),
-                    UserPoolId: aws.String(CognitoUserPoolId),
-                    IdentityPoolId: aws.String(CognitoIdentityPoolId),
-                    RoleArn: aws.String(ESCognitoRoleArn),
-                },
-            })
-        }
-
-        cognito_svc := cognitoidentityprovider.New(sess)
+	//If cognito options are not set for the domain, set them
+	if !ESCognitoOptionsEnabledStatus {
+		svc.UpdateElasticsearchDomainConfig(&elasticsearchservice.UpdateElasticsearchDomainConfigInput{
+			DomainName: aws.String(ESCognitoDomainName),
+			CognitoOptions: &elasticsearchservice.CognitoOptions{
+				Enabled:        aws.Bool(true),
+				UserPoolId:     aws.String(CognitoUserPoolId),
+				IdentityPoolId: aws.String(CognitoIdentityPoolId),
+				RoleArn:        aws.String(ESCognitoRoleArn),
+			},
+		})
+	}
+       cognito_svc := cognitoidentityprovider.New(sess)
 
         UserExists := false
         //List of desired users for Kibana, from the config file, should be the first part of Okta email address to work correctly
@@ -333,27 +356,27 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
                 logger.Info(createuser)
             }
         }
-        
+       
 
-        if err != nil {
-            logger.Info(err)
-        }
+	if err != nil {
+		logger.Info(err)
+	}
 
-        return nil
+	return nil
 }
 
 // createElasticSearchMappings creates Elasticsearch mappings
 func createElasticSearchMappings(config DeploymentConfig) error {
-        usr, err := user.Current()
-        if err != nil {
-                logger.Error(err)
-                return err
-        }
+	usr, err := user.Current()
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
 
-        credfile := filepath.Join(usr.HomeDir, ".aws", "credentials")
-        creds := credentials.NewSharedCredentials(credfile, config.AWSProfile)
-        now := time.Now()
-        signer := v4.NewSigner(creds)
+	credfile := filepath.Join(usr.HomeDir, ".aws", "credentials")
+	creds := credentials.NewSharedCredentials(credfile, config.AWSProfile)
+	now := time.Now()
+	signer := v4.NewSigner(creds)
 
 	fn := "terraform.tfstate"
 	file, err := os.Open(fn)
@@ -373,25 +396,25 @@ func createElasticSearchMappings(config DeploymentConfig) error {
 			if k == "elasticearch_endpoint" {
 				if !strings.Contains(v.Value, "amazon.com") {
 					esEndpoint = v.Value
-                                        logger.Info(esEndpoint)
+					logger.Info(esEndpoint)
 					break
 				}
 			}
 		}
 	}
 
-        var currentRegion string
-        for _, i := range tfstate.Modules {
-                for k, v := range i.Outputs {
-                        if k == "elasticsearch_region" {
-                                if !strings.Contains(v.Value, "amazon.com") {
-                                        currentRegion = v.Value
-                                        logger.Info(currentRegion)
-                                        break
-                                }
-                        }
-                }
-        }
+	var currentRegion string
+	for _, i := range tfstate.Modules {
+		for k, v := range i.Outputs {
+			if k == "elasticsearch_region" {
+				if !strings.Contains(v.Value, "amazon.com") {
+					currentRegion = v.Value
+					logger.Info(currentRegion)
+					break
+				}
+			}
+		}
+	}
 
 	//esEndpoint := "https://search-sgt-osquery-results-r6owrsyarql42ttzy26fz6nf24.us-east-1.es.amazonaws.com"
 	path := "_template/template_1"
@@ -425,7 +448,7 @@ func createElasticSearchMappings(config DeploymentConfig) error {
 
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-        signer.Sign(req, bytes.NewReader(rawJSON), "es", currentRegion, now)
+	signer.Sign(req, bytes.NewReader(rawJSON), "es", currentRegion, now)
 	response, err := client.Do(req)
 	if err != nil {
 		return err
@@ -444,7 +467,7 @@ func createElasticSearchMappings(config DeploymentConfig) error {
 		return fmt.Errorf("Request failed: %s", string(body))
 	}
 
-        createElasticSearchCognitoOptions(currentRegion, config)
+	createElasticSearchCognitoOptions(currentRegion, config)
 
 	return nil
 }

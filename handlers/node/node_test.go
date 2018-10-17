@@ -1,10 +1,10 @@
 package node
 
 import (
-	"testing"
-	"net/http"
 	"github.com/oktasecuritylabs/sgt/handlers/helpers"
+	"net/http"
 	"net/url"
+	"testing"
 )
 
 func TestNodeEnrollRequest(t *testing.T) {
@@ -14,7 +14,7 @@ func TestNodeEnrollRequest(t *testing.T) {
 
 	test := helpers.GenerateHandleTester(t, handler)
 
-	w := test("POST", url.Values{})
+	w := test("POST", "", url.Values{}, nil)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("NodeEnrollRequest returned: %+v, expected: %+v", w.Code, http.StatusOK)
