@@ -1,13 +1,13 @@
 package filecarver
 
 import (
-	"net/http"
-	"io/ioutil"
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"github.com/oktasecuritylabs/sgt/handlers/response"
 	"github.com/oktasecuritylabs/sgt/osquery_types"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"net/http"
 	"time"
 )
 
@@ -23,11 +23,9 @@ type CarverDB interface {
 	AddCarveData(data *osquery_types.CarveData) error
 }
 
-
 func NewSessionID() string {
 	return RandString(15)
 }
-
 
 func StartCarve(db CarverDB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -58,11 +56,11 @@ func StartCarve(db CarverDB) http.Handler {
 			}
 			//create first entry in DB carve table
 			type statusSuccess struct {
-				Success bool `json:"success"`
+				Success   bool   `json:"success"`
 				SessionID string `json:"session_id"`
 			}
 			ok := statusSuccess{
-				Success: true,
+				Success:   true,
 				SessionID: carve.SessionID,
 			}
 
@@ -81,7 +79,7 @@ func StartCarve(db CarverDB) http.Handler {
 
 func ContinueCarve(db CarverDB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handleRequest := func()(interface{}, error) {
+		handleRequest := func() (interface{}, error) {
 			w.Header().Set("Content-Type", "application/json")
 			body, err := ioutil.ReadAll(r.Body)
 			defer r.Body.Close()

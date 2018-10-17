@@ -1,15 +1,15 @@
 package carvebuilder
 
 import (
-	"github.com/oktasecuritylabs/sgt/osquery_types"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"strconv"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
+	"github.com/oktasecuritylabs/sgt/osquery_types"
 	"github.com/sirupsen/logrus"
-	)
+	"strconv"
+)
 
 var (
 	log = logrus.New()
@@ -52,7 +52,7 @@ func DeleteCarve(db *dynamodb.DynamoDB, carve *osquery_types.Carve) error {
 	}
 	params := &dynamodb.DeleteItemInput{
 		TableName: aws.String("filecarves"),
-		Key: mm,
+		Key:       mm,
 	}
 	_, err = db.DeleteItem(params)
 	if err != nil {
@@ -68,9 +68,9 @@ func GetCarveDataBySBID(db *dynamodb.DynamoDB, sbid string) (*osquery_types.Carv
 		return nil, err
 	}
 	params := &dynamodb.QueryInput{
-		TableName: aws.String("carve_data"),
-		KeyConditionExpression: expr.KeyCondition(),
-		ExpressionAttributeNames: expr.Names(),
+		TableName:                 aws.String("carve_data"),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
 	}
 	result, err := db.Query(params)
@@ -96,7 +96,7 @@ func CarveFinished(db *dynamodb.DynamoDB, carve *osquery_types.Carve) (bool, []*
 	}
 
 	data := make([]*osquery_types.CarveData, bc)
-	for i := bc-1; i >= 0; i-- {
+	for i := bc - 1; i >= 0; i-- {
 		sbid := fmt.Sprintf("%s-%d", carve.SessionID, i)
 		cd, err := GetCarveDataBySBID(db, sbid)
 		if err != nil {

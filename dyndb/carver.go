@@ -1,9 +1,9 @@
 package dyndb
 
 import (
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/oktasecuritylabs/sgt/osquery_types"
 	"github.com/sirupsen/logrus"
 )
@@ -22,7 +22,7 @@ func (dyn DynDB) CreateCarve(carveMap *osquery_types.Carve) error {
 	}
 	_, err = dyn.DB.PutItem(&dynamodb.PutItemInput{
 		TableName: aws.String("filecarves"),
-		Item: mm,
+		Item:      mm,
 	})
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func (dyn DynDB) CarveDataExists(data *osquery_types.CarveData) (bool, error) {
 
 	resp, err := dyn.DB.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String("carve_data"),
-		Key: mm,
+		Key:       mm,
 	})
 	if err != nil {
 		log.Errorf("GetItemFailed: %s", err.Error())
@@ -71,7 +71,7 @@ func (dyn DynDB) AddCarveData(data *osquery_types.CarveData) error {
 		}
 		_, err = dyn.DB.PutItem(&dynamodb.PutItemInput{
 			TableName: aws.String("carve_data"),
-			Item: mm,
+			Item:      mm,
 		})
 		if err != nil {
 			return err

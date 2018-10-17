@@ -2,29 +2,27 @@ package main
 
 import (
 	//"github.com/aws/aws-lambda-go/lambda"
-	"github.com/sirupsen/logrus"
-	"github.com/oktasecuritylabs/sgt/internal/pkg/carvebuilder"
-	"github.com/oktasecuritylabs/sgt/dyndb"
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"os"
 	lambdasvc "github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/gin-gonic/gin/json"
-	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/oktasecuritylabs/sgt/dyndb"
+	"github.com/oktasecuritylabs/sgt/internal/pkg/carvebuilder"
+	"github.com/sirupsen/logrus"
+	"os"
 )
 
 var (
 	log = logrus.New()
 )
 
-
-
 func init() {
 	log.Formatter = &logrus.JSONFormatter{}
 }
 
 type ev struct {
-	SessionID string `json:"session_id"`
+	SessionID  string `json:"session_id"`
 	BlockCount string `json:"block_count"`
 }
 
@@ -50,9 +48,9 @@ func Handler() {
 				log.Error(err)
 			}
 			_, err = lambdaClient.Invoke(&lambdasvc.InvokeInput{
-				FunctionName: aws.String(os.Getenv("CARVE_BUILDER")),
+				FunctionName:   aws.String(os.Getenv("CARVE_BUILDER")),
 				InvocationType: aws.String("Event"),
-				Payload: js,
+				Payload:        js,
 			})
 			if err != nil {
 				log.Error(err)
@@ -62,8 +60,6 @@ func Handler() {
 		log.Infof("No pending carves, exiting")
 		return
 	}
-
-
 
 	// Perform action to transform log lines into firehose.Record type
 	// these transforms and actions should be defined in the pkg for the log type.

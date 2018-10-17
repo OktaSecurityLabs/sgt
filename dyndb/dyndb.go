@@ -45,6 +45,7 @@ func NewDynamoDB() DynDB {
 	dynDB.DB = DbInstance()
 	return dynDB
 }
+
 // deprecated
 // BuildOsqueryPacksAsJSON returns raw json of a named config
 /*func (dyn DynDB) BuildOsqueryPackAsJSON(nc osq_types.OsqueryNamedConfig) (json.RawMessage) {
@@ -63,7 +64,6 @@ func NewDynamoDB() DynDB {
 	return json.RawMessage(packJSON)
 
 }*/
-
 
 // BuildNamedConfig returns the fully built Named config, minus the credentials which are supplied during node config
 func (db DynDB) BuildNamedConfig(configName string) (osq_types.OsqueryNamedConfig, error) {
@@ -299,7 +299,7 @@ func GetNamedConfig(dynamoDB *dynamodb.DynamoDB, configName string) (osq_types.O
 */
 
 // UpsertClient upsers an osqueryClient
-func (db DynDB) UpsertClient(oc osq_types.OsqueryClient) (error) {
+func (db DynDB) UpsertClient(oc osq_types.OsqueryClient) error {
 	av, err := dynamodbattribute.MarshalMap(oc)
 	if err != nil {
 		logger.Warn("Marshal failed")
@@ -440,7 +440,7 @@ func (db DynDB) SearchByHostIdentifier(hid string) ([]osq_types.OsqueryClient, e
 	return Results, nil
 }*/
 
-func (db DynDB) ApprovePendingNode(nodeKey string) (error) {
+func (db DynDB) ApprovePendingNode(nodeKey string) error {
 	osqNode, err := db.SearchByNodeKey(nodeKey)
 	logger.Infof("here's our node that we're approving: %+v", osqNode)
 	if err != nil {
@@ -499,7 +499,7 @@ func ApprovePendingNode(nodeKey string, dyn *dynamodb.DynamoDB) error {
 }
 */
 
-func (db DynDB) ValidNode(nodeKey string) (error) {
+func (db DynDB) ValidNode(nodeKey string) error {
 	osqNode, err := db.SearchByNodeKey(nodeKey)
 	if err != nil {
 		return err
@@ -516,7 +516,6 @@ func (db DynDB) ValidNode(nodeKey string) (error) {
 	return nil
 
 }
-
 
 // ValidNode returns if a node is valid or note, specified by nodeKey
 func ValidNode(nodeKey string, dyn *dynamodb.DynamoDB) error {
@@ -536,7 +535,6 @@ func ValidNode(nodeKey string, dyn *dynamodb.DynamoDB) error {
 
 	return nil
 }
-
 
 func (db DynDB) SearchByNodeKey(nk string) (osq_types.OsqueryClient, error) {
 	type QS struct {
@@ -574,7 +572,6 @@ func (db DynDB) SearchByNodeKey(nk string) (osq_types.OsqueryClient, error) {
 	return osqNode, nil
 
 }
-
 
 /*
 // SearchByNodeKey return osqueryClient by nodeKey
@@ -616,7 +613,6 @@ func SearchByNodeKey(nk string, s *dynamodb.DynamoDB) (osq_types.OsqueryClient, 
 }
 */
 
-
 func (db DynDB) APIGetPackQueries() ([]osq_types.PackQuery, error) {
 	results := []osq_types.PackQuery{}
 	scanItems, err := db.DB.Scan(&dynamodb.ScanInput{
@@ -637,8 +633,8 @@ func (db DynDB) APIGetPackQueries() ([]osq_types.PackQuery, error) {
 	}
 	return results, nil
 
-
 }
+
 /*
 // APIGetPackQueries returns slice of packQueries
 func APIGetPackQueries(dynamoDB *dynamodb.DynamoDB) ([]osq_types.PackQuery, error) {
@@ -782,7 +778,7 @@ func GetPackQuery(queryName string, db *dynamodb.DynamoDB) (osq_types.PackQuery,
 }
 */
 
-func (dyn DynDB) UpsertPackQuery(pq osq_types.PackQuery) (error) {
+func (dyn DynDB) UpsertPackQuery(pq osq_types.PackQuery) error {
 	av, err := dynamodbattribute.MarshalMap(pq)
 	if err != nil {
 		logger.Warn("Marshal failed")
@@ -918,7 +914,6 @@ func (dyn DynDB) GetPackByName(packName string) (osq_types.Pack, error) {
 
 }
 
-
 /*
 // GetNewPackByName returns a packs specified by packName
 func GetNewPackByName(packName string, dynamoDB *dynamodb.DynamoDB) (osq_types.Pack, error) {
@@ -975,7 +970,6 @@ func GetNewPackByName(packName string, dynamoDB *dynamodb.DynamoDB) (osq_types.P
 }
 */
 
-
 func (dyn DynDB) SearchQueryPacks(searchString string) ([]osq_types.QueryPack, error) {
 	results := []osq_types.QueryPack{}
 	scanItems, err := dyn.DB.Scan(&dynamodb.ScanInput{
@@ -999,7 +993,6 @@ func (dyn DynDB) SearchQueryPacks(searchString string) ([]osq_types.QueryPack, e
 	return results, nil
 
 }
-
 
 /*
 // SearchQueryPacks returns a slice of QueryPacks
@@ -1027,8 +1020,7 @@ func SearchQueryPacks(searchString string, dynamoDB *dynamodb.DynamoDB) ([]osq_t
 }
 */
 
-
-func (dyn DynDB) NewQueryPack(qp osq_types.QueryPack) (error) {
+func (dyn DynDB) NewQueryPack(qp osq_types.QueryPack) error {
 	av, err := dynamodbattribute.MarshalMap(qp)
 	if err != nil {
 		logger.Error(err)
@@ -1068,7 +1060,7 @@ func NewQueryPack(qp osq_types.QueryPack, dynamoDB *dynamodb.DynamoDB) error {
 }
 */
 
-func (dyn DynDB) DeleteQueryPack(queryPackName string) (error) {
+func (dyn DynDB) DeleteQueryPack(queryPackName string) error {
 	type qs struct {
 		PackName string `json:"pack_name"`
 	}
@@ -1116,8 +1108,7 @@ func DeleteQueryPack(queryPackName string, dynamoDB *dynamodb.DynamoDB) error {
 }
 */
 
-
-func (dyn DynDB) UpsertPack(qp osq_types.QueryPack) (error) {
+func (dyn DynDB) UpsertPack(qp osq_types.QueryPack) error {
 	//Additive upsert.
 	existing, err := dyn.GetPackByName(qp.PackName)
 	if err != nil {
@@ -1201,7 +1192,6 @@ func UpsertPack(qp osq_types.QueryPack, dynamoDB *dynamodb.DynamoDB) error {
 }
 */
 
-
 func (dyn DynDB) SearchDistributedNodeKey(nk string) (osq_types.DistributedQuery, error) {
 	type nodequery struct {
 		NodeKey string `json:"node_key"`
@@ -1268,7 +1258,7 @@ func SearchDistributedNodeKey(nk string, dynamoDB *dynamodb.DynamoDB) (osq_types
 }
 */
 
-func (dyn DynDB) NewDistributedQuery(dq osq_types.DistributedQuery) (error) {
+func (dyn DynDB) NewDistributedQuery(dq osq_types.DistributedQuery) error {
 	mm, err := dynamodbattribute.MarshalMap(dq)
 	if err != nil {
 		logger.Error(err)
@@ -1309,7 +1299,7 @@ func NewDistributedQuery(dq osq_types.DistributedQuery, dynamoDB *dynamodb.Dynam
 }
 */
 
-func (dyn DynDB) DeleteDistributedQuery(dq osq_types.DistributedQuery) (error) {
+func (dyn DynDB) DeleteDistributedQuery(dq osq_types.DistributedQuery) error {
 	type querykey struct {
 		NodeKey string `json:"node_key"`
 	}
@@ -1357,8 +1347,7 @@ func DeleteDistributedQuery(dq osq_types.DistributedQuery, dynamoDB *dynamodb.Dy
 }
 */
 
-
-func (dyn DynDB) AppendDistributedQuery(dq osq_types.DistributedQuery) (error) {
+func (dyn DynDB) AppendDistributedQuery(dq osq_types.DistributedQuery) error {
 	//
 	//NOTE:  This could be optimized to take in teh results of the already made call to check if the key exists
 	// This is probably worth doing at some point when its beyond POC
@@ -1436,8 +1425,7 @@ func AppendDistributedQuery(dq osq_types.DistributedQuery, dynamoDB *dynamodb.Dy
 }
 */
 
-
-func (dyn DynDB) UpsertDistributedQuery(dq osq_types.DistributedQuery) (error) {
+func (dyn DynDB) UpsertDistributedQuery(dq osq_types.DistributedQuery) error {
 	//queries for node_key in dynamodb.  if found, appends queries to existing list
 	//if not found, creates item and adds queries
 	//Search for key
@@ -1475,8 +1463,7 @@ func UpsertDistributedQuery(dq osq_types.DistributedQuery, dynamoDB *dynamodb.Dy
 }
 */
 
-
-func (dyn DynDB) NewUser(u osq_types.User) (error) {
+func (dyn DynDB) NewUser(u osq_types.User) error {
 	mm, err := dynamodbattribute.MarshalMap(u)
 	if err != nil {
 		logger.Error(err)
@@ -1495,7 +1482,6 @@ func (dyn DynDB) NewUser(u osq_types.User) (error) {
 	return nil
 
 }
-
 
 //NewUser creates new user in DB
 func NewUser(u osq_types.User, dynamoDB *dynamodb.DynamoDB) error {
@@ -1516,7 +1502,6 @@ func NewUser(u osq_types.User, dynamoDB *dynamodb.DynamoDB) error {
 
 	return nil
 }
-
 
 func (dyn DynDB) GetUser(username string) (osq_types.User, error) {
 	user := osq_types.User{}

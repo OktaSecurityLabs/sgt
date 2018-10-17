@@ -1,26 +1,24 @@
 package main
 
 import (
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/sirupsen/logrus"
-	"github.com/oktasecuritylabs/sgt/osquery_types"
-	"github.com/oktasecuritylabs/sgt/internal/pkg/carvebuilder"
-	"github.com/oktasecuritylabs/sgt/dyndb"
+	"bytes"
 	"fmt"
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"os"
-	"bytes"
+	"github.com/oktasecuritylabs/sgt/dyndb"
+	"github.com/oktasecuritylabs/sgt/internal/pkg/carvebuilder"
+	"github.com/oktasecuritylabs/sgt/osquery_types"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
+	"os"
 )
 
 var (
-	log = logrus.New()
+	log         = logrus.New()
 	carveBucket string
 )
-
-
 
 func init() {
 	log.Formatter = &logrus.JSONFormatter{}
@@ -28,7 +26,7 @@ func init() {
 }
 
 type ev struct {
-	SessionID string `json:"session_id"`
+	SessionID  string `json:"session_id"`
 	BlockCount string `json:"block_count"`
 }
 
@@ -39,7 +37,7 @@ func Handler(event ev) {
 	s3uploader := s3manager.NewUploader(sess)
 
 	c := &osquery_types.Carve{
-		SessionID: event.SessionID,
+		SessionID:  event.SessionID,
 		BlockCount: event.BlockCount,
 	}
 
@@ -53,7 +51,7 @@ func Handler(event ev) {
 	if ready {
 		fc := osquery_types.FileCarve{
 			SessionID: c.SessionID,
-			Chunks: data,
+			Chunks:    data,
 		}
 		path := fmt.Sprintf("/tmp/%s.tar", fc.SessionID)
 		err = fc.SaveToFile(path)
@@ -72,11 +70,10 @@ func Handler(event ev) {
 			log.Error(err)
 		}
 
-
 		_, err = s3uploader.Upload(&s3manager.UploadInput{
 			Bucket: aws.String(carveBucket),
-			Key: aws.String(fmt.Sprintf("filecarves/%s", fc.SessionID)),
-			Body: bytes.NewReader(body),
+			Key:    aws.String(fmt.Sprintf("filecarves/%s", fc.SessionID)),
+			Body:   bytes.NewReader(body),
 		})
 		// copy to s3 here, if successfull, delete
 

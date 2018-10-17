@@ -1,12 +1,12 @@
 package helpers
 
 import (
-	"net/url"
-	"net/http/httptest"
-	"testing"
-	"net/http"
-	"io"
 	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"testing"
 )
 
 type HandleTester func(method, url string, params url.Values, body io.Reader) *httptest.ResponseRecorder
