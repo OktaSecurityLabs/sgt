@@ -252,3 +252,5 @@ Provide this token in any subsequent requests in the Authorization header
 ## Documentation notes:
 Documentation is lacking right now due to a rather un-fun flu season.  However, updates to documentation should be expected in teh coming week or so.
 (This note marked: 1/17/18)
+
+![arch](docs/arch.png)
