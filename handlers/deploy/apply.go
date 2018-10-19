@@ -19,6 +19,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"io"
 )
 
 // tfState struct for terraform state
@@ -177,6 +180,11 @@ func deployAWSComponent(component, envName string, config DeploymentConfig) erro
 		return err
 	}
 
+	err = SetS3Backend(config, component)
+	if err != nil {
+		return err
+	}
+
 	if component == "firehose" || component == "elasticsearch_firehose" {
 		logger.Info("updating zip file...")
 		cmd := exec.Command("bash", "-c", "../../modules/firehose/build_lambda.sh")
@@ -186,15 +194,16 @@ func deployAWSComponent(component, envName string, config DeploymentConfig) erro
 		}
 		logger.Info(string(combinedOutput))
 	}
-
-	cmd := exec.Command("terraform", "init")
-	_, err = cmd.CombinedOutput()
+	args := fmt.Sprintf("terraform init -force-copy -backend=true -backend-config=../backend.vars")
+	cmd := exec.Command("bash", "-c", args)
+	out, err := cmd.CombinedOutput()
 	if err != nil {
+		logger.Infof("\n %s \n", string(out))
 		return err
 	}
 
-	args := fmt.Sprintf("terraform apply -auto-approve -var-file=../%s.json", envName)
-  logger.Info(args)
+	args = fmt.Sprintf("terraform apply -auto-approve -var-file=../%s.json", envName)
+	logger.Info(args)
 
 	cmd = exec.Command("bash", "-c", args)
 	stdoutStderr, err := cmd.CombinedOutput()
@@ -212,6 +221,26 @@ func deployAWSComponent(component, envName string, config DeploymentConfig) erro
 
 // createElasticSearchCognitoOptions creates CognitoOption settings for the Elasticsearch domain
 func createElasticSearchCognitoOptions(currentRegion string, config DeploymentConfig) error {
+	getStateFile := func() (io.Reader, error) {
+		usr, err := user.Current()
+		if err != nil {
+			return nil, err
+		}
+		credPath := filepath.Join(usr.HomeDir, ".aws", "credentials")
+		creds := credentials.NewSharedCredentials(credPath, config.AWSProfile)
+
+		sess := session.Must(session.NewSession(&aws.Config{
+			Region: aws.String("us-east-1"),
+			Credentials:creds,
+		}))
+		downloader := s3manager.NewDownloader(sess)
+		buff := aws.NewWriteAtBuffer([]byte{})
+		_, err = downloader.Download(buff, &s3.GetObjectInput{
+			Bucket: aws.String(config.TerraformBackendBucketName),
+			Key: aws.String(filepath.Join(config.Environment, "elasticsearch", "terraform.tfstate")),
+		})
+		return bytes.NewReader(buff.Bytes()), nil
+	}
 
 	//Get input variables from terraform state
 	var ESCognitoRoleArn string
@@ -219,9 +248,15 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
 	var CognitoIdentityPoolId string
 	var ESCognitoDomainName string
 
-	fn := "terraform.tfstate"
-	file, err := os.Open(fn)
+	//fn := "terraform.tfstate"
+	//file, err := os.Open(fn)
+	//if err != nil {
+		//return err
+	//}
+
+	file, err := getStateFile()
 	if err != nil {
+		logger.Error(err)
 		return err
 	}
 
@@ -367,6 +402,27 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
 
 // createElasticSearchMappings creates Elasticsearch mappings
 func createElasticSearchMappings(config DeploymentConfig) error {
+
+	getStateFile := func() (io.Reader, error) {
+		usr, err := user.Current()
+		if err != nil {
+			return nil, err
+		}
+		credPath := filepath.Join(usr.HomeDir, ".aws", "credentials")
+		creds := credentials.NewSharedCredentials(credPath, config.AWSProfile)
+
+		sess := session.Must(session.NewSession(&aws.Config{
+			Region: aws.String("us-east-1"),
+			Credentials:creds,
+		}))
+		downloader := s3manager.NewDownloader(sess)
+		buff := aws.NewWriteAtBuffer([]byte{})
+		_, err = downloader.Download(buff, &s3.GetObjectInput{
+			Bucket: aws.String(config.TerraformBackendBucketName),
+			Key: aws.String(filepath.Join(config.Environment, "elasticsearch", "terraform.tfstate")),
+		})
+		return bytes.NewReader(buff.Bytes()), nil
+	}
 	usr, err := user.Current()
 	if err != nil {
 		logger.Error(err)
@@ -378,8 +434,9 @@ func createElasticSearchMappings(config DeploymentConfig) error {
 	now := time.Now()
 	signer := v4.NewSigner(creds)
 
-	fn := "terraform.tfstate"
-	file, err := os.Open(fn)
+	//fn := "terraform.tfstate"
+//	file, err := os.Open(fn)
+	file, err := getStateFile()
 	if err != nil {
 		return err
 	}

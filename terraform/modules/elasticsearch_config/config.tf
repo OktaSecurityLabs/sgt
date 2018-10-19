@@ -4,18 +4,23 @@ provider "aws" {
   version = ">= 1.21.0"
 }
 
-
 data "terraform_remote_state" "firehose" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../elasticsearch_firehose/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/elasticsearch_firehose/terraform.tfstate"
+    profile = "${var.aws_profile}"
+    region = "${var.aws_region}"
   }
 }
 
 data "terraform_remote_state" "datastore" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../datastore/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/datastore/terraform.tfstate"
+    profile = "${var.aws_profile}"
+    region = "${var.aws_region}"
   }
 }
 

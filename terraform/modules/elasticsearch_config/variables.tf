@@ -13,3 +13,7 @@ variable "full_cert_chain" {
 variable "priv_key" {
   description = "name of private key .pem file for ssl certs.  Should be located in certs folder"
 }
+
+variable "terraform_backend_bucket_name" {}
+
+variable "environment" {}
