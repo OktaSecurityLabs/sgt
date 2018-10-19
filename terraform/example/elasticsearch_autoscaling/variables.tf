@@ -1,6 +1,8 @@
 variable "aws_profile" {
 }
 
+variable "aws_region" {}
+
 variable "aws_keypair" {}
 
 variable "domain" {}
@@ -16,3 +18,7 @@ variable "asg_max_size" {
 }
 
 variable "asg_desired_size" {}
+
+variable "terraform_backend_bucket_name" {}
+
+variable "environment" {}

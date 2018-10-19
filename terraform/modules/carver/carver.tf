@@ -5,9 +5,12 @@ resource "aws_s3_bucket" "filecarve_bucket" {
 
 
 data "terraform_remote_state" "datastore" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../datastore/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/datastore/terraform.tfstate"
+    region = "${var.aws_region}"
+    profile = "${var.aws_profile}"
   }
 }
 

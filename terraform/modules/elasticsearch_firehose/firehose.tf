@@ -5,9 +5,12 @@ provider "aws" {
 }
 
 data "terraform_remote_state" "elasticsearch" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../elasticsearch/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/elasticsearch/terraform.tfstate"
+    profile = "${var.aws_profile}"
+    region = "${var.aws_region}"
   }
 }
 

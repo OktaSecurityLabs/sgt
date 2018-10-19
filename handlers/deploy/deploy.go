@@ -96,6 +96,7 @@ type DeploymentConfig struct {
 	AWSRegion                   string   `json:"aws_region"`
 	Users                       []string `json:"users"`
 	MailDomain                  string   `json:"mail_domain"`
+	TerraformBackendBucketName	string   `json:"terraform_backend_bucket_name"`
 }
 
 // copyFile copies file from src to dst
@@ -149,6 +150,31 @@ func (d DeploymentConfig) checkEnvironMatchConfig(environ string) error {
 	if d.Environment != environ {
 		return errors.New("config environment and passed environment variable do not match")
 	}
+	return nil
+}
+
+func SetS3Backend(d DeploymentConfig, component string) error {
+	err := FindAndReplace("backend.tf", "example-backend-bucket-name", d.TerraformBackendBucketName)
+	if err != nil {
+		return err
+	}
+
+	key := filepath.Join(d.Environment, component, "terraform.tfstate")
+	err = FindAndReplace("backend.tf", "example-terraform.tfstate", key)
+	if err != nil {
+		return err
+	}
+
+	/*err = FindAndReplace("backend.tf", "example-region", d.AWSRegion)
+	if err != nil {
+		return err
+	}
+
+	err = FindAndReplace("backened.tf", "example-profile", d.AWSProfile)
+	if err != nil {
+		return err
+	}*/
+
 	return nil
 }
 
