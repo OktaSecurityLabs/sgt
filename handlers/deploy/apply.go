@@ -10,7 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/oktasecuritylabs/sgt/logger"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -19,9 +22,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"io"
 )
 
 // tfState struct for terraform state
@@ -230,14 +230,14 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
 		creds := credentials.NewSharedCredentials(credPath, config.AWSProfile)
 
 		sess := session.Must(session.NewSession(&aws.Config{
-			Region: aws.String("us-east-1"),
-			Credentials:creds,
+			Region:      aws.String("us-east-1"),
+			Credentials: creds,
 		}))
 		downloader := s3manager.NewDownloader(sess)
 		buff := aws.NewWriteAtBuffer([]byte{})
 		_, err = downloader.Download(buff, &s3.GetObjectInput{
 			Bucket: aws.String(config.TerraformBackendBucketName),
-			Key: aws.String(filepath.Join(config.Environment, "elasticsearch", "terraform.tfstate")),
+			Key:    aws.String(filepath.Join(config.Environment, "elasticsearch", "terraform.tfstate")),
 		})
 		return bytes.NewReader(buff.Bytes()), nil
 	}
@@ -251,7 +251,7 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
 	//fn := "terraform.tfstate"
 	//file, err := os.Open(fn)
 	//if err != nil {
-		//return err
+	//return err
 	//}
 
 	file, err := getStateFile()
@@ -351,47 +351,46 @@ func createElasticSearchCognitoOptions(currentRegion string, config DeploymentCo
 			},
 		})
 	}
-       cognito_svc := cognitoidentityprovider.New(sess)
+	cognito_svc := cognitoidentityprovider.New(sess)
 
-        UserExists := false
-        //List of desired users for Kibana, from the config file, should be the first part of Okta email address to work correctly
-        DesiredUsers := config.Users
-        MailDomain := config.MailDomain        
+	UserExists := false
+	//List of desired users for Kibana, from the config file, should be the first part of Okta email address to work correctly
+	DesiredUsers := config.Users
+	MailDomain := config.MailDomain
 
-        ExistingUsers, err := cognito_svc.ListUsers(&cognitoidentityprovider.ListUsersInput{
-                UserPoolId: aws.String(CognitoUserPoolId),
-        })
+	ExistingUsers, err := cognito_svc.ListUsers(&cognitoidentityprovider.ListUsersInput{
+		UserPoolId: aws.String(CognitoUserPoolId),
+	})
 
-        if err != nil {
-            logger.Info(err)
-        }        
+	if err != nil {
+		logger.Info(err)
+	}
 
-        //Determine if the user already exists
-        for _, DesiredUser := range DesiredUsers {
-            for _, ExistingUser := range ExistingUsers.Users{
-                UserExists = false
-                if DesiredUser == *ExistingUser.Username {
-                    UserExists = true
-                }               
-            }
-            if UserExists == false {
-                logger.Info(DesiredUser)
-                //If not, create it
-                createuser, err := cognito_svc.AdminCreateUser(&cognitoidentityprovider.AdminCreateUserInput{
-                    UserPoolId: aws.String(CognitoUserPoolId),
-                    Username: aws.String(DesiredUser),
-                    UserAttributes: []*cognitoidentityprovider.AttributeType{
-                        {Name: aws.String("email"),Value : aws.String(DesiredUser+"@"+MailDomain)},
-                        {Name: aws.String("email_verified"),Value : aws.String("true")},
-                    },
-                })
-                if err != nil {
-                    logger.Info(err)
-                }
-                logger.Info(createuser)
-            }
-        }
-       
+	//Determine if the user already exists
+	for _, DesiredUser := range DesiredUsers {
+		for _, ExistingUser := range ExistingUsers.Users {
+			UserExists = false
+			if DesiredUser == *ExistingUser.Username {
+				UserExists = true
+			}
+		}
+		if UserExists == false {
+			logger.Info(DesiredUser)
+			//If not, create it
+			createuser, err := cognito_svc.AdminCreateUser(&cognitoidentityprovider.AdminCreateUserInput{
+				UserPoolId: aws.String(CognitoUserPoolId),
+				Username:   aws.String(DesiredUser),
+				UserAttributes: []*cognitoidentityprovider.AttributeType{
+					{Name: aws.String("email"), Value: aws.String(DesiredUser + "@" + MailDomain)},
+					{Name: aws.String("email_verified"), Value: aws.String("true")},
+				},
+			})
+			if err != nil {
+				logger.Info(err)
+			}
+			logger.Info(createuser)
+		}
+	}
 
 	if err != nil {
 		logger.Info(err)
@@ -412,14 +411,14 @@ func createElasticSearchMappings(config DeploymentConfig) error {
 		creds := credentials.NewSharedCredentials(credPath, config.AWSProfile)
 
 		sess := session.Must(session.NewSession(&aws.Config{
-			Region: aws.String("us-east-1"),
-			Credentials:creds,
+			Region:      aws.String("us-east-1"),
+			Credentials: creds,
 		}))
 		downloader := s3manager.NewDownloader(sess)
 		buff := aws.NewWriteAtBuffer([]byte{})
 		_, err = downloader.Download(buff, &s3.GetObjectInput{
 			Bucket: aws.String(config.TerraformBackendBucketName),
-			Key: aws.String(filepath.Join(config.Environment, "elasticsearch", "terraform.tfstate")),
+			Key:    aws.String(filepath.Join(config.Environment, "elasticsearch", "terraform.tfstate")),
 		})
 		return bytes.NewReader(buff.Bytes()), nil
 	}
@@ -435,7 +434,7 @@ func createElasticSearchMappings(config DeploymentConfig) error {
 	signer := v4.NewSigner(creds)
 
 	//fn := "terraform.tfstate"
-//	file, err := os.Open(fn)
+	//	file, err := os.Open(fn)
 	file, err := getStateFile()
 	if err != nil {
 		return err
