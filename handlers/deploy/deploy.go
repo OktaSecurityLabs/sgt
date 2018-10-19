@@ -96,7 +96,7 @@ type DeploymentConfig struct {
 	AWSRegion                   string   `json:"aws_region"`
 	Users                       []string `json:"users"`
 	MailDomain                  string   `json:"mail_domain"`
-	TerraformBackendBucketName	string   `json:"terraform_backend_bucket_name"`
+	TerraformBackendBucketName  string   `json:"terraform_backend_bucket_name"`
 }
 
 // copyFile copies file from src to dst
@@ -165,15 +165,15 @@ func SetS3Backend(d DeploymentConfig, component string) error {
 		return err
 	}
 
-	/*err = FindAndReplace("backend.tf", "example-region", d.AWSRegion)
+	err = FindAndReplace("backend.vars", "example-region", d.AWSRegion)
 	if err != nil {
 		return err
 	}
 
-	err = FindAndReplace("backened.tf", "example-profile", d.AWSProfile)
+	err = FindAndReplace("backend.vars", "example-profile", d.AWSProfile)
 	if err != nil {
 		return err
-	}*/
+	}
 
 	return nil
 }
