@@ -17,3 +17,4 @@ variable "priv_key" {
 variable "terraform_backend_bucket_name" {}
 
 variable "environment" {}
+variable "auto_approve_nodes" {}

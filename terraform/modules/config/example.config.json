@@ -8,5 +8,6 @@
   "distributed_query_logger_s3_bucket_name": "",
   "distributed_query_logger_firehose_stream_name": "${distributed_query_logger_firehose_stream_name}",
   "distributed_query_logger_filesystem_path": "",
-  "api_token_lifetime": 14400
+  "api_token_lifetime": 14400,
+  "auto_approve_nodes": ${auto_approve_nodes}
 }

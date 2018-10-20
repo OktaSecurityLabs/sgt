@@ -10,6 +10,7 @@ import (
 	"github.com/oktasecuritylabs/sgt/handlers/distributed"
 	"github.com/oktasecuritylabs/sgt/handlers/node"
 	"github.com/oktasecuritylabs/sgt/internal/pkg/filecarver"
+	"github.com/oktasecuritylabs/sgt/osquery_types"
 	"github.com/urfave/negroni"
 )
 
@@ -18,10 +19,14 @@ func Serve() error {
 	dynb := dyndb.NewDynamoDB()
 
 	router := mux.NewRouter()
+	serverConfig, err := osquery_types.GetServerConfig("config.json")
+	if err != nil {
+		return err
+	}
 	//node endpoint
 	nodeAPI := router.PathPrefix("/node").Subrouter()
-	nodeAPI.Path("/configure").Handler(node.NodeConfigureRequest(dynb))
-	nodeAPI.Path("/enroll").Handler(node.NodeEnrollRequest(dynb))
+	nodeAPI.Path("/configure").Handler(node.NodeConfigureRequest(dynb, serverConfig))
+	nodeAPI.Path("/enroll").Handler(node.NodeEnrollRequest(dynb, serverConfig))
 	//protect with uiAuth
 	//Configuration (management) endpoint
 	apiRouter := mux.NewRouter().PathPrefix("/api/v1/configuration").Subrouter()
@@ -80,7 +85,7 @@ func Serve() error {
 		negroni.HandlerFunc(auth.AnotherValidation),
 		negroni.Wrap(apiRouter),
 	))
-	err := http.ListenAndServeTLS(":443",
+	err = http.ListenAndServeTLS(":443",
 		"fullchain.pem", "privkey.pem", router)
 	//"fullchain.pem", "privkey.pem", handlers.LoggingHandler(os.Stdout, router))
 	return err

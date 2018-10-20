@@ -97,6 +97,7 @@ type DeploymentConfig struct {
 	Users                       []string `json:"users"`
 	MailDomain                  string   `json:"mail_domain"`
 	TerraformBackendBucketName  string   `json:"terraform_backend_bucket_name"`
+	AutoApproveNodes            string   `json:"auto_approve_nodes"`
 }
 
 // copyFile copies file from src to dst
@@ -165,12 +166,12 @@ func SetS3Backend(d DeploymentConfig, component string) error {
 		return err
 	}
 
-	err = FindAndReplace("backend.vars", "example-region", d.AWSRegion)
+	err = FindAndReplace("../backend.vars", "example-region", d.AWSRegion)
 	if err != nil {
 		return err
 	}
 
-	err = FindAndReplace("backend.vars", "example-profile", d.AWSProfile)
+	err = FindAndReplace("../backend.vars", "example-profile", d.AWSProfile)
 	if err != nil {
 		return err
 	}

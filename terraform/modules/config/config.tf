@@ -40,6 +40,7 @@ data "template_file" "sgt-config-file" {
     firehose_aws_secret_access_key = "${data.terraform_remote_state.firehose.sgt-node-user-secret-access-key}",
     firehose_stream_name = "${data.terraform_remote_state.firehose.sgt-firehose-stream-name}",
     distributed_query_logger_firehose_stream_name = "${data.terraform_remote_state.firehose.sgt-distributed-firehose-stream-name}"
+    auto_approve_nodes = "${var.auto_approve_nodes}"
   }
 }
 

@@ -18,5 +18,7 @@
   "users": [
       "first.last",
       "first1.last1"
-  ]
+  ],
+  "terraform_backend_bucket_name": "example-backend-bucket-name",
+  "auto_approve_nodes": true
 }
