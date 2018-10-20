@@ -97,7 +97,7 @@ type DeploymentConfig struct {
 	Users                       []string `json:"users"`
 	MailDomain                  string   `json:"mail_domain"`
 	TerraformBackendBucketName  string   `json:"terraform_backend_bucket_name"`
-	AutoApproveNodes			string	 `json:"auto_approve_nodes"`
+	AutoApproveNodes            string   `json:"auto_approve_nodes"`
 }
 
 // copyFile copies file from src to dst

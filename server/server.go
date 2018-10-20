@@ -10,9 +10,9 @@ import (
 	"github.com/oktasecuritylabs/sgt/handlers/distributed"
 	"github.com/oktasecuritylabs/sgt/handlers/node"
 	"github.com/oktasecuritylabs/sgt/internal/pkg/filecarver"
-	"github.com/urfave/negroni"
 	"github.com/oktasecuritylabs/sgt/osquery_types"
-	)
+	"github.com/urfave/negroni"
+)
 
 // Serve will create the server listen
 func Serve() error {

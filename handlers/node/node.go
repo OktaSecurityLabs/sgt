@@ -135,10 +135,10 @@ func NodeEnrollRequest(dyn NodeDB, config *osquery_types.ServerConfig) http.Hand
 					return err
 				}
 				osc := osquery_types.OsqueryClient{
-					ConfigName:                  "default",
-					HostDetails:                 data.HostDetails,
-					HostIdentifier:              data.HostIdentifier,
-					NodeKey:                     nodeKey,
+					ConfigName:     "default",
+					HostDetails:    data.HostDetails,
+					HostIdentifier: data.HostIdentifier,
+					NodeKey:        nodeKey,
 					//if autoenroll enabled, set pending to false
 					PendingRegistrationApproval: !autoApprove,
 				}
@@ -190,7 +190,6 @@ func NodeEnrollRequest(dyn NodeDB, config *osquery_types.ServerConfig) http.Hand
 
 	})
 }
-
 
 // NodeConfigureRequest configures a node.  Returns a json body of either a full osquery config, or a node_invalide = True to
 // indicate need for re-enrollment
@@ -262,7 +261,7 @@ func NodeConfigureRequest(dyn NodeDB, config *osquery_types.ServerConfig) http.H
 
 			//config, err := osquery_types.GetServerConfig("config.json")
 			//if err != nil {
-				//return nil, fmt.Errorf("could not get server config: %s", err)
+			//return nil, fmt.Errorf("could not get server config: %s", err)
 			//}
 			//oc, err := dyn.BuildNamedConfig(osqNode.ConfigName)
 			//logger.Infof("OC: %+v", oc)

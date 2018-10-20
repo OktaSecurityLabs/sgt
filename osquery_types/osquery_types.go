@@ -322,7 +322,7 @@ type ServerConfig struct {
 	DistributedQueryLoggerS3BucketName       string   `json:"distributed_query_logger_s3_bucket_name"`
 	DistributedQueryLoggerFirehoseStreamName string   `json:"distributed_query_logger_firehose_stream_name"`
 	DistributedQueryLoggerFilesytemPath      string   `json:"distributed_query_logger_filesytem_path"`
-	AutoApproveNodes						 string	  `json:"auto_approve_nodes"`
+	AutoApproveNodes                         string   `json:"auto_approve_nodes"`
 }
 
 func GetServerConfig(fn string) (*ServerConfig, error) {

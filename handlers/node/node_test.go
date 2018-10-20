@@ -2,12 +2,11 @@ package node
 
 import (
 	"github.com/oktasecuritylabs/sgt/handlers/helpers"
+	"github.com/oktasecuritylabs/sgt/osquery_types"
 	"net/http"
 	"net/url"
 	"testing"
-	"github.com/oktasecuritylabs/sgt/osquery_types"
 )
-
 
 func init() {
 }
