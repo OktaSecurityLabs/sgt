@@ -138,6 +138,7 @@ func NodeEnrollRequest(dyn NodeDB, config *osquery_types.ServerConfig) http.Hand
 					ConfigName:     "default",
 					HostDetails:    data.HostDetails,
 					HostIdentifier: data.HostIdentifier,
+					HostName:       data.HostDetails["system_info"]["computer_name"],
 					NodeKey:        nodeKey,
 					//if autoenroll enabled, set pending to false
 					PendingRegistrationApproval: !autoApprove,

@@ -43,6 +43,7 @@ var testClient1 = osquery_types.OsqueryClient{
 	"host1",
 	"3lkjsdf0jdfoiasdjf",
 	false,
+	"testhost",
 	map[string]map[string]string{},
 	false,
 	[]string{"a", "b"},
