@@ -107,7 +107,14 @@ func NodeEnrollRequest(dyn NodeDB, config *osquery_types.ServerConfig) http.Hand
 			}).Info("Correct sekret received")
 
 			if data.NodeKey != "" {
-				return fmt.Errorf("node key '%s' already exists in data", data.NodeKey)
+				node, err := dyn.SearchByNodeKey(data.NodeKey)
+				if err != nil {
+					response.WriteCustomJSON(w, EnrollRequestResponse{NodeKey: data.NodeKey, NodeInvalid: nodeInvalid})
+					return err
+				}
+				if node.NodeInvalid {
+					response.WriteCustomJSON(w, EnrollRequestResponse{NodeKey: data.NodeKey, NodeInvalid: nodeInvalid})
+				}
 			}
 
 			//Need more error handling here.  what if node key is valid but hostname is duplicate?
