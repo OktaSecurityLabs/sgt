@@ -14,7 +14,7 @@ type OsqueryClient struct {
 	HostIdentifier              string                       `json:"host_identifier"`
 	NodeKey                     string                       `json:"node_key"`
 	NodeInvalid                 bool                         `json:"node_invalid"`
-	HostName					string						 `json:"host_name"`
+	HostName                    string                       `json:"host_name"`
 	HostDetails                 map[string]map[string]string `json:"host_details"`
 	PendingRegistrationApproval bool                         `json:"pending_registration_approval"`
 	Tags                        []string                     `json:"tags,omitempty"`
