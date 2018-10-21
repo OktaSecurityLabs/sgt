@@ -1,10 +1,10 @@
 package deploy
 
 import (
-        "strings"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/oktasecuritylabs/sgt/handlers/helpers"
 )
@@ -38,42 +38,42 @@ func Wizard() error {
 	}
 	config.AWSProfile = profile
 
-        fmt.Println("Enter the name for the aws region where you want to deploy this environment \n" +
-                "us-east-1 is recommended: ")
-        var region string
-        _, err = fmt.Scan(&region)
-        if err != nil {
-                return err
-        }
-        config.AWSRegion = region
+	fmt.Println("Enter the name for the aws region where you want to deploy this environment \n" +
+		"us-east-1 is recommended: ")
+	var region string
+	_, err = fmt.Scan(&region)
+	if err != nil {
+		return err
+	}
+	config.AWSRegion = region
 
-        fmt.Println("Enter the name for th mail domain for the users of your Kibana dashboard  \n" +
-                "cognito users will be created with email address username@MailDomain: ")
-        var mail_domain string
-        _, err = fmt.Scan(&mail_domain)
-        if err != nil {
-                return err
-        }
-        config.MailDomain = mail_domain
+	fmt.Println("Enter the name for th mail domain for the users of your Kibana dashboard  \n" +
+		"cognito users will be created with email address username@MailDomain: ")
+	var mail_domain string
+	_, err = fmt.Scan(&mail_domain)
+	if err != nil {
+		return err
+	}
+	config.MailDomain = mail_domain
 
-        fmt.Println("Enter the desired size of the autoscaling group: \n"+
-                "This will be the number of instances running in the autoscaling group: ")
-        var asgsize int
-        _, err = fmt.Scan(&asgsize)
-        if err != nil {
-                return err
-        }
-        config.AsgDesiredSize = asgsize
+	fmt.Println("Enter the desired size of the autoscaling group: \n" +
+		"This will be the number of instances running in the autoscaling group: ")
+	var asgsize int
+	_, err = fmt.Scan(&asgsize)
+	if err != nil {
+		return err
+	}
+	config.AsgDesiredSize = asgsize
 
-        fmt.Println("Enter the comma separated list of users to provision: \n "+
-                "Example: firstname.lastname,firstname2.lastname2: ")
-        var cognitousersstring string
-        _, err = fmt.Scan(&cognitousersstring)
-        if err != nil {
-                return err
-        }
-        cognitoUsers := strings.Split(cognitousersstring, ",")
-        config.Users = cognitoUsers
+	fmt.Println("Enter the comma separated list of users to provision: \n " +
+		"Example: firstname.lastname,firstname2.lastname2: ")
+	var cognitousersstring string
+	_, err = fmt.Scan(&cognitousersstring)
+	if err != nil {
+		return err
+	}
+	cognitoUsers := strings.Split(cognitousersstring, ",")
+	config.Users = cognitoUsers
 
 	fmt.Println("Enter an ipaddress or cidr block for access to your elasticsearch cluster. \n" +
 		"Note:  This should probably be your current IP address, as you will need to be able to access \n" +

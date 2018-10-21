@@ -13,10 +13,12 @@
   "sgt_app_secret": "ultra_mega_sekret_key_you'll_never_give_to_anyone_not_even_your_mother",
   "create_elasticsearch": 1,
   "asg_min_size": 2,
-  "asg_max_size": 10
+  "asg_max_size": 10,
   "mail_domain": "example.com",
   "users": [
       "first.last",
       "first1.last1"
-  ]
+  ],
+  "terraform_backend_bucket_name": "example-backend-bucket-name",
+  "auto_approve_nodes": true
 }

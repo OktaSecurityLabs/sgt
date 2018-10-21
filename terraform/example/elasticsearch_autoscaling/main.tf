@@ -1,3 +1,9 @@
+provider "aws" {
+  profile = "${var.aws_profile}"
+  region = "${var.aws_region}"
+  version = ">= 1.21.0"
+}
+
 module "autoscaling" {
   source = "../../modules/elasticsearch_autoscaling"
   instance_ssh_key_name = "${var.aws_keypair}"
@@ -13,5 +19,8 @@ module "autoscaling" {
   dns_zone_domain = "${var.domain}"
   dns_subdomain = "${var.subdomain}"
   aws_profile = "${var.aws_profile}"
+  terraform_backend_bucket_name = "${var.terraform_backend_bucket_name}"
+  environment = "${var.environment}"
+  aws_region = "${var.aws_region}"
 }
 

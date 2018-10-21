@@ -1,14 +1,21 @@
+
 data "terraform_remote_state" "firehose" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../firehose/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/firehose/terraform.tfstate"
+    region = "${var.aws_region}"
+    profile = "${var.aws_profile}"
   }
 }
 
 data "terraform_remote_state" "datastore" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../datastore/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/datastore/terraform.tfstate"
+    region = "${var.aws_region}"
+    profile = "${var.aws_profile}"
   }
 }
 
@@ -33,6 +40,7 @@ data "template_file" "sgt-config-file" {
     firehose_aws_secret_access_key = "${data.terraform_remote_state.firehose.sgt-node-user-secret-access-key}",
     firehose_stream_name = "${data.terraform_remote_state.firehose.sgt-firehose-stream-name}",
     distributed_query_logger_firehose_stream_name = "${data.terraform_remote_state.firehose.sgt-distributed-firehose-stream-name}"
+    auto_approve_nodes = "${var.auto_approve_nodes}"
   }
 }
 

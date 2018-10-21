@@ -117,7 +117,7 @@ type PackQuery struct {
 	Version     string `json:"version"`
 	Description string `json:"description"`
 	Value       string `json:"value"`
-	Snapshot	string `json:"snapshot"`
+	Snapshot    string `json:"snapshot"`
 }
 
 func (op OsqueryPack) ListQueries() []string {

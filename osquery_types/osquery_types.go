@@ -14,6 +14,7 @@ type OsqueryClient struct {
 	HostIdentifier              string                       `json:"host_identifier"`
 	NodeKey                     string                       `json:"node_key"`
 	NodeInvalid                 bool                         `json:"node_invalid"`
+	HostName                    string                       `json:"host_name"`
 	HostDetails                 map[string]map[string]string `json:"host_details"`
 	PendingRegistrationApproval bool                         `json:"pending_registration_approval"`
 	Tags                        []string                     `json:"tags,omitempty"`
@@ -50,6 +51,7 @@ type OsqueryOptions struct {
 	CarverBlockSize        int    `json:"carver_block_size,omitempty"`
 	CarverContinueEndpoint string `json:"carver_continue_endpoint,omitempty"`
 	CarverStartEndpoint    string `json:"carver_start_endpoint,omitempty"`
+	CarverDisableFunction  bool   `json:"carver_disable_function"`
 	//config_settings
 	ConfigRefresh int  `json:"config_refresh"`
 	CSV           bool `json:"csv,omitempty"`
@@ -114,7 +116,7 @@ type OsqueryOptions struct {
 	LoggerPlugin    string `json:"logger_plugin"`
 
 	LoggerSecondaryStatusOnly bool `json:"logger_secondary_status_only,omitempty"`
-	LoggerSnapshotEventType		bool `json:"logger_snapshot_event_type,omitempty"`
+	LoggerSnapshotEventType   bool `json:"logger_snapshot_event_type,omitempty"`
 	LoggerStatusSync          bool `json:"logger_status_sync,omitempty"`
 
 	LoggerSyslogFacility   int  `json:"logger_syslog_facility,omitempty"`
@@ -185,7 +187,7 @@ type OsqueryConfig struct {
 	Decorators  OsqueryDecorators `json:"decorators,omitemtpy"`
 	Schedule    OsquerySchedule   `json:"schedule,omitempty"`
 	//Packs OsqueryPacks `json:"packs"`
-	Packs		map[string]map[string]map[string]map[string]string `json:"packs"`
+	Packs map[string]map[string]map[string]map[string]string `json:"packs"`
 }
 
 type OsqueryUploadConfig struct {
@@ -194,7 +196,7 @@ type OsqueryUploadConfig struct {
 	Options     OsqueryOptions    `json:"options"`
 	Decorators  OsqueryDecorators `json:"decorators,omitemtpy"`
 	Schedule    OsquerySchedule   `json:"schedule,omitempty"`
-	Packs		[]string		  `json:"packs"`
+	Packs       []string          `json:"packs"`
 	//Packs OsqueryPacks `json:"packs"`
 }
 
@@ -213,19 +215,19 @@ type Pack struct {
 
 // deprecated
 //func (p Pack) AsString() string {
-	//s := fmt.Sprintf("%q: ", p.PackName)
-	//s += `{"queries": `
-	//s += BuildPackQueries(p.Queries)
-	//s += "}}"
-	//return s
+//s := fmt.Sprintf("%q: ", p.PackName)
+//s += `{"queries": `
+//s += BuildPackQueries(p.Queries)
+//s += "}}"
+//return s
 //}
 
 // deprecated
 //func (p Pack) AsRawJson() json.RawMessage {
-	//return json.RawMessage(p.AsString())
+//return json.RawMessage(p.AsString())
 //}
 
-func (p Pack) AsMap() (map[string]map[string]map[string]string) {
+func (p Pack) AsMap() map[string]map[string]map[string]string {
 	m := map[string]map[string]map[string]string{}
 	m["queries"] = map[string]map[string]string{}
 	for _, packQuery := range p.Queries {
@@ -261,7 +263,7 @@ type PackQuery struct {
 	Version     string `json:"version"`
 	Description string `json:"description"`
 	Value       string `json:"value"`
-	Snapshot	string `json:"snapshot"`
+	Snapshot    string `json:"snapshot"`
 }
 
 func (pq PackQuery) AsString() string {
@@ -321,23 +323,24 @@ type ServerConfig struct {
 	DistributedQueryLoggerS3BucketName       string   `json:"distributed_query_logger_s3_bucket_name"`
 	DistributedQueryLoggerFirehoseStreamName string   `json:"distributed_query_logger_firehose_stream_name"`
 	DistributedQueryLoggerFilesytemPath      string   `json:"distributed_query_logger_filesytem_path"`
+	AutoApproveNodes                         string   `json:"auto_approve_nodes"`
 }
 
-func GetServerConfig(fn string) (ServerConfig, error) {
+func GetServerConfig(fn string) (*ServerConfig, error) {
 
 	config := ServerConfig{}
 	file, err := os.Open(fn)
 	if err != nil {
-		return config, err
+		return nil, err
 	}
 
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&config)
 	if err != nil {
-		return config, err
+		return nil, err
 	}
 
-	return config, nil
+	return &config, nil
 }
 
 type User struct {

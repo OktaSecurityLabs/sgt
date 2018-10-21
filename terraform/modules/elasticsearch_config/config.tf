@@ -4,18 +4,23 @@ provider "aws" {
   version = ">= 1.21.0"
 }
 
-
 data "terraform_remote_state" "firehose" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../elasticsearch_firehose/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/elasticsearch_firehose/terraform.tfstate"
+    profile = "${var.aws_profile}"
+    region = "${var.aws_region}"
   }
 }
 
 data "terraform_remote_state" "datastore" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../datastore/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/datastore/terraform.tfstate"
+    profile = "${var.aws_profile}"
+    region = "${var.aws_region}"
   }
 }
 
@@ -33,6 +38,7 @@ data "template_file" "sgt-config-file" {
     firehose_aws_secret_access_key = "${data.terraform_remote_state.firehose.sgt-node-user-secret-access-key}",
     firehose_stream_name = "${data.terraform_remote_state.firehose.sgt-firehose-stream-name}",
     distributed_query_logger_firehose_stream_name = "${data.terraform_remote_state.firehose.sgt-distributed-firehose-stream-name}"
+    auto_approve_nodes = "${var.auto_approve_nodes}"
   }
 }
 
@@ -40,7 +46,7 @@ resource "aws_s3_bucket_object" "osquery-sgt-config" {
   bucket = "${data.terraform_remote_state.datastore.s3_bucket_name}"
   content = "${data.template_file.sgt-config-file.rendered}"
   key = "sgt/config.json"
-  etag = "${md5(base64encode("{data.template_file.sgt-config-file.rendered}"))}"
+  etag = "${md5("{data.template_file.sgt-config-file.rendered}")}"
 }
 
 resource "aws_s3_bucket_object" "osquery-sgt-fullchain_pem" {
