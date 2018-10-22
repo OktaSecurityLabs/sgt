@@ -157,6 +157,17 @@ func Wizard() error {
 		return err
 	}
 	config.SgtAppSecret = appSecret
+
+	fmt.Println("Enter the s3 bucket name for the bucket you wish to store your terraform state files in.  This bucket" +
+		"should already exists and be accessible via the aws profile you specified earlier")
+
+	var backendBucketName string
+	_, err = fmt.Scan(&backendBucketName)
+	if err != nil {
+		return err
+	}
+	config.TerraformBackendBucketName = backendBucketName
+
 	fmt.Println("Congratulations, you've successfully configured your SGT deployment! \n" +
 		"That wasn't so bad, was it? \n" +
 		"You're now ready to do the actual deployment")

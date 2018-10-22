@@ -166,6 +166,7 @@ func SetS3Backend(d DeploymentConfig, component string) error {
 		return err
 	}
 
+
 	err = FindAndReplace("../backend.vars", "example-region", d.AWSRegion)
 	if err != nil {
 		return err
@@ -200,6 +201,16 @@ func CreateDeployDirectory(environ string) error {
 			os.Mkdir(dir, 0755)
 		}
 	}
+
+	backendFile := filepath.Join("path", "backend.vars")
+	if _, err := os.Stat(backendFile); os.IsNotExist(err) {
+		exampleBackendFile := filepath.Join(path, "../example", "backend.vars")
+		err = copyFile(exampleBackendFile, backendFile)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
