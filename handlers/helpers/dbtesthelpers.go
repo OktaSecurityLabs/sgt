@@ -192,3 +192,7 @@ func (m MockDB) AddCarveData(data *osquery_types.CarveData) error {
 func (m MockDB) CarveDataExists(data *osquery_types.CarveData) (bool, error) {
 	return false, nil
 }
+
+func (m MockDB) DeleteNodeByNodekey(nodeKey string) error {
+	return nil
+}

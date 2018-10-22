@@ -7,7 +7,6 @@ import (
 	"strings"
 	osq_types "github.com/oktasecuritylabs/sgt/osquery_types"
 	"github.com/oktasecuritylabs/sgt/logger"
-	"log"
 	"fmt"
 )
 
