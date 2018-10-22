@@ -201,7 +201,7 @@ func CreateDeployDirectory(environ string) error {
 		}
 	}
 
-	backendFile := filepath.Join("path", "backend.vars")
+	backendFile := filepath.Join(path, "backend.vars")
 	if _, err := os.Stat(backendFile); os.IsNotExist(err) {
 		exampleBackendFile := filepath.Join(path, "../example", "backend.vars")
 		err = copyFile(exampleBackendFile, backendFile)
