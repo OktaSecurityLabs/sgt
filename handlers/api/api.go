@@ -39,6 +39,7 @@ type ApiDB interface {
 	UpsertDistributedQuery(dq osquery_types.DistributedQuery) error
 	NewUser(u osquery_types.User) error
 	GetUser(username string) (osquery_types.User, error)
+	DeleteNodeByNodekey(nodeKey string) error
 }
 
 func init() {

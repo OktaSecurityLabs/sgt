@@ -32,6 +32,7 @@
     "aws/request",
     "aws/session",
     "aws/signer/v4",
+    "internal/ini",
     "internal/s3err",
     "internal/sdkio",
     "internal/sdkrand",
@@ -61,14 +62,14 @@
     "service/ssm",
     "service/sts"
   ]
-  revision = "bf8067ceb6e7f51e150c218972dccfeeed892b85"
-  version = "v1.15.54"
+  revision = "c0037b52736b07cea4e0cb6521f7995adef833bc"
+  version = "v1.15.59"
 
 [[projects]]
   name = "github.com/briandowns/spinner"
   packages = ["."]
-  revision = "bbeb66ec3653684a0afb3031087f790a5b7d7bdf"
-  version = "1.3"
+  revision = "dd69c579ff204842e8962816987f838e2c2c18d8"
+  version = "1.4"
 
 [[projects]]
   name = "github.com/dgrijalva/jwt-go"
@@ -90,12 +91,6 @@
   packages = ["json"]
   revision = "b869fe1415e4b9eb52f247441830d502aece2d4d"
   version = "v1.3.0"
-
-[[projects]]
-  name = "github.com/go-ini/ini"
-  packages = ["."]
-  revision = "9c8236e659b76e87bf02044d06fde8683008ff3e"
-  version = "v1.39.0"
 
 [[projects]]
   name = "github.com/gorilla/context"
@@ -157,6 +152,12 @@
   version = "1.0.1"
 
 [[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   revision = "ad15b42461921f1fb3529b058c6786c6a45d5162"
@@ -185,11 +186,11 @@
     "unix",
     "windows"
   ]
-  revision = "fa43e7bc11baaae89f3f902b2b4d832b68234844"
+  revision = "8a28ead16f52c8aaeffbf79239b251dfdf6c4f96"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a08728b3b7e0f529b1a97068dbf6fb88489fbde44ad565bbd2d0ddb26be11823"
+  inputs-digest = "cd43a28bfcaad0d84097cd8297f98ae3a331339d71255787fc217eacc1e4447a"
   solver-name = "gps-cdcl"
   solver-version = 1

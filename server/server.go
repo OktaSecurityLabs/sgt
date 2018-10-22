@@ -40,6 +40,7 @@ func Serve() error {
 	apiRouter.Handle("/nodes", api.GetNodesHandler(dynb))
 	//apiRouter.HandleFunc("/nodes/{node_key}", api.ConfigureNode).Methods(http.MethodPost, http.MethodGet)
 	apiRouter.Handle("/nodes/{node_key}", api.ConfigureNodeHandler(dynb))
+	apiRouter.Handle("/nodes/{node_key}", api.DeleteNodeHandler(dynb)).Methods(http.MethodDelete)
 	apiRouter.Handle("/nodes/{node_key}/approve", api.ApproveNode(dynb)).Methods(http.MethodPost)
 	//apiRouter.HandleFunc("/nodes/approve/_bulk", api.Placeholder).Methods("POST)
 	//Packs
