@@ -166,7 +166,6 @@ func SetS3Backend(d DeploymentConfig, component string) error {
 		return err
 	}
 
-
 	err = FindAndReplace("../backend.vars", "example-region", d.AWSRegion)
 	if err != nil {
 		return err
