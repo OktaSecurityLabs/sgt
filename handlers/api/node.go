@@ -30,7 +30,7 @@ func DeleteNodeHandler(db ApiDB) http.Handler {
 		err := handleRequest()
 		if err != nil {
 			logger.Error(err)
-			errString := fmt.Sprintf("DeleteNodeKey: ", err)
+			errString := fmt.Sprintf("DeleteNodeKey: %s", err)
 			response.WriteError(w, errString)
 		} else {
 			response.WriteSuccess(w, "")
