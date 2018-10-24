@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "sgt_firehose_assume_role_policy_doc" {
 
 
 resource "aws_iam_role" "sgt-firehose-assume-role" {
-  name = "sgt_firehose__role"
+  name = "sgt_firehose_assume_role"
   assume_role_policy = "${data.aws_iam_policy_document.sgt_firehose_assume_role_policy_doc.json}"
 }
 
