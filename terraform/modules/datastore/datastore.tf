@@ -1,9 +1,3 @@
-provider "aws" {
-  profile = "${var.aws_profile}"
-  region = "us-east-1"
-  version = ">= 1.21.0"
-}
-
 resource "aws_s3_bucket" "osquery_s3_bucket" {
   bucket = "${var.osquery_s3_bucket_name}"
   acl = "private"
