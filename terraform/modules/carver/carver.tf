@@ -1,9 +1,3 @@
-resource "aws_s3_bucket" "filecarve_bucket" {
-  bucket = "test-file-carve-bucket"
-  acl = "private"
-}
-
-
 data "terraform_remote_state" "datastore" {
   backend = "s3"
   config {
