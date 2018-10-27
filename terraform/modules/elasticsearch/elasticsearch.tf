@@ -24,18 +24,21 @@ resource "aws_elasticsearch_domain" "sgt-osquery_results" {
   domain_name = "${var.elasticsearch_domain_name}"
   elasticsearch_version = "5.5"
   cluster_config {
-    instance_count = 3
-    instance_type = "m4.large.elasticsearch"
+    instance_count = "${var.elasticsearch_instance_count}"
+    instance_type = "${var.elasticsearch_instance_type}"
     dedicated_master_enabled = true
-    dedicated_master_count = 3
-    dedicated_master_type = "t2.medium.elasticsearch"
+    dedicated_master_count = "${var.elasticsearch_dedicated_master_count}"
+    dedicated_master_type = "${var.elasticsearch_master_instance_type}"
   }
   ebs_options {
     ebs_enabled = true
-    volume_size = 300
-    volume_type = "gp2"
+    volume_size = "${var.elasticsearch_volume_size}"
+    volume_type = "${var.elasticsearch_volume_type}"
   }
 }
+
+## volume limits
+## https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-limits.html#ebsresource
 
 resource "aws_iam_role_policy_attachment" "es_cognito_access_role_attach" {
     role       = "${aws_iam_role.es_cognito_access_role.name}"
@@ -182,3 +185,5 @@ resource "aws_cognito_user_pool" "pool" {
     require_uppercase  = "true"
   }
 }
+
+
