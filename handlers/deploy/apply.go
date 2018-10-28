@@ -148,9 +148,12 @@ func deployAWSComponent(component, envName string, config DeploymentConfig) erro
 		carveBuilderGo := filepath.Join(cachedCurDir, "lambda_functions", "carvebuilder", "main.go")
 		carveBuilderOut := filepath.Join(cachedCurDir, "lambda_functions", "carvebuilder", "main")
 		args := fmt.Sprintf("GOOS=linux go build -o %s %s", carveBuilderOut, carveBuilderGo)
+		logger.Infof("Blerp")
 		cmd := exec.Command("bash", "-c", args)
 		combinedOutput, buildErr := cmd.CombinedOutput()
 		if buildErr != nil {
+			fmt.Println(string(combinedOutput))
+			logger.Error(string(combinedOutput))
 			return buildErr
 		}
 		logger.Info(string(combinedOutput))
@@ -194,7 +197,15 @@ func deployAWSComponent(component, envName string, config DeploymentConfig) erro
 		}
 		logger.Info(string(combinedOutput))
 	}
-	args := fmt.Sprintf("terraform init -force-copy -backend=true -backend-config=../backend.vars")
+
+	args := ""
+
+	_, err = os.Stat(".terraform"); if os.IsNotExist(err) {
+		args = fmt.Sprintf("terraform init -backend-config=../backend.vars")
+	} else {
+		args = fmt.Sprintf("terraform init -force-copy -backend=true -backend-config=../backend.vars")
+	}
+
 	cmd := exec.Command("bash", "-c", args)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

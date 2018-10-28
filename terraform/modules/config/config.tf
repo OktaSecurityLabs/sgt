@@ -4,8 +4,8 @@ data "terraform_remote_state" "firehose" {
   config {
     bucket = "${var.terraform_backend_bucket_name}"
     key = "${var.environment}/firehose/terraform.tfstate"
-    region = "${var.aws_region}"
     profile = "${var.aws_profile}"
+    region = "${var.aws_region}"
   }
 }
 
@@ -14,15 +14,9 @@ data "terraform_remote_state" "datastore" {
   config {
     bucket = "${var.terraform_backend_bucket_name}"
     key = "${var.environment}/datastore/terraform.tfstate"
-    region = "${var.aws_region}"
     profile = "${var.aws_profile}"
+    region = "${var.aws_region}"
   }
-}
-
-provider "aws" {
-  profile = "${var.aws_profile}"
-  region = "${var.aws_region}"
-  version = ">= 1.21.0"
 }
 
 
