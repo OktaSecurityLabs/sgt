@@ -151,6 +151,7 @@ func deployAWSComponent(component, envName string, config DeploymentConfig) erro
 		cmd := exec.Command("bash", "-c", args)
 		combinedOutput, buildErr := cmd.CombinedOutput()
 		if buildErr != nil {
+			logger.Error(string(combinedOutput))
 			return buildErr
 		}
 		logger.Info(string(combinedOutput))
@@ -194,7 +195,15 @@ func deployAWSComponent(component, envName string, config DeploymentConfig) erro
 		}
 		logger.Info(string(combinedOutput))
 	}
-	args := fmt.Sprintf("terraform init -force-copy -backend=true -backend-config=../backend.vars")
+
+	args := ""
+
+	_, err = os.Stat(".terraform"); if os.IsNotExist(err) {
+		args = fmt.Sprintf("terraform init -backend-config=../backend.vars")
+	} else {
+		args = fmt.Sprintf("terraform init -force-copy -backend=true -backend-config=../backend.vars")
+	}
+
 	cmd := exec.Command("bash", "-c", args)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
