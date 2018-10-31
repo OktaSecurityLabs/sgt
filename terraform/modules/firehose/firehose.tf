@@ -37,8 +37,47 @@ data "aws_iam_policy_document" "sgt_firehose_assume_role_policy_doc" {
 
 
 resource "aws_iam_role" "sgt-firehose-assume-role" {
-  name = "sgt_firehose_role"
+  name = "sgt_firehose_assume_role"
   assume_role_policy = "${data.aws_iam_policy_document.sgt_firehose_assume_role_policy_doc.json}"
+}
+
+data "aws_iam_policy_document" "firehose_invoke_lambda_policy_doc" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "lambda:InvokeFunction",
+      "lambda:GetFunctionConfiguration",
+      "logs:PutLogEvents"
+    ]
+    resources = [
+      "${aws_lambda_function.sgt_osquery_results_date_transform.arn}:$LATEST"
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:PutLogEvents"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "kinesis:DescribeStream",
+      "kinesis:GetShardIterator",
+      "kinesis:GetRecords"
+    ]
+    resources = [
+      "${aws_kinesis_firehose_delivery_stream.sgt-firehose-osquery_results.arn}"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "firehose_invoke_lambda_policy" {
+  name = "sgt-firehose-lambda-policy"
+  policy = "${data.aws_iam_policy_document.firehose_invoke_lambda_policy_doc.json}"
 }
 
 resource "aws_iam_role_policy_attachment" "attach_s3_policy" {
@@ -98,48 +137,60 @@ resource "aws_lambda_function" "sgt_osquery_results_date_transform" {
 
 resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-osquery_results" {
   name = "sgt-firehose-osquery_results"
-  destination = "s3"
-  #commented out until terraform supports data transformation outside of extended s3.  For the time being, this needs to be enabled via console
-  /*extended_s3_configuration {
-    role_arn = "${aws_iam_role.sgt-firehose-assume-role.arn}"
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = "${aws_iam_role.sgt-firehose-assume-role.arn}"
     bucket_arn = "${aws_s3_bucket.sgt-osquery_results-s3.arn}"
-    buffer_size = 5
-    buffer_interval = 300
-    prefix = "osquery_results"
-    processing_configuration {
-      enabled = true
-      processors {
-        type = "Lambda"
-        parameters {
-          parameter_name = "LambdaArn"
-          parameter_value = "${aws_lambda_function.sgt_osquery_results_date_transform.arn}:$LATEST"
-        }
-      }
-    }
-  }*/
-  s3_configuration {
-    role_arn = "${aws_iam_role.sgt-firehose-assume-role.arn}"
-    bucket_arn = "${aws_s3_bucket.sgt-osquery_results-s3.arn}"
-    buffer_size = 5
     buffer_interval = 60
+    buffer_size = 10
     prefix = "osquery_results"
+    processing_configuration = [
+      {
+        enabled = "true"
+        processors = [
+          {
+            type = "Lambda"
+            parameters = [
+              {
+                parameter_name = "LambdaArn"
+                parameter_value = "${aws_lambda_function.sgt_osquery_results_date_transform.arn}:$LATEST"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
-
 }
-
 
 resource "aws_kinesis_firehose_delivery_stream" "sgt-firehose-distributed-osquery_results" {
   name = "sgt-firehose-distributed_osquery_results"
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
-    role_arn = "${aws_iam_role.sgt-firehose-assume-role.arn}"
+  extended_s3_configuration {
+    role_arn   = "${aws_iam_role.sgt-firehose-assume-role.arn}"
     bucket_arn = "${aws_s3_bucket.sgt-osquery_results-s3.arn}"
-    buffer_size = 5
     buffer_interval = 60
+    buffer_size = 10
     prefix = "distributed_osquery_results"
+    processing_configuration = [
+      {
+        enabled = "true"
+        processors = [
+          {
+            type = "Lambda"
+            parameters = [
+              {
+                parameter_name = "LambdaArn"
+                parameter_value = "${aws_lambda_function.sgt_osquery_results_date_transform.arn}:$LATEST"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
-
 }
 
 ## create iam user to allow nodes to send directly to firehose
@@ -158,9 +209,13 @@ data "aws_iam_policy_document" "sgt-node-user" {
   }
 }
 
-
+resource "aws_iam_role_policy_attachment" "firehose_invoke_lambda_policy_attachment" {
+  policy_arn = "${aws_iam_policy.firehose_invoke_lambda_policy.arn}"
+  role = "${aws_iam_role.sgt-firehose-assume-role.name}"
+}
 
 resource "aws_iam_policy" "sgt-node-user-policy" {
+  name = "sgt-node-user-policy"
   policy = "${data.aws_iam_policy_document.sgt-node-user.json}"
 }
 
