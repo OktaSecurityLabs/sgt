@@ -16,10 +16,13 @@ SGT is managed entirely through terraform
 Getting started with sgt is designed to be very simple with minimal setup required.  To get started, however, you will need a FEW things first.
 
 
+:warning: There is current an issue with terraform version 11.5-11.10 that will cause terraform to error out during destroy.  The current
+workaround is to set environment variable `TF_WARN_OUTPUT_ERRORS=1` :warning:
+
 ##### prereqs:
 1. An [AWS account](https://aws.amazon.com/free/) with admin access to DynamoDB, EC2, ES (ElastisearchService), Kinesis/Firehose and IAM. (note, this must be programatic access, so you can have an access key and secret to use)
-2. [Golang 1.8.2+]((https://golang.org/doc/install))
-3. [Terraform 11.0+](https://www.terraform.io/intro/getting-started/install.html)
+2. [Golang 1.9.0+]((https://golang.org/doc/install))
+3. [Terraform 11.9+](https://www.terraform.io/intro/getting-started/install.html)
 4. A domain with DNS [managed via Route53](http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html) (Note: This does not mean you need to buy a domain, you can use an existing domain and just  manage DNS on Route53)
 5. An SSL cert with public and private keypair. This will be used to terminate TLS connections to our server see [Obtaining a free ssl cert for SGT with Letsencrypt for one method of aquiring a certificate](https://github.com/OktaSecurityLabs/sgt/blob/master/docs/letsencrypt_cert_instructions.md)
 6. An aws [profile configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html).
