@@ -10,6 +10,6 @@ module "config" {
   full_cert_chain = "${var.full_ssl_certchain}"
   priv_key = "${var.ssl_private_key}"
   terraform_backend_bucket_name = "${var.terraform_backend_bucket_name}"
-  environment = "${var.terraform_backend_bucket_name}"
+  environment = "${var.environment}"
   auto_approve_nodes = "${var.auto_approve_nodes}"
 }

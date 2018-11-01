@@ -1,49 +1,63 @@
-provider "aws" {
-  region = "us-east-1"
-  profile = "${var.aws_profile}"
-  version = ">= 1.21.0"
-}
-
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {
   current = true
 }
 
+
 data "terraform_remote_state" "vpc" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../vpc/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/vpc/terraform.tfstate"
+    profile = "${var.aws_profile}"
+    region = "${var.aws_region}"
   }
 }
+
 
 data "terraform_remote_state" "datastore" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../datastore/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/datastore/terraform.tfstate"
+    profile = "${var.aws_profile}"
+    region = "${var.aws_region}"
   }
 }
 
+
 data "terraform_remote_state" "s3" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../config/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/config/terraform.tfstate"
+    profile = "${var.aws_profile}"
+    region = "${var.aws_region}"
   }
 }
 
 data "terraform_remote_state" "ssm" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../secrets/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/secrets/terraform.tfstate"
+    profile = "${var.aws_profile}"
+    region = "${var.aws_region}"
   }
 }
 
+
 data "terraform_remote_state" "firehose" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../firehose/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/firehose/terraform.tfstate"
+    profile = "${var.aws_profile}"
+    region = "${var.aws_region}"
   }
 }
+
 
 data "aws_iam_policy_document" "server_assume_role_policy_doc" {
   statement {
