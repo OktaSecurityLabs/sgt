@@ -13,7 +13,7 @@ SGT is managed entirely through terraform
 
 ### Getting started.
 
-__NOTE__ If you are upgrading from a previous version, please see the release notes for [0.2.0](docs/Release Notes 0.2.0.md)
+__NOTE__ If you are upgrading from a previous version, please see the release notes for [0.2.0](https://github.com/OktaSecurityLabs/sgt/blob/master/docs/Release%20Notes%200.2.0.md)
 
 Getting started with sgt is designed to be very simple with minimal setup required.  To get started, however, you will need a FEW things first.
 
