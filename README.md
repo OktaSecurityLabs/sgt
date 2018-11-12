@@ -34,12 +34,11 @@ workaround is to set environment variable `TF_WARN_OUTPUT_ERRORS=1` :warning:
 
 1.  Clone the repo
     ```commandline
-
-    go get github.com/OktaSecurityLabs/sgt
+    ```git clone git@github.com:OktaSecurityLabs/sgt.git $GOPATH/src/github.com/oktasecuritylabs/sgt```
     ```
 2. change into the downloaded directory
     ```commandline
-    cd $GOPATH/src/github.com/OktaSecurityLabs/sgt
+    cd $GOPATH/src/github.com/oktasecuritylabs/sgt
     ```
 
 3.  Build the project
