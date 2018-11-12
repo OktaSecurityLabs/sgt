@@ -34,7 +34,7 @@ workaround is to set environment variable `TF_WARN_OUTPUT_ERRORS=1` :warning:
 
 1.  Clone the repo
     ```commandline
-    ```git clone git@github.com:OktaSecurityLabs/sgt.git $GOPATH/src/github.com/oktasecuritylabs/sgt```
+    git clone git@github.com:OktaSecurityLabs/sgt.git $GOPATH/src/github.com/oktasecuritylabs/sgt
     ```
 2. change into the downloaded directory
     ```commandline
