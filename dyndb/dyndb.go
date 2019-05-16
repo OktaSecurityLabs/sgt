@@ -112,41 +112,40 @@ func (db DynDB) SearchByHostIdentifier(hid string) ([]osq_types.OsqueryClient, e
 	}
 	var bs BS
 	bs.HostIdentifier = hid
-	scanItem := dynamodb.ScanInput{
+	scanParams := &dynamodb.ScanInput{
 		TableName: aws.String("osquery_clients"),
 	}
-	a, err := db.DB.Scan(&scanItem)
-	if err != nil {
-		logger.Error(err)
-		return Results, err
-	}
-	if hid != "" {
-		for _, i := range a.Items {
-			//fmt.Println(i)
-			o := osq_types.OsqueryClient{}
-			err = dynamodbattribute.UnmarshalMap(i, &o)
-			if err != nil {
-				logger.Error(err)
-				return Results, err
-			}
-			if hid == string(o.HostIdentifier) {
-				Results = append(Results, o)
-				fmt.Println(o)
-			}
 
-		}
-	} else {
-		for _, i := range a.Items {
-			client := osq_types.OsqueryClient{}
-			err = dynamodbattribute.UnmarshalMap(i, &client)
-			if err != nil {
-				logger.Error(err)
-				return Results, err
-			}
-			Results = append(Results, client)
-		}
-	}
-	//resp, err := s.GetItem(&item)
+        pageNum := 0
+        err := db.DB.ScanPages(scanParams,
+            func(page *dynamodb.ScanOutput, lastPage bool) bool {
+                pageNum++
+                if hid != "" {
+                    for _, i := range page.Items {
+                        o := osq_types.OsqueryClient{}
+                        err2 := dynamodbattribute.UnmarshalMap(i, &o)
+                        if err2 != nil {
+                              logger.Error(err2)
+                        }
+                        if hid == string(o.HostIdentifier) {
+                              Results = append(Results, o)
+                              fmt.Println(o)
+                        }
+                    }
+                } else {
+                      for _, i := range page.Items {
+                          client := osq_types.OsqueryClient{}
+                          err3 := dynamodbattribute.UnmarshalMap(i, &client)
+                          if err3 != nil {
+                              logger.Error(err3)
+                          }
+                          Results = append(Results, client)
+                      }
+                  }
+
+                return pageNum <= 10
+            })
+
 	if err != nil {
 		logger.Error(err)
 		return Results, err
