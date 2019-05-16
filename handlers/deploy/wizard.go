@@ -174,7 +174,7 @@ func Wizard() error {
 	fmt.Println("If you'd like to continue and do the actual deployment, you may continue by\n" +
 		"entering 'Y' at the next prompt.  If you'd like to pause, don't worry! \n" +
 		"next time you're ready to continue, just run ./sgt -deploy -env $your_deployment_name")
-	d, err := json.Marshal(config)
+	d, err := json.MarshalIndent(config, "", "  ")
 	fn := fmt.Sprintf("terraform/%s/%s.json", envName, envName)
 	err = ioutil.WriteFile(fn, d, 0644)
 	if err != nil {
