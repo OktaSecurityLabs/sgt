@@ -32,9 +32,9 @@ const (
 )
 
 type AuthDB interface {
-	NewUser(u osquery_types.User) (error)
+	NewUser(u osquery_types.User) error
 	GetUser(username string) (osquery_types.User, error)
-	ValidNode(nodeKey string) (error)
+	ValidNode(nodeKey string) error
 }
 
 // NodeConfigurePost type for handling post requests made by node
@@ -103,7 +103,7 @@ func GetPass() ([]byte, error) {
 }
 
 // NewUser creates new user
-func NewUser(credentialsFile, profile, username, role string,  dyn AuthDB) error {
+func NewUser(credentialsFile, profile, username, role string, dyn AuthDB) error {
 	fmt.Print("Enter password: ")
 	pass1, err := gopass.GetPasswd()
 	if err != nil {
@@ -334,7 +334,6 @@ func GetNodeSecret() (string, error) {
 	})
 }
 */
-
 
 func ValidNodeKey(respWriter http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 	logger.Info("validating node...")

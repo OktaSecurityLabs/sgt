@@ -18,7 +18,7 @@
     "events_expiry": 300,
     "events_max": 100000,
     "event_optimize": true,
-    "host_identifier": "hostname",
+    "host_identifier": "uuid",
     "logger_plugin": "aws_firehose",
     "watchdog_level": -1,
     "watchdog_memory_limit": 300

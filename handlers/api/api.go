@@ -17,28 +17,29 @@ import (
 type ApiDB interface {
 	GetNamedConfigs() ([]osquery_types.OsqueryNamedConfig, error)
 	GetNamedConfig(configName string) (osquery_types.OsqueryNamedConfig, error)
-	UpsertNamedConfig(onc *osquery_types.OsqueryNamedConfig) (error)
-	UpsertClient(oc osquery_types.OsqueryClient) (error)
+	UpsertNamedConfig(onc *osquery_types.OsqueryNamedConfig) error
+	UpsertClient(oc osquery_types.OsqueryClient) error
 	SearchByHostIdentifier(hid string) ([]osquery_types.OsqueryClient, error)
-	ApprovePendingNode(nodeKey string) (error)
-	ValidNode(nodeKey string) (error)
+	ApprovePendingNode(nodeKey string) error
+	ValidNode(nodeKey string) error
 	SearchByNodeKey(nk string) (osquery_types.OsqueryClient, error)
 	APIGetPackQueries() ([]osquery_types.PackQuery, error)
 	APISearchPackQueries(searchString string) ([]osquery_types.PackQuery, error)
 	GetPackQuery(queryName string) (osquery_types.PackQuery, error)
-	UpsertPackQuery(pq osquery_types.PackQuery) (error)
+	UpsertPackQuery(pq osquery_types.PackQuery) error
 	GetPackByName(packName string) (osquery_types.Pack, error)
 	SearchQueryPacks(searchString string) ([]osquery_types.QueryPack, error)
-	NewQueryPack(qp osquery_types.QueryPack) (error)
-	DeleteQueryPack(queryPackName string) (error)
-	UpsertPack(qp osquery_types.QueryPack) (error)
+	NewQueryPack(qp osquery_types.QueryPack) error
+	DeleteQueryPack(queryPackName string) error
+	UpsertPack(qp osquery_types.QueryPack) error
 	SearchDistributedNodeKey(nk string) (osquery_types.DistributedQuery, error)
-	NewDistributedQuery(dq osquery_types.DistributedQuery) (error)
-	DeleteDistributedQuery(dq osquery_types.DistributedQuery) (error)
-	AppendDistributedQuery(dq osquery_types.DistributedQuery) (error)
-	UpsertDistributedQuery(dq osquery_types.DistributedQuery) (error)
-	NewUser(u osquery_types.User) (error)
+	NewDistributedQuery(dq osquery_types.DistributedQuery) error
+	DeleteDistributedQuery(dq osquery_types.DistributedQuery) error
+	AppendDistributedQuery(dq osquery_types.DistributedQuery) error
+	UpsertDistributedQuery(dq osquery_types.DistributedQuery) error
+	NewUser(u osquery_types.User) error
 	GetUser(username string) (osquery_types.User, error)
+	DeleteNodeByNodekey(nodeKey string) error
 }
 
 func init() {
@@ -74,10 +75,9 @@ func GetNamedConfigsHandler(db ApiDB) http.Handler {
 	})
 }
 
-
 // ConfigurationRequestHandler accepts a json post body of a NamedConfig
 func ConfigurationRequestHandler(db ApiDB) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleRequest := func() (interface{}, error) {
 
 			vars := mux.Vars(r)
@@ -143,7 +143,6 @@ func ConfigurationRequestHandler(db ApiDB) http.Handler {
 
 	})
 }
-
 
 // GetNodes returns json reponse of a list of nodes
 func GetNodesHandler(db ApiDB) http.Handler {
@@ -439,7 +438,6 @@ func ApproveNode(respWriter http.ResponseWriter, request *http.Request) {
 }
 */
 
-
 func GetPackQueries(db ApiDB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -591,6 +589,7 @@ func GetQueryPacks(db ApiDB) http.Handler {
 
 	})
 }
+
 /*
 func GetQueryPacks(respWriter http.ResponseWriter, request *http.Request) {
 
@@ -651,6 +650,7 @@ func SearchQueryPacks(db ApiDB) http.Handler {
 
 	})
 }
+
 /*
 func SearchQueryPacks(respWriter http.ResponseWriter, request *http.Request) {
 
@@ -775,7 +775,7 @@ func ConfigurePack(respWriter http.ResponseWriter, request *http.Request) {
 */
 
 // ConfigurePackQuery accepts post body with packquery config
-func ConfigurePackQuery (db ApiDB) http.Handler {
+func ConfigurePackQuery(db ApiDB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleRequest := func() error {
 

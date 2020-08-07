@@ -61,7 +61,7 @@ func TestHandlerValid(t *testing.T) {
 			events.KinesisFirehoseEventRecord{
 				RecordID:                    "001",
 				ApproximateArrivalTimestamp: events.MilliSecondsEpochTime{time.Now()},
-				Data: []byte(data),
+				Data:                        []byte(data),
 			},
 		},
 	}
@@ -99,7 +99,7 @@ func TestHandlerInvalid(t *testing.T) {
 			events.KinesisFirehoseEventRecord{
 				RecordID:                    "001",
 				ApproximateArrivalTimestamp: events.MilliSecondsEpochTime{time.Now()},
-				Data: []byte(data),
+				Data:                        []byte(data),
 			},
 		},
 	}

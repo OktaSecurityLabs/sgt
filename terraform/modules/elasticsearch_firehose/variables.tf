@@ -9,3 +9,7 @@ variable "aws_region" {
 variable "create_elasticsearch" {
   default = 1
 }
+
+variable "terraform_backend_bucket_name" {}
+
+variable "environment" {}

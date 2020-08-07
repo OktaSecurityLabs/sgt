@@ -13,13 +13,18 @@ SGT is managed entirely through terraform
 
 ### Getting started.
 
+__NOTE__ If you are upgrading from a previous version, please see the release notes for [0.2.0](https://github.com/OktaSecurityLabs/sgt/blob/master/docs/Release%20Notes%200.2.0.md)
+
 Getting started with sgt is designed to be very simple with minimal setup required.  To get started, however, you will need a FEW things first.
 
 
+:warning: There is current an issue with terraform version 11.5-11.10 that will cause terraform to error out during destroy.  The current
+workaround is to set environment variable `TF_WARN_OUTPUT_ERRORS=1` :warning:
+
 ##### prereqs:
 1. An [AWS account](https://aws.amazon.com/free/) with admin access to DynamoDB, EC2, ES (ElastisearchService), Kinesis/Firehose and IAM. (note, this must be programatic access, so you can have an access key and secret to use)
-2. [Golang 1.8.2+]((https://golang.org/doc/install))
-3. [Terraform 11.0+](https://www.terraform.io/intro/getting-started/install.html)
+2. [Golang 1.9.0+]((https://golang.org/doc/install))
+3. [Terraform 11.9+](https://www.terraform.io/intro/getting-started/install.html)
 4. A domain with DNS [managed via Route53](http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html) (Note: This does not mean you need to buy a domain, you can use an existing domain and just  manage DNS on Route53)
 5. An SSL cert with public and private keypair. This will be used to terminate TLS connections to our server see [Obtaining a free ssl cert for SGT with Letsencrypt for one method of aquiring a certificate](https://github.com/OktaSecurityLabs/sgt/blob/master/docs/letsencrypt_cert_instructions.md)
 6. An aws [profile configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html).
@@ -29,12 +34,11 @@ Getting started with sgt is designed to be very simple with minimal setup requir
 
 1.  Clone the repo
     ```commandline
-
-    go get github.com/OktaSecurityLabs/sgt
+    git clone git@github.com:OktaSecurityLabs/sgt.git $GOPATH/src/github.com/oktasecuritylabs/sgt
     ```
 2. change into the downloaded directory
     ```commandline
-    cd $GOPATH/src/github.com/OktaSecurityLabs/sgt
+    cd $GOPATH/src/github.com/oktasecuritylabs/sgt
     ```
 
 3.  Build the project
@@ -173,7 +177,22 @@ an endpoint and start receiving logs!
 
 -Note:  This getting started guide originally appeared on [blog.securelyinsecure.com](https://blog.securelyinsecure.com), but I'm appropriating it for the docs as well, due to it being better than the last readme I wrote.
 
+Once you've installed Go and Terraform, and built your SGT binary, its time to run your deployment!
 
+The wizard will walk you through everything you need to configure a new environment,
+create the proper directory structure and the environment specific configuration
+files and stand up the environment if you choose to do so
+
+```commandline
+./sgt wizard
+```
+Among other things, the wizard will ask you to provide:
+The "mail domain for the users of your Kibana dashboard". This should be the domain name used for the email addresses of the people who will be using the Kibana dashboard (example: company.com)
+
+A comma delimited list of users for the Kibana dashboard. The users in the list must correspond to email addresses of the users. For example, if you wanted to initialize Kibana with 2 users (Some Guy, sguy@company.com; Someone Else, selse@company,com) your input at this prompt woukld be ```sguy,selse``` 
+
+When you are done with the wizard, you will be prompted to either continue to deploy
+the actual resources, or exit.  If you choose to exit, you you will need manually deploy later
 
 ### Manual deployment
 
@@ -221,4 +240,21 @@ If your credentials are valid, you will recieve a json response back
 
 Provide this token in any subsequent requests in the Authorization header
 
+# Creating Additional Kibana Users Post-Deployment
+1. Log into the AWS account where you deployed sgt, and go to the  [cognito service page](https://console.aws.amazon.com/cognito/home?region=us-east-1#)
+2. Click Manage User Pools
+3. Click the User Pool you created during the sgt deployment
+4. Click Users and Groups
+5. Click Create User
+6. In the Username text box, type the username portion of the user's email address
+7. Leave the box "Send an invitation to this new user?" checked
+8. Check the "Email" box
+9. Un-check the "Mark phone number as verified?" box
+10. In the Email text box, type the user's email address
+11. Click Create User
 
+## Documentation notes:
+Documentation is lacking right now due to a rather un-fun flu season.  However, updates to documentation should be expected in teh coming week or so.
+(This note marked: 1/17/18)
+
+![arch](docs/arch.png)

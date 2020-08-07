@@ -1,13 +1,10 @@
-provider "aws" {
-  profile = "${var.aws_profile}"
-  region = "${var.aws_region}"
-  version = ">= 1.25"
-}
-
 data "terraform_remote_state" "elasticsearch" {
-  backend = "local"
+  backend = "s3"
   config {
-    path = "../elasticsearch/terraform.tfstate"
+    bucket = "${var.terraform_backend_bucket_name}"
+    key = "${var.environment}/elasticsearch/terraform.tfstate"
+    profile = "${var.aws_profile}"
+    region = "${var.aws_region}"
   }
 }
 
@@ -51,7 +48,7 @@ data "aws_iam_policy_document" "sgt_firehose_assume_role_policy_doc" {
 
 
 resource "aws_iam_role" "sgt-firehose-assume-role" {
-  name = "sgt_firehose_role"
+  name = "sgt_firehose_assume_role"
   assume_role_policy = "${data.aws_iam_policy_document.sgt_firehose_assume_role_policy_doc.json}"
 }
 

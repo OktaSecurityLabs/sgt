@@ -10,12 +10,12 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/oktasecuritylabs/sgt/dyndb"
 	"github.com/oktasecuritylabs/sgt/handlers/auth"
 	"github.com/oktasecuritylabs/sgt/handlers/deploy"
 	"github.com/oktasecuritylabs/sgt/handlers/helpers"
 	"github.com/oktasecuritylabs/sgt/logger"
 	"github.com/oktasecuritylabs/sgt/server"
-	"github.com/oktasecuritylabs/sgt/dyndb"
 )
 
 const (
@@ -179,8 +179,7 @@ func runSGT() error {
 			createUserCommand.Usage()
 			return errors.New("aws profile name required, please pass via -profile flag")
 		}
-		dyn := dyndb.DynDB{
-		}
+		dyn := dyndb.DynDB{}
 		err := auth.NewUser(*credFileFlag, *profileFlag, *usernameFlag, *roleFlag, dyn)
 		if err != nil {
 			return err

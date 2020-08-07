@@ -22,18 +22,20 @@ import (
 )
 
 const (
-	vpc                   = "vpc"
-	datastore             = "datastore"
-	elasticsearch         = "elasticsearch"
-	elasticsearchFirehose = "elasticsearch_firehose"
-	elasticsearchConfig   = "elasticsearch_config"
+	vpc                      = "vpc"
+	datastore                = "datastore"
+	elasticsearch            = "elasticsearch"
+	elasticsearchFirehose    = "elasticsearch_firehose"
+	elasticsearchConfig      = "elasticsearch_config"
 	elasticsearchAutoscaling = "elasticsearch_autoscaling"
-	firehose              = "firehose"
-	configs                = "configs"
-	secrets               = "secrets"
-	autoscaling           = "autoscaling"
-	packs                 = "packs"
-	scripts               = "scripts"
+	firehose                 = "firehose"
+	config                   = "config"
+	secrets                  = "secrets"
+	autoscaling              = "autoscaling"
+	packs                    = "packs"
+	configs                  = "configs"
+	scripts                  = "scripts"
+	carver                   = "carver"
 )
 
 var (
@@ -47,6 +49,7 @@ var (
 		configs,
 		secrets,
 		autoscaling,
+		carver,
 	}
 
 	ElasticDeployOrder = []string{
@@ -57,6 +60,7 @@ var (
 		elasticsearchConfig,
 		secrets,
 		elasticsearchAutoscaling,
+		carver,
 	}
 
 	// OsqueryOpts holds all deploy options for osquery
@@ -75,19 +79,25 @@ var (
 
 // DeploymentConfig configuration file used by all environment deployments
 type DeploymentConfig struct {
-	Environment                 string `json:"environment"`
-	AWSProfile                  string `json:"aws_profile"`
-	UserIPAddress               string `json:"user_ip_address"`
-	SgtOsqueryResultsBucketName string `json:"sgt_osquery_results_bucket_name"`
-	SgtConfigBucketName         string `json:"sgt_config_bucket_name"`
-	Domain                      string `json:"domain"`
-	Subdomain                   string `json:"subdomain"`
-	AwsKeypair                  string `json:"aws_keypair"`
-	FullSslCertchain            string `json:"full_ssl_certchain"`
-	SslPrivateKey               string `json:"ssl_private_key"`
-	SgtNodeSecret               string `json:"sgt_node_secret"`
-	SgtAppSecret                string `json:"sgt_app_secret"`
-	CreateElasticsearch         int    `json:"create_elasticsearch"`
+	Environment                 string   `json:"environment"`
+	AWSProfile                  string   `json:"aws_profile"`
+	UserIPAddress               string   `json:"user_ip_address"`
+	SgtOsqueryResultsBucketName string   `json:"sgt_osquery_results_bucket_name"`
+	SgtConfigBucketName         string   `json:"sgt_config_bucket_name"`
+	Domain                      string   `json:"domain"`
+	Subdomain                   string   `json:"subdomain"`
+	AwsKeypair                  string   `json:"aws_keypair"`
+	FullSslCertchain            string   `json:"full_ssl_certchain"`
+	SslPrivateKey               string   `json:"ssl_private_key"`
+	SgtNodeSecret               string   `json:"sgt_node_secret"`
+	SgtAppSecret                string   `json:"sgt_app_secret"`
+	CreateElasticsearch         int      `json:"create_elasticsearch"`
+	AsgDesiredSize              int      `json:"asg_desired_size"`
+	AWSRegion                   string   `json:"aws_region"`
+	Users                       []string `json:"users"`
+	MailDomain                  string   `json:"mail_domain"`
+	TerraformBackendBucketName  string   `json:"terraform_backend_bucket_name"`
+	AutoApproveNodes            string   `json:"auto_approve_nodes"`
 }
 
 // copyFile copies file from src to dst
@@ -144,6 +154,31 @@ func (d DeploymentConfig) checkEnvironMatchConfig(environ string) error {
 	return nil
 }
 
+func SetS3Backend(d DeploymentConfig, component string) error {
+	err := FindAndReplace("backend.tf", "example-backend-bucket-name", d.TerraformBackendBucketName)
+	if err != nil {
+		return err
+	}
+
+	key := filepath.Join(d.Environment, component, "terraform.tfstate")
+	err = FindAndReplace("backend.tf", "example-terraform.tfstate", key)
+	if err != nil {
+		return err
+	}
+
+	err = FindAndReplace("../backend.vars", "example-region", d.AWSRegion)
+	if err != nil {
+		return err
+	}
+
+	err = FindAndReplace("../backend.vars", "example-profile", d.AWSProfile)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 //CreateDeployDirectory  Creates deployment director based on environment
 func CreateDeployDirectory(environ string) error {
 	path := fmt.Sprintf("terraform/%s", environ)
@@ -156,7 +191,7 @@ func CreateDeployDirectory(environ string) error {
 		os.Exit(0)
 	}
 	dirs := []string{"vpc", "datastore", "firehose", "elasticsearch_firehose", "elasticsearch",
-	"elasticsearch_config", "config", "autoscaling", "elasticsearch_autoscaling", "secrets"}
+		"elasticsearch_config", "config", "autoscaling", "elasticsearch_autoscaling", "secrets", "carver"}
 	for _, p := range dirs {
 		dir := filepath.Join(path, p)
 		//logger.Info(dir)
@@ -165,6 +200,16 @@ func CreateDeployDirectory(environ string) error {
 			os.Mkdir(dir, 0755)
 		}
 	}
+
+	backendFile := filepath.Join(path, "backend.vars")
+	if _, err := os.Stat(backendFile); os.IsNotExist(err) {
+		exampleBackendFile := filepath.Join(path, "../example", "backend.vars")
+		err = copyFile(exampleBackendFile, backendFile)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -330,7 +375,7 @@ func osqueryDefaultConfigs(config DeploymentConfig, environ string) error {
 		}
 		//err = json.Unmarshal(*config.Packs, &pl)
 		//if err != nil {
-			//return err
+		//return err
 		//}
 
 		namedConfig.PackList = pl

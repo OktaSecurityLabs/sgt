@@ -44,4 +44,9 @@ variable "dns_subdomain" {
 
 
 variable "aws_profile" {}
+variable "aws_region" {}
 #variable "nat_gw_id" {}
+
+variable "terraform_backend_bucket_name" {}
+
+variable "environment" {}
