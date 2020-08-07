@@ -46,7 +46,7 @@ var (
 		vpc,
 		datastore,
 		firehose,
-		config,
+		configs,
 		secrets,
 		autoscaling,
 		carver,
